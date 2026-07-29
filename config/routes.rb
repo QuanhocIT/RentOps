@@ -8,6 +8,12 @@ Rails.application.routes.draw do
 
       get "dashboard/summary", to: "dashboard#summary"
       post "webhooks/vietqr", to: "webhooks#vietqr"
+      post "payment_webhooks/sepay", to: "payment_webhooks#sepay"
+      post "payment_webhooks/cassso", to: "payment_webhooks#cassso"
+
+      get "export/monthly_bills", to: "export#monthly_bills"
+      get "export/operating_expenses", to: "export#operating_expenses"
+      get "export/printable_bill/:id", to: "export#printable_bill"
 
       get "super_admin/overview", to: "super_admin#index"
       post "super_admin/update_plan", to: "super_admin#update_tenant_plan"
@@ -39,18 +45,21 @@ Rails.application.routes.draw do
 
       resources :notifications, only: [:index] do
         post :send_reminder, on: :collection
+        post :send_batch_reminders, on: :collection
       end
 
       resources :contracts, only: [:index, :create, :destroy] do
         post :checkout, on: :member
         post :renew, on: :member
+        match :co_tenants, on: :member, via: [:get, :post]
       end
 
       resources :monthly_bills, only: [:index, :create, :destroy] do
         post :generate, on: :collection
+        post :batch_generate, on: :collection
         get :vietqr, on: :member
+        post :mark_as_paid, on: :member
       end
     end
   end
 end
-

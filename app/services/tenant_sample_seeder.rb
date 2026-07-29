@@ -35,22 +35,30 @@ class TenantSampleSeeder
     end
 
     # 3. Properties & Rooms
-    prop1 = Property.find_or_create_by!(tenant: tenant, name: "Tòa Nhà A - Nam Từ Liêm") do |r|
+    prop1 = Property.find_or_create_by!(tenant: tenant, name: "Tòa Nhà RentOps A - Nam Từ Liêm") do |r|
       r.address = "Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội"
     end
 
-    prop2 = Property.find_or_create_by!(tenant: tenant, name: "Tòa Nhà B - Cầu Giấy") do |r|
+    prop2 = Property.find_or_create_by!(tenant: tenant, name: "Tòa Nhà RentOps B - Cầu Giấy") do |r|
       r.address = "Số 88 Trần Thái Tông, Cầu Giấy, Hà Nội"
     end
 
+    prop3 = Property.find_or_create_by!(tenant: tenant, name: "Căn Hộ Dịch Vụ RentOps C - Đống Đa") do |r|
+      r.address = "Số 102 Chùa Lăng, Đống Đa, Hà Nội"
+    end
+
     rooms_data = [
-      { property: prop1, room_number: "101", floor: 1, price: 3500000, status: :vacant },
-      { property: prop1, room_number: "102", floor: 1, price: 3800000, status: :occupied },
-      { property: prop1, room_number: "103", floor: 1, price: 3500000, status: :reserved },
-      { property: prop1, room_number: "201", floor: 2, price: 4200000, status: :occupied },
-      { property: prop1, room_number: "202", floor: 2, price: 4500000, status: :occupied },
-      { property: prop2, room_number: "301", floor: 3, price: 5000000, status: :vacant },
-      { property: prop2, room_number: "302", floor: 3, price: 5200000, status: :occupied }
+      { property: prop1, room_number: "101", floor: 1, price: 3500000, status: :vacant, area: 25.0 },
+      { property: prop1, room_number: "102", floor: 1, price: 3800000, status: :occupied, area: 28.0 },
+      { property: prop1, room_number: "103", floor: 1, price: 3500000, status: :vacant, area: 25.0 },
+      { property: prop1, room_number: "201", floor: 2, price: 4200000, status: :occupied, area: 30.0 },
+      { property: prop1, room_number: "202", floor: 2, price: 4500000, status: :occupied, area: 32.0 },
+      { property: prop1, room_number: "203", floor: 2, price: 4000000, status: :vacant, area: 28.0 },
+      { property: prop2, room_number: "301", floor: 3, price: 5000000, status: :vacant, area: 35.0 },
+      { property: prop2, room_number: "302", floor: 3, price: 5200000, status: :occupied, area: 38.0 },
+      { property: prop2, room_number: "303", floor: 3, price: 4800000, status: :vacant, area: 32.0 },
+      { property: prop3, room_number: "401 (Studio)", floor: 4, price: 6500000, status: :vacant, area: 42.0 },
+      { property: prop3, room_number: "402 (Studio)", floor: 4, price: 6800000, status: :occupied, area: 45.0 }
     ]
 
     created_rooms = {}
@@ -61,6 +69,7 @@ class TenantSampleSeeder
       r.floor = attrs[:floor]
       r.price = attrs[:price]
       r.status = attrs[:status]
+      r.area = attrs[:area]
       r.save!
       created_rooms[attrs[:room_number]] = r
     end
@@ -95,7 +104,7 @@ class TenantSampleSeeder
     r201 = created_rooms["201"]
 
     if r102
-      RoomAsset.find_or_create_by!(tenant: tenant, room_id: r102.id, asset_code: "DH-102") do |a|
+      RoomAsset.find_or_create_by!(room_id: r102.id, asset_code: "DH-102") do |a|
         a.property = prop1
         a.name = "Điều hòa Daikin Inverter 12000 BTU"
         a.category = "appliance"
@@ -177,7 +186,7 @@ class TenantSampleSeeder
     end
 
     # 7. Contract Templates
-    ContractTemplate.find_or_create_by!(tenant: tenant, name: "Mẫu Hợp Đồng Thuê Nhà Trọ Chuẩn 2026") do |t|
+    ContractTemplate.find_or_create_by!(name: "Mẫu Hợp Đồng Thuê Nhà Trọ Chuẩn 2026") do |t|
       t.content = "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n\nHỢP ĐỒNG CHO THUÊ PHÒNG TRỌ\n\nBên A (Bên cho thuê): {{landlord_name}} - SĐT: {{landlord_phone}}\nBên B (Bên thuê): {{tenant_name}} - CCCD: {{tenant_id_card}}\n\nHai bên thống nhất cho thuê phòng {{room_number}} tại {{property_address}} với giá {{monthly_rent}} VNĐ/tháng. Đặt cọc {{deposit_amount}} VNĐ."
       t.is_default = true
       t.description = "Mẫu hợp đồng đầy đủ điều khoản pháp lý về cọc, thanh toán và hủy hợp đồng."

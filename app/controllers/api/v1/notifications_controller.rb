@@ -50,6 +50,43 @@ module Api
           message: "Đã gửi tin nhắn nhắc nợ ZNS/SMS thành công tới #{name} (#{phone})"
         )
       end
+
+      def send_batch_reminders
+        billing_month = params[:billing_month].presence || Date.current.strftime("%Y-%m")
+        unpaid_bills = MonthlyBill.kept.where(tenant_id: current_tenant_record&.id, billing_month: billing_month, status: [:issued, :partially_paid, :overdue])
+
+        sent_count = 0
+        unpaid_bills.each do |bill|
+          renter = bill.contract&.renter
+          phone = renter&.phone || current_tenant_record&.phone || "0988777666"
+          name = renter&.full_name || "Khách thuê"
+          amt = ActionController::Base.helpers.number_to_currency(bill.total_amount, unit: "đ", precision: 0, format: "%n %u")
+          content = "RentOps Nhắc Nợ Tháng #{billing_month}: Kính gửi #{name}, phòng #{bill.room&.room_number} số tiền #{amt} chưa được thanh toán. Vui lòng thanh toán trước ngày #{bill.due_date&.strftime('%d/%m/%Y')}."
+
+          Notification.create!(
+            tenant: current_tenant_record,
+            recipient_name: name,
+            recipient_phone: phone,
+            channel: "zns",
+            content: content,
+            status: :sent,
+            sent_at: Time.current
+          )
+          sent_count += 1
+        end
+
+        AuditLog.log_action(
+          tenant: current_tenant_record,
+          user: current_user,
+          action: "SEND_BATCH_REMINDERS",
+          payload: { month: billing_month, sent_count: sent_count }
+        )
+
+        render_json_success(
+          data: { sent_count: sent_count },
+          message: "Đã gửi thành công #{sent_count} tin nhắn nhắc nợ cho tháng #{billing_month}"
+        )
+      end
     end
   end
 end

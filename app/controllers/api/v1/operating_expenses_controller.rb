@@ -3,6 +3,12 @@ module Api
     class OperatingExpensesController < BaseController
       def index
         expenses = OperatingExpense.kept.where(tenant_id: current_tenant_record&.id)
+
+        expenses = expenses.where(property_id: params[:property_id]) if params[:property_id].present?
+        expenses = expenses.where(category: params[:category]) if params[:category].present?
+        expenses = expenses.where("expense_date >= ?", params[:start_date]) if params[:start_date].present?
+        expenses = expenses.where("expense_date <= ?", params[:end_date]) if params[:end_date].present?
+
         expenses = expenses.order(expense_date: :desc)
 
         expenses_list = expenses.map do |exp|
@@ -10,13 +16,15 @@ module Api
         end
 
         total_amount = expenses.sum(:amount)
+        by_category = expenses.group(:category).sum(:amount)
 
         render_json_success(
           data: expenses_list,
           message: "Lấy danh sách chi phí vận hành thành công",
           meta: {
             total_items: expenses_list.size,
-            total_amount: total_amount
+            total_amount: total_amount,
+            by_category: by_category
           }
         )
       end

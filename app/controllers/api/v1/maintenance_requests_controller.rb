@@ -11,8 +11,9 @@ module Api
         end
 
         total_cost = requests.sum(:cost)
+        records, meta = paginate(requests)
 
-        data = requests.map do |req|
+        data = records.map do |req|
           req.as_json.merge(
             room_number: req.room&.room_number,
             property_name: req.room&.property_name,
@@ -23,7 +24,7 @@ module Api
         render_json_success(
           data: data,
           message: "Lấy danh sách sự cố sửa chữa thành công",
-          meta: { total_items: data.size, total_cost: total_cost }
+          meta: meta.merge(total_cost: total_cost)
         )
       end
 

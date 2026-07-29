@@ -1,3 +1,5 @@
+require "jwt"
+
 module Api
   module V1
     class BaseController < ActionController::API
@@ -38,16 +40,65 @@ module Api
         current_user&.tenant
       end
 
+      def authorize_roles!(*roles)
+        return if current_user&.super_admin?
+        return if roles.map(&:to_s).include?(current_user&.role.to_s)
+
+        render_json_error(message: "Bạn không có quyền thực hiện thao tác này.", status: :forbidden)
+      end
+
+      def paginate(scope, page: params[:page], per_page: params[:per_page])
+        page_num = [(page.presence || 1).to_i, 1].max
+        per_num = [(per_page.presence || 20).to_i, 1].max
+        per_num = 100 if per_num > 100
+
+        total_count = scope.count
+        total_pages = (total_count.to_f / per_num).ceil
+        records = scope.offset((page_num - 1) * per_num).limit(per_num)
+
+        meta = {
+          current_page: page_num,
+          per_page: per_num,
+          total_pages: total_pages,
+          total_count: total_count
+        }
+
+        [records, meta]
+      end
+
+      def encode_jwt_token(user, exp = 24.hours.from_now)
+        payload = {
+          user_id: user.id,
+          tenant_id: user.tenant_id,
+          role: user.role,
+          exp: exp.to_i
+        }
+        JWT.encode(payload, jwt_secret, "HS256")
+      end
+
       private
 
       def authenticate_request!
         header = request.headers["Authorization"].to_s
         token = header.split(" ").last
-        @current_user = decode_mock_user(token) if token.present?
+        @current_user = decode_jwt_token(token) if token.present?
 
         return if @current_user
 
-        render_json_error(message: "Không có quyền truy cập. Token không hợp lệ.", status: :unauthorized)
+        render_json_error(message: "Không có quyền truy cập. Token không hợp lệ hoặc đã hết hạn.", status: :unauthorized)
+      end
+
+      def decode_jwt_token(token)
+        return nil if token.blank?
+
+        decoded = JWT.decode(token, jwt_secret, true, { algorithm: "HS256" }).first
+        User.find_by(id: decoded["user_id"])
+      rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound
+        nil
+      end
+
+      def jwt_secret
+        ENV["JWT_SECRET_KEY"] || Rails.application.credentials.secret_key_base || "rentops_jwt_secret_key_2026_super_secure"
       end
 
       def set_tenant_from_user
@@ -55,20 +106,6 @@ module Api
         return unless @current_user&.tenant
 
         set_current_tenant(@current_user.tenant)
-      end
-
-      def decode_mock_user(token)
-        return nil if token.blank?
-
-        tenant = Tenant.first_or_create!(subdomain: "demo") do |t|
-          t.name = "Demo Tenant"
-          t.phone = "0901234567"
-        end
-
-        User.first_or_create!(email: "admin@rentops.vn") do |u|
-          u.full_name = "Quản trị viên RentOps"
-          u.tenant = tenant
-        end
       end
 
       def render_not_found(exception)

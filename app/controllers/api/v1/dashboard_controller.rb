@@ -50,12 +50,40 @@ module Api
           }
         end
 
-        # Expense categories breakdown
-        expense_by_cat = expenses.group(:category).sum(:amount)
-        expense_categories = expense_by_cat.map do |cat, amt|
-          pct = total_expenses.positive? ? ((amt.to_f / total_expenses) * 100).round(1) : 0.0
-          { category: cat.presence || "Khác", amount: amt, percentage: pct }
+        # 6-month financial trends
+        current_date = Date.current
+        financial_trends = (0..5).map do |i|
+          m_date = current_date - (5 - i).months
+          m_str = m_date.strftime("%Y-%m")
+          m_bills = bills.where(billing_month: m_str)
+          m_paid = m_bills.where(status: :paid).sum(:total_amount)
+          m_expenses = expenses.where("DATE_FORMAT(expense_date, '%Y-%m') = ?", m_str).sum(:amount)
+          {
+            month: m_str,
+            month_name: "Thg #{m_date.month}/#{m_date.year}",
+            paid_billed: m_paid,
+            expenses: m_expenses,
+            net_profit: m_paid - m_expenses
+          }
         end
+
+        # Expiring contracts (next 30 days)
+        expiring_contracts = contracts.where("end_date IS NOT NULL AND end_date <= ?", Date.current + 30.days).order(end_date: :asc).limit(5).map do |c|
+          days_left = c.end_date ? (c.end_date - Date.current).to_i : 0
+          {
+            id: c.id,
+            contract_code: c.contract_code,
+            room_number: c.room&.room_number,
+            property_name: c.room&.property_name,
+            renter_name: c.renter&.full_name,
+            end_date: c.end_date,
+            days_remaining: [days_left, 0].max
+          }
+        end
+
+        # Maintenance statistics
+        m_requests = MaintenanceRequest.kept.where(tenant_id: tenant_id)
+        pending_maintenance_count = m_requests.where(status: [:pending, :in_progress]).count
 
         render_json_success(
           data: {
@@ -65,7 +93,9 @@ module Api
               occupied_rooms: occupied_rooms,
               reserved_rooms: reserved_rooms,
               maintenance_rooms: maintenance_rooms,
-              occupancy_rate: occupancy_rate
+              occupancy_rate: occupancy_rate,
+              pending_maintenance_count: pending_maintenance_count,
+              expiring_contracts_count: expiring_contracts.size
             },
             financials: {
               monthly_revenue_estimate: monthly_revenue_estimate,
@@ -76,7 +106,9 @@ module Api
               net_profit_estimate: net_profit_estimate
             },
             by_property: by_property,
-            expense_categories: expense_categories
+            expense_categories: expense_categories,
+            financial_trends: financial_trends,
+            expiring_contracts: expiring_contracts
           },
           message: "Lấy thông tin dashboard tổng quan thành công"
         )

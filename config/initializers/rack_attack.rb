@@ -1,16 +1,18 @@
 class Rack::Attack
-  # Throttle login attempts by IP address
-  throttle("auth/login/ip", limit: 10, period: 1.minute) do |req|
-    req.ip if req.path == "/api/v1/auth/login" && req.post?
+  # Rate limit login attempts by IP address
+  throttle('req/ip', limit: 300, period: 5.minutes) do |req|
+    req.ip
   end
 
-  # Throttle general API requests by IP address
-  throttle("api/ip", limit: 300, period: 1.minute) do |req|
-    req.ip if req.path.start_with?("/api/")
+  # Throttle login attempts to 5 per minute per IP
+  throttle('logins/ip', limit: 5, period: 1.minute) do |req|
+    if req.path == '/api/v1/auth/login' && req.post?
+      req.ip
+    end
   end
 
-  # Throttle webhook calls by IP
-  throttle("webhooks/vietqr/ip", limit: 60, period: 1.minute) do |req|
-    req.ip if req.path == "/api/v1/webhooks/vietqr" && req.post?
+  # Custom response for throttled requests
+  self.throttled_responder = lambda do |env|
+    [ 429,  { 'Content-Type' => 'application/json' }, [ { success: false, message: "Quá nhiều yêu cầu. Vui lòng thử lại sau ít phút." }.to_json ] ]
   end
 end
