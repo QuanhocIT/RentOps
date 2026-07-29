@@ -113,6 +113,8 @@ const navItems = [
   { name: 'Tiện ích phòng', path: '/amenities', icon: '🛋️' },
   { name: 'Quản lý Tài sản', path: '/assets', icon: '📦' },
   { name: 'Cổng Khách Thuê', path: '/tenant-portal', icon: '📱' },
+  { name: 'Khôi phục Dữ liệu', path: '/trash', icon: '♻️' },
+  { name: 'Super Admin Console', path: '/super-admin', icon: '⚙️' },
   { name: 'Chi phí vận hành', path: '/expenses', icon: '📊' },
   { name: 'Báo cáo tài chính', path: '/reports', icon: '📈' },
   { name: 'Cấu hình VietQR', path: '/settings', icon: '⚙️' },

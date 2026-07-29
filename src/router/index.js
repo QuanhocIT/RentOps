@@ -17,6 +17,8 @@ import SettingsView from '../views/SettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
 import AssetsView from '../views/AssetsView.vue'
 import TenantPortalView from '../views/TenantPortalView.vue'
+import SuperAdminView from '../views/SuperAdminView.vue'
+import TrashView from '../views/TrashView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -89,6 +91,16 @@ const routes = [
     path: '/tenant-portal',
     name: 'TenantPortal',
     component: TenantPortalView
+  },
+  {
+    path: '/super-admin',
+    name: 'SuperAdmin',
+    component: SuperAdminView
+  },
+  {
+    path: '/trash',
+    name: 'Trash',
+    component: TrashView
   },
   {
     path: '/expenses',
