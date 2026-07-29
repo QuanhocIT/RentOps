@@ -21,11 +21,20 @@ import SuperAdminView from '../views/SuperAdminView.vue'
 import TrashView from '../views/TrashView.vue'
 import { useAuthStore } from '../stores/auth'
 
+import LandingView from '../views/LandingView.vue'
+
 const routes = [
+  {
+    path: '/landing',
+    name: 'Landing',
+    component: LandingView,
+    meta: { public: true }
+  },
   {
     path: '/login',
     name: 'Login',
-    component: LoginView
+    component: LoginView,
+    meta: { public: true }
   },
   {
     path: '/',
@@ -131,11 +140,13 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const authStore = useAuthStore()
-  if (to.name !== 'Login' && !authStore.isAuthenticated) {
-    return { name: 'Login' }
+  const isPublic = to.meta?.public || to.name === 'Login' || to.name === 'Landing'
+
+  if (!isPublic && !authStore.isAuthenticated) {
+    return { name: 'Landing' }
   }
 
-  if (to.name === 'Login' && authStore.isAuthenticated) {
+  if ((to.name === 'Login' || to.name === 'Landing') && authStore.isAuthenticated) {
     return { name: 'Dashboard' }
   }
 })
