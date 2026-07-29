@@ -3,12 +3,20 @@ module Api
     class ContractsController < BaseController
       def index
         contracts = Contract.kept.where(tenant_id: current_tenant_record&.id)
-        contracts = contracts.select(:id, :tenant_id, :room_id, :renter_id, :contract_code, :status, :start_date, :end_date, :created_at).order(created_at: :desc)
+        contracts = contracts.includes(:room, :renter).order(created_at: :desc)
+
+        data = contracts.map do |c|
+          c.as_json.merge(
+            room_number: c.room&.room_number,
+            property_name: c.room&.property_name,
+            renter_name: c.renter&.full_name
+          )
+        end
 
         render_json_success(
-          data: contracts.as_json,
+          data: data,
           message: "Lấy danh sách hợp đồng thành công",
-          meta: { total_items: contracts.count }
+          meta: { total_items: data.size }
         )
       end
 
@@ -17,7 +25,16 @@ module Api
 
         if contract.save
           room = contract.room
-          room.update(status: :occupied) if room&.respond_to?(:status=)
+          room.update(status: :occupied) if room
+
+          AuditLog.log_action(
+            tenant: current_tenant_record,
+            user: current_user,
+            action: "CREATE_CONTRACT",
+            record: contract,
+            payload: { contract_code: contract.contract_code, room_number: room&.room_number }
+          )
+
           render_json_success(data: contract.as_json, message: "Tạo hợp đồng thành công", status: :created)
         else
           render_json_error(message: "Không thể tạo hợp đồng", errors: contract.errors.full_messages)
@@ -26,13 +43,42 @@ module Api
 
       def checkout
         contract = Contract.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
-        contract.update(status: :ended, end_date: Date.current)
 
-        if contract.room&.respond_to?(:status=)
-          contract.room.update(status: :vacant)
+        deduction_amount = params[:deduction_amount].to_f
+        deduction_reason = params[:deduction_reason].presence || "Khấu trừ thanh lý"
+
+        deposit = contract.deposit_amount.to_f
+        refund_amount = [deposit - deduction_amount, 0].max
+
+        contract.update!(status: :ended, end_date: Date.current)
+
+        if contract.room
+          contract.room.update!(status: :vacant)
         end
 
-        render_json_success(data: contract.as_json, message: "Thanh lý hợp đồng thành công")
+        AuditLog.log_action(
+          tenant: current_tenant_record,
+          user: current_user,
+          action: "CHECKOUT_CONTRACT",
+          record: contract,
+          payload: {
+            contract_code: contract.contract_code,
+            deposit_amount: deposit,
+            deduction_amount: deduction_amount,
+            refund_amount: refund_amount,
+            reason: deduction_reason
+          }
+        )
+
+        render_json_success(
+          data: contract.as_json.merge(
+            deposit_amount: deposit,
+            deduction_amount: deduction_amount,
+            refund_amount: refund_amount,
+            deduction_reason: deduction_reason
+          ),
+          message: "Thanh lý hợp đồng thành công"
+        )
       end
 
       def destroy

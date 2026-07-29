@@ -3,11 +3,10 @@ module Api
     class RoomsController < BaseController
       def index
         rooms = Room.kept.where(tenant_id: current_tenant_record&.id)
-        rooms = rooms.select(:id, :tenant_id, :property_name, :room_number, :price, :status, :created_at)
 
         rooms = rooms.where(status: Room.statuses[params[:status]]) if params[:status].present? && Room.statuses.key?(params[:status])
 
-        room_list = rooms.order(:room_number)
+        room_list = rooms.order(:floor, :room_number)
 
         render_json_success(
           data: room_list.as_json,
@@ -17,7 +16,8 @@ module Api
             summary: {
               vacant: room_list.where(status: Room.statuses[:vacant]).count,
               occupied: room_list.where(status: Room.statuses[:occupied]).count,
-              reserved: room_list.where(status: Room.statuses[:reserved]).count
+              reserved: room_list.where(status: Room.statuses[:reserved]).count,
+              maintenance: room_list.where(status: Room.statuses[:maintenance]).count
             }
           }
         )
@@ -53,7 +53,7 @@ module Api
       private
 
       def room_params
-        params.require(:room).permit(:property_name, :room_number, :price, :status)
+        params.require(:room).permit(:property_id, :property_name, :room_number, :price, :status, :floor, :area)
       end
     end
   end
