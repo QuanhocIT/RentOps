@@ -1,0 +1,356 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANT (SaaS customer – a landlord or property management company)
+// ─────────────────────────────────────────────────────────────────────────────
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique // used for subdomain / API routing
+  email       String   @unique
+  phone       String?
+  address     String?
+  logoUrl     String?
+  plan        Plan     @default(BASIC)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  properties  Property[]
+  roomTypes   RoomType[]
+
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER  (belongs to a tenant)
+// ─────────────────────────────────────────────────────────────────────────────
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String
+  email        String
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         UserRole  @default(STAFF)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contracts    Contract[]
+  invoicesCreated Invoice[] @relation("InvoiceCreatedBy")
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROPERTY  (building / block of rooms)
+// ─────────────────────────────────────────────────────────────────────────────
+model Property {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  address     String
+  city        String
+  district    String?
+  ward        String?
+  description String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  rooms       Room[]
+
+  @@map("properties")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOM TYPE  (template: studio, 1-bedroom, …)
+// ─────────────────────────────────────────────────────────────────────────────
+model RoomType {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  baseRent    Decimal  @db.Decimal(15, 2)
+  area        Decimal? @db.Decimal(8, 2)  // m²
+  maxOccupants Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  rooms       Room[]
+
+  @@unique([tenantId, name])
+  @@map("room_types")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOM
+// ─────────────────────────────────────────────────────────────────────────────
+model Room {
+  id           String     @id @default(uuid())
+  propertyId   String
+  roomTypeId   String?
+  number       String     // e.g. "101", "A-02"
+  floor        Int?
+  area         Decimal?   @db.Decimal(8, 2)
+  rentPrice    Decimal    @db.Decimal(15, 2)
+  depositAmount Decimal   @db.Decimal(15, 2)
+  status       RoomStatus @default(AVAILABLE)
+  description  String?
+  imageUrl     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  property     Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType     RoomType?  @relation(fields: [roomTypeId], references: [id])
+  contracts    Contract[]
+  utilityReadings UtilityReading[]
+
+  @@unique([propertyId, number])
+  @@map("rooms")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENTER  (the person renting – not a SaaS user)
+// ─────────────────────────────────────────────────────────────────────────────
+model Renter {
+  id           String    @id @default(uuid())
+  tenantId     String    // the SaaS tenant who owns this record
+  fullName     String
+  email        String?
+  phone        String
+  idNumber     String?   // national ID / passport
+  idType       IdType    @default(NATIONAL_ID)
+  dateOfBirth  DateTime?
+  permanentAddress String?
+  temporaryAddress String?
+  notes        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  contracts    Contract[]
+
+  @@unique([tenantId, phone])
+  @@map("renters")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTRACT  (rental agreement)
+// ─────────────────────────────────────────────────────────────────────────────
+model Contract {
+  id            String         @id @default(uuid())
+  tenantId      String
+  roomId        String
+  renterId      String
+  createdById   String
+  contractCode  String
+  startDate     DateTime
+  endDate       DateTime?
+  rentAmount    Decimal        @db.Decimal(15, 2)
+  depositAmount Decimal        @db.Decimal(15, 2)
+  paymentDay    Int            @default(5)  // day of month
+  status        ContractStatus @default(ACTIVE)
+  notes         String?
+  signedAt      DateTime?
+  terminatedAt  DateTime?
+  terminationReason String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  room          Room           @relation(fields: [roomId], references: [id])
+  renter        Renter         @relation(fields: [renterId], references: [id])
+  createdBy     User           @relation(fields: [createdById], references: [id])
+  invoices      Invoice[]
+
+  @@unique([tenantId, contractCode])
+  @@map("contracts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY READING  (electricity / water meters)
+// ─────────────────────────────────────────────────────────────────────────────
+model UtilityReading {
+  id           String      @id @default(uuid())
+  tenantId     String
+  roomId       String
+  type         UtilityType
+  readingDate  DateTime
+  previousReading Decimal  @db.Decimal(12, 2)
+  currentReading  Decimal  @db.Decimal(12, 2)
+  unitPrice    Decimal     @db.Decimal(12, 4)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  room         Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@map("utility_readings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVOICE  (monthly billing)
+// ─────────────────────────────────────────────────────────────────────────────
+model Invoice {
+  id            String        @id @default(uuid())
+  tenantId      String
+  contractId    String
+  createdById   String
+  invoiceCode   String
+  billingMonth  Int           // 1-12
+  billingYear   Int
+  dueDate       DateTime
+  status        InvoiceStatus @default(PENDING)
+  totalAmount   Decimal       @db.Decimal(15, 2)
+  paidAmount    Decimal       @db.Decimal(15, 2) @default(0)
+  notes         String?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  contract      Contract      @relation(fields: [contractId], references: [id])
+  createdBy     User          @relation("InvoiceCreatedBy", fields: [createdById], references: [id])
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  @@unique([tenantId, invoiceCode])
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVOICE ITEM  (line items)
+// ─────────────────────────────────────────────────────────────────────────────
+model InvoiceItem {
+  id               String          @id @default(uuid())
+  invoiceId        String
+  utilityReadingId String?
+  type             InvoiceItemType
+  description      String
+  quantity         Decimal         @db.Decimal(12, 4)
+  unitPrice        Decimal         @db.Decimal(12, 4)
+  amount           Decimal         @db.Decimal(15, 2)
+  createdAt        DateTime        @default(now())
+
+  // Relations
+  invoice          Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  utilityReading   UtilityReading? @relation(fields: [utilityReadingId], references: [id])
+
+  @@map("invoice_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYMENT  (records of money received)
+// ─────────────────────────────────────────────────────────────────────────────
+model Payment {
+  id            String        @id @default(uuid())
+  tenantId      String
+  invoiceId     String
+  amount        Decimal       @db.Decimal(15, 2)
+  method        PaymentMethod @default(CASH)
+  reference     String?       // bank reference / transaction ID
+  paidAt        DateTime      @default(now())
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  // Relations
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum UserRole {
+  OWNER        // full access within tenant
+  MANAGER      // property manager
+  STAFF        // limited access
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  INACTIVE
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoiceItemType {
+  RENT
+  ELECTRICITY
+  WATER
+  INTERNET
+  PARKING
+  SERVICE
+  OTHER
+}
+
+enum UtilityType {
+  ELECTRICITY
+  WATER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOMO
+  ZALOPAY
+  VNPAY
+  OTHER
+}
+
+enum IdType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVER_LICENSE
+  OTHER
+}
