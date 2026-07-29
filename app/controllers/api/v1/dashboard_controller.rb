@@ -24,6 +24,39 @@ module Api
 
         net_profit_estimate = paid_billed - total_expenses
 
+        # Property performance breakdown
+        properties = Property.kept.where(tenant_id: tenant_id)
+        by_property = properties.map do |prop|
+          p_rooms = rooms.where(property_id: prop.id)
+          p_total = p_rooms.count
+          p_occupied = p_rooms.where(status: :occupied).count
+          p_rate = p_total.positive? ? ((p_occupied.to_f / p_total) * 100).round(1) : 0.0
+          p_contracts = contracts.joins(:room).where(rooms: { property_id: prop.id })
+          p_revenue = p_contracts.sum(:monthly_rent)
+          p_bills = bills.joins(:room).where(rooms: { property_id: prop.id })
+          p_paid = p_bills.where(status: :paid).sum(:total_amount)
+          p_expenses = expenses.where(property_id: prop.id).sum(:amount)
+
+          {
+            id: prop.id,
+            name: prop.name,
+            total_rooms: p_total,
+            occupied_rooms: p_occupied,
+            occupancy_rate: p_rate,
+            revenue_estimate: p_revenue,
+            paid_billed: p_paid,
+            expenses: p_expenses,
+            net_profit: p_paid - p_expenses
+          }
+        end
+
+        # Expense categories breakdown
+        expense_by_cat = expenses.group(:category).sum(:amount)
+        expense_categories = expense_by_cat.map do |cat, amt|
+          pct = total_expenses.positive? ? ((amt.to_f / total_expenses) * 100).round(1) : 0.0
+          { category: cat.presence || "Khác", amount: amt, percentage: pct }
+        end
+
         render_json_success(
           data: {
             counters: {
@@ -41,7 +74,9 @@ module Api
               pending_billed: pending_billed,
               total_expenses: total_expenses,
               net_profit_estimate: net_profit_estimate
-            }
+            },
+            by_property: by_property,
+            expense_categories: expense_categories
           },
           message: "Lấy thông tin dashboard tổng quan thành công"
         )

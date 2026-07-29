@@ -75,7 +75,7 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h4 class="font-bold text-slate-900 text-sm">🛠️ Gửi Yêu Cầu Báo Hỏng</h4>
           <p class="text-xs text-slate-500">Gửi ticket sự cố thiết bị (điều hòa, đường nước) cho Ban quản lý.</p>
-          <button @click="alert('Tạo ticket sự cố thành công! Ban quản lý sẽ liên hệ sửa chữa.')" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition">
+          <button @click="showTicketModal = true" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition">
             🚨 Báo Hỏng Sự Cố
           </button>
         </div>
@@ -94,6 +94,44 @@
         @close="showSignModal = false"
         @save="handleSignSave"
       />
+
+      <!-- Tenant Ticket Modal -->
+      <div v-if="showTicketModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-bold text-slate-900">🚨 Gửi Báo Hỏng Sự Cố</h3>
+            <button @click="showTicketModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+
+          <form @submit.prevent="submitTicket" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tiêu đề sự cố</label>
+              <input v-model="ticketForm.title" required type="text" placeholder="Ví dụ: Rò rỉ nước bồn rửa mặt, Hỏng máy lạnh..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-rose-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mức độ ưu tiên</label>
+              <select v-model="ticketForm.priority" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white">
+                <option value="medium">Bình thường</option>
+                <option value="high">Báo gấp</option>
+                <option value="urgent">Khẩn cấp (Cần xử lý ngay)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mô tả sự cố</label>
+              <textarea v-model="ticketForm.description" rows="3" placeholder="Mô tả cụ thể để ban quản lý nắm tình hình..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2">
+              <button type="button" @click="showTicketModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-xl text-sm">Hủy</button>
+              <button type="submit" :disabled="submittingTicket" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-rose-600/30">
+                {{ submittingTicket ? 'Đang gửi...' : 'Gửi Yêu Cầu' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -103,9 +141,18 @@ import { ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import PaymentQrModal from '../components/PaymentQrModal.vue'
 import ESignatureModal from '../components/ESignatureModal.vue'
+import api from '../services/api'
 
 const showPayQr = ref(false)
 const showSignModal = ref(false)
+const showTicketModal = ref(false)
+const submittingTicket = ref(false)
+
+const ticketForm = ref({
+  title: '',
+  priority: 'medium',
+  description: ''
+})
 
 const demoBill = ref({
   bill_code: 'HD2026-07-102',
@@ -123,5 +170,19 @@ const handleSuccess = (bill) => {
 
 const handleSignSave = (signatureUrl) => {
   alert('Đã lưu chữ ký điện tử của bạn vào hợp đồng thành công!')
+}
+
+const submitTicket = async () => {
+  submittingTicket.value = true
+  try {
+    await api.post('/maintenance_requests', { maintenance_request: ticketForm.value })
+    alert('Tạo ticket báo sự cố thành công! Ban quản lý sẽ tiếp nhận và liên hệ hỗ trợ.')
+    showTicketModal.value = false
+    ticketForm.value = { title: '', priority: 'medium', description: '' }
+  } catch (err) {
+    alert(err?.message || 'Không thể gửi ticket sự cố')
+  } finally {
+    submittingTicket.value = false
+  }
 }
 </script>

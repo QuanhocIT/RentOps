@@ -72,6 +72,63 @@
           </div>
         </div>
       </div>
+
+      <!-- Property Performance Breakdown Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-slate-900 text-lg">Phân Tích Hiệu Quả Theo Tòa Nhà / Cơ Sở</h3>
+          <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full uppercase">Property Breakdown</span>
+        </div>
+
+        <div v-if="byProperty.length === 0" class="text-slate-400 text-sm py-4 text-center">Chưa có dữ liệu tòa nhà.</div>
+
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Tên Tòa Nhà</th>
+                <th class="py-3 px-4">Số Phòng / Lấp Đầy</th>
+                <th class="py-3 px-4">Doanh Thu Dự Kiến</th>
+                <th class="py-3 px-4">Đã Thu Thực Tế</th>
+                <th class="py-3 px-4">Chi Phí Vận Hành</th>
+                <th class="py-3 px-4 text-right">Lợi Nhuận Ròng</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-mono">
+              <tr v-for="p in byProperty" :key="p.id" class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-bold text-slate-900 font-sans">{{ p.name }}</td>
+                <td class="py-3 px-4 font-sans text-xs">
+                  <span class="font-bold text-slate-800">{{ p.occupied_rooms }}/{{ p.total_rooms }}</span>
+                  <span class="text-slate-400 ml-1">({{ p.occupancy_rate }}%)</span>
+                </td>
+                <td class="py-3 px-4 text-slate-900">{{ formatCurrency(p.revenue_estimate) }}</td>
+                <td class="py-3 px-4 text-emerald-600 font-bold">{{ formatCurrency(p.paid_billed) }}</td>
+                <td class="py-3 px-4 text-rose-600">{{ formatCurrency(p.expenses) }}</td>
+                <td class="py-3 px-4 text-right font-black" :class="p.net_profit >= 0 ? 'text-indigo-600' : 'text-rose-600'">
+                  {{ formatCurrency(p.net_profit) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Expense Categories Breakdown -->
+      <div v-if="expenseCategories.length > 0" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <h3 class="font-bold text-slate-900 text-lg">Phân Tốc Chi Phí Vận Hành Theo Danh Mục</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="cat in expenseCategories" :key="cat.category" class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div class="flex justify-between items-center text-sm">
+              <span class="font-bold text-slate-800 capitalize">{{ cat.category }}</span>
+              <span class="font-mono text-rose-600 font-bold">{{ formatCurrency(cat.amount) }}</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-rose-500 h-full rounded-full" :style="{ width: `${cat.percentage}%` }"></div>
+            </div>
+            <div class="text-right text-xs text-slate-500 font-mono">{{ cat.percentage }}% tổng chi phí</div>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -96,6 +153,9 @@ const counters = ref({
   occupied_rooms: 0,
   occupancy_rate: 0
 })
+
+const byProperty = ref([])
+const expenseCategories = ref([])
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
@@ -122,7 +182,6 @@ const exportCSV = () => {
 }
 
 const collectionRate = computed(() => {
-
   if (!financials.value.total_billed) return 0
   return Math.round((financials.value.paid_billed / financials.value.total_billed) * 100)
 })
@@ -134,6 +193,8 @@ const loadData = async () => {
     if (res?.data) {
       financials.value = res.data.financials || {}
       counters.value = res.data.counters || {}
+      byProperty.value = res.data.by_property || []
+      expenseCategories.value = res.data.expense_categories || []
     }
   } catch (err) {
     console.warn('API error fetching summary report:', err)

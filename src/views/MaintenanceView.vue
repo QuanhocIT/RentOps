@@ -15,11 +15,53 @@
         </button>
       </div>
 
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase font-bold text-slate-400">Tổng Số Sự Cố</div>
+            <div class="text-2xl font-black text-slate-900 mt-1 font-mono">{{ requests.length }}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">🔧</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase font-bold text-amber-600">Đang Chờ Xử Lý</div>
+            <div class="text-2xl font-black text-amber-600 mt-1 font-mono">{{ pendingCount }}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">⏳</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs uppercase font-bold text-rose-600">Tổng Chi Phí Sửa Chữa</div>
+            <div class="text-2xl font-black text-rose-600 mt-1 font-mono">{{ formatCurrency(totalCost) }}</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-lg">💸</div>
+        </div>
+      </div>
+
       <!-- Maintenance List -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div class="font-bold text-slate-900 text-base">Danh Sách Yêu Cầu Sửa Chữa</div>
-          <button @click="loadData" class="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200" title="Tải lại">🔄</button>
+          <div class="flex items-center gap-3">
+            <select v-model="filterStatus" @change="loadData" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Tất cả trạng thái</option>
+              <option value="pending">Chờ xử lý</option>
+              <option value="in_progress">Đang sửa</option>
+              <option value="resolved">Đã hoàn thành</option>
+            </select>
+            <select v-model="filterPriority" @change="loadData" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Tất cả mức ưu tiên</option>
+              <option value="urgent">Khẩn cấp</option>
+              <option value="high">Cao</option>
+              <option value="medium">Trung bình</option>
+              <option value="low">Thấp</option>
+            </select>
+            <button @click="loadData" class="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200" title="Tải lại">🔄</button>
+          </div>
         </div>
 
         <div v-if="loading" class="p-8 text-center text-slate-500">Đang tải danh sách sự cố...</div>
@@ -137,6 +179,8 @@ const rooms = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
+const filterStatus = ref('')
+const filterPriority = ref('')
 
 const form = ref({
   title: '',
@@ -146,6 +190,14 @@ const form = ref({
 })
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+
+const pendingCount = computed(() => {
+  return requests.value.filter(r => r.status === 'pending' || r.status === 'in_progress' || r.status === 0 || r.status === 1).length
+})
+
+const totalCost = computed(() => {
+  return requests.value.reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
+})
 
 const getPriorityBadge = (p) => {
   if (p === 'urgent' || p === 3) return 'bg-rose-100 text-rose-800'
@@ -168,8 +220,12 @@ const getStatusLabel = (s) => {
 const loadData = async () => {
   loading.value = true
   try {
+    const params = {}
+    if (filterStatus.value) params.status = filterStatus.value
+    if (filterPriority.value) params.priority = filterPriority.value
+
     const [resReqs, resRooms] = await Promise.all([
-      api.get('/maintenance_requests'),
+      api.get('/maintenance_requests', { params }),
       api.get('/rooms')
     ])
     requests.value = resReqs?.data || []

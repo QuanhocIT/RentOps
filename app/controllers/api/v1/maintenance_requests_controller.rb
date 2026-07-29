@@ -4,6 +4,14 @@ module Api
       def index
         requests = MaintenanceRequest.kept.where(tenant_id: current_tenant_record&.id).includes(:room, :renter).order(created_at: :desc)
 
+        requests = requests.where(status: params[:status]) if params[:status].present?
+        requests = requests.where(priority: params[:priority]) if params[:priority].present?
+        if params[:property_id].present?
+          requests = requests.joins(:room).where(rooms: { property_id: params[:property_id] })
+        end
+
+        total_cost = requests.sum(:cost)
+
         data = requests.map do |req|
           req.as_json.merge(
             room_number: req.room&.room_number,
@@ -15,7 +23,7 @@ module Api
         render_json_success(
           data: data,
           message: "Lấy danh sách sự cố sửa chữa thành công",
-          meta: { total_items: data.size }
+          meta: { total_items: data.size, total_cost: total_cost }
         )
       end
 
