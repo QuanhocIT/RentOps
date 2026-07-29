@@ -7,9 +7,14 @@
           <p class="text-slate-500 text-sm mt-0.5">Tổng hợp doanh thu, dòng tiền thực thu, chi phí vận hành và lợi nhuận ròng</p>
         </div>
 
-        <button @click="loadData" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
-          🔄 Cập nhật báo cáo
-        </button>
+        <div class="flex items-center space-x-3">
+          <button @click="exportCSV" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-sm transition">
+            📊 Xuất Báo Cáo Excel/CSV
+          </button>
+          <button @click="loadData" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
+            🔄 Cập nhật báo cáo
+          </button>
+        </div>
       </div>
 
       <!-- Financial Metrics Grid -->
@@ -94,7 +99,30 @@ const counters = ref({
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
+const exportCSV = () => {
+  const rows = [
+    ['CHỈ SỐ BÁO CÁO TÀI CHÍNH RENTOPS', 'GIÁ TRỊ'],
+    ['Doanh thu ước tính', financials.value.monthly_revenue_estimate],
+    ['Đã thu thực tế', financials.value.paid_billed],
+    ['Tổng chi phí vận hành', financials.value.total_expenses],
+    ['Lợi nhuận ròng', financials.value.net_profit_estimate],
+    ['Tổng số phòng', counters.value.total_rooms],
+    ['Phòng đang ở', counters.value.occupied_rooms],
+    ['Tỷ lệ lấp đầy (%)', counters.value.occupancy_rate + '%']
+  ]
+
+  let csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + rows.map(e => e.join(',')).join('\n')
+  const encodedUri = encodeURI(csvContent)
+  const link = document.createElement('a')
+  link.setAttribute('href', encodedUri)
+  link.setAttribute('download', `RentOps_Financial_Report_${new Date().toISOString().slice(0,10)}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 const collectionRate = computed(() => {
+
   if (!financials.value.total_billed) return 0
   return Math.round((financials.value.paid_billed / financials.value.total_billed) * 100)
 })

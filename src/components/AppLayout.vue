@@ -111,6 +111,8 @@ const navItems = [
   { name: 'Nhắc nợ ZNS / SMS', path: '/notifications', icon: '📩' },
   { name: 'Sự cố & Bảo trì', path: '/maintenance', icon: '🔧' },
   { name: 'Tiện ích phòng', path: '/amenities', icon: '🛋️' },
+  { name: 'Quản lý Tài sản', path: '/assets', icon: '📦' },
+  { name: 'Cổng Khách Thuê', path: '/tenant-portal', icon: '📱' },
   { name: 'Chi phí vận hành', path: '/expenses', icon: '📊' },
   { name: 'Báo cáo tài chính', path: '/reports', icon: '📈' },
   { name: 'Cấu hình VietQR', path: '/settings', icon: '⚙️' },

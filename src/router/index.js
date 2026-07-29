@@ -15,6 +15,8 @@ import AmenitiesView from '../views/AmenitiesView.vue'
 import AuditLogsView from '../views/AuditLogsView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
+import AssetsView from '../views/AssetsView.vue'
+import TenantPortalView from '../views/TenantPortalView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -77,6 +79,16 @@ const routes = [
     path: '/amenities',
     name: 'Amenities',
     component: AmenitiesView
+  },
+  {
+    path: '/assets',
+    name: 'Assets',
+    component: AssetsView
+  },
+  {
+    path: '/tenant-portal',
+    name: 'TenantPortal',
+    component: TenantPortalView
   },
   {
     path: '/expenses',
