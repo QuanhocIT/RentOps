@@ -1,10 +1,12 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="space-y-6 animate-slide-up">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Khu Trọ & Tòa Nhà</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Quản lý các tòa nhà, dãy nhà trọ và địa chỉ cụm cho thuê</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>🏛️</span> Khu Trọ & Tòa Nhà
+          </h1>
+          <p class="text-slate-500 text-xs mt-1 font-medium">Quản lý các tòa nhà, dãy nhà trọ và địa chỉ cụm cho thuê</p>
         </div>
       </div>
 

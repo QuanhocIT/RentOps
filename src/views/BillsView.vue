@@ -1,33 +1,108 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
+    <div class="space-y-6 animate-slide-up">
       <!-- Title & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Quản Lý Hóa Đơn & VietQR</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Tạo hóa đơn tháng, tự động tính tiền phòng + điện nước và xuất mã VietQR thanh toán</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>💳</span> Quản Lý Hóa Đơn & VietQR
+          </h1>
+          <p class="text-slate-500 text-xs mt-1 font-medium">Tạo hóa đơn tháng, tự động tính tiền phòng + điện nước và xuất mã VietQR thanh toán</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            @click="sendBatchDebtReminders"
+            :disabled="submittingBatchReminder"
+            class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm shadow-md shadow-amber-600/30 transition"
+          >
+            <span>📩</span> {{ submittingBatchReminder ? 'Đang gửi...' : 'Nhắc nợ 1-Click' }}
+          </button>
+
           <button
             @click="exportCSV"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-sm shadow-md transition"
+            class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-sm shadow-md transition"
           >
             <span>📥</span> Xuất File CSV
           </button>
+
+          <button
+            @click="showBatchModal = true"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold text-sm shadow-md shadow-purple-600/30 transition"
+          >
+            <span>⚡</span> Sinh hàng loạt
+          </button>
+
           <button
             @click="showCreateModal = true"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
           >
-            <span>✨</span> Sinh hóa đơn mới
+            <span>✨</span> Sinh 1 phòng
           </button>
+        </div>
+      </div>
+
+      <!-- Financial Statistics Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng Hóa Đơn</div>
+            <div class="text-2xl font-black text-slate-900 mt-1">{{ bills.length }}</div>
+            <div class="text-xs text-slate-500 mt-0.5">Tổng giá trị: {{ formatCurrency(totalBilledAmount) }}</div>
+          </div>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            📄
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Đã Thanh Toán</div>
+            <div class="text-2xl font-black text-emerald-700 mt-1">{{ paidCount }} phòng</div>
+            <div class="text-xs text-emerald-600 font-semibold mt-0.5">Đã thu: {{ formatCurrency(totalPaidAmount) }}</div>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            ✅
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between">
+          <div>
+            <div class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Chưa Thanh Toán</div>
+            <div class="text-2xl font-black text-rose-700 mt-1">{{ pendingCount }} phòng</div>
+            <div class="text-xs text-rose-600 font-semibold mt-0.5">Còn nợ: {{ formatCurrency(totalPendingAmount) }}</div>
+          </div>
+          <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-xl font-bold">
+            ⚠️
+          </div>
         </div>
       </div>
 
       <!-- Bills List Table -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div class="font-bold text-slate-900 text-base">Danh Sách Hóa Đơn Hàng Tháng</div>
+          <!-- Filter status tabs -->
+          <div class="flex items-center gap-2">
+            <button
+              @click="statusFilter = 'all'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', statusFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >
+              Tất cả ({{ bills.length }})
+            </button>
+            <button
+              @click="statusFilter = 'pending'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', statusFilter === 'pending' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 hover:bg-rose-100']"
+            >
+              Chưa trả ({{ pendingCount }})
+            </button>
+            <button
+              @click="statusFilter = 'paid'"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition', statusFilter === 'paid' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100']"
+            >
+              Đã trả ({{ paidCount }})
+            </button>
+          </div>
+
           <div class="flex items-center gap-3">
             <input
               v-model="searchQuery"
@@ -60,7 +135,7 @@
                 <th class="px-6 py-4">Điện Nước</th>
                 <th class="px-6 py-4">Tổng Tiền</th>
                 <th class="px-6 py-4">Trạng Thái</th>
-                <th class="px-6 py-4 text-right">In A4 / VietQR / Nhắc Nợ</th>
+                <th class="px-6 py-4 text-right">Thao Tác</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -83,6 +158,15 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                  <button
+                    v-if="b.status !== 'paid' && b.status !== 3"
+                    @click="openPayModal(b)"
+                    class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 text-white font-semibold rounded-lg text-xs hover:bg-emerald-700 shadow-sm transition"
+                    title="Xác nhận khách đã thanh toán"
+                  >
+                    <span>💰</span> Đã thu tiền
+                  </button>
+
                   <button
                     v-if="b.status !== 'paid' && b.status !== 3"
                     @click="sendDebtReminder(b.id)"
@@ -116,7 +200,124 @@
         </div>
       </div>
 
-      <!-- Create Bill Modal -->
+      <!-- Batch Bill Generation Modal -->
+      <div v-if="showBatchModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">⚡ Sinh Hóa Đơn Hàng Loạt</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Tự động quét tất cả các phòng đang có hợp đồng hoạt động</p>
+            </div>
+            <button @click="showBatchModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+
+          <form @submit.prevent="runBatchGenerate" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kỳ tháng sinh hóa đơn</label>
+              <input
+                v-model="batchForm.billing_month"
+                type="month"
+                required
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-purple-500 font-bold"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Phí dịch vụ mặc định (VNĐ)</label>
+              <input
+                v-model.number="batchForm.service_fee"
+                type="number"
+                placeholder="150000"
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"
+              />
+              <p class="text-xs text-slate-400 mt-1">Bao gồm vệ sinh, wifi, rác chung...</p>
+            </div>
+
+            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 text-xs text-purple-800 space-y-1">
+              <div class="font-bold text-sm text-purple-900">ℹ️ Cách thức hoạt động:</div>
+              <div>• Tiền phòng tự động lấy từ Hợp Đồng của từng phòng.</div>
+              <div>• Tiền Điện/Nước tự động tính theo Chỉ số đã ghi trong tháng.</div>
+              <div>• Bỏ qua các phòng đã được tạo hóa đơn trong tháng này.</div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                @click="showBatchModal = false"
+                class="px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 text-sm"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                :disabled="submittingBatch"
+                class="px-5 py-2 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 text-sm shadow-md shadow-purple-600/30"
+              >
+                {{ submittingBatch ? 'Đang tự động sinh...' : '🚀 Bắt đầu sinh ngay' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Mark Paid Modal -->
+      <div v-if="payModalBill" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-bold text-slate-900">Xác Nhận Đã Thu Tiền</h3>
+            <button @click="payModalBill = null" class="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-900 space-y-1">
+            <div class="text-xs font-semibold uppercase text-emerald-700">Hóa đơn: {{ payModalBill.bill_code }}</div>
+            <div class="text-xl font-black">{{ formatCurrency(payModalBill.total_amount) }}</div>
+            <div class="text-xs text-emerald-700">Phòng {{ payModalBill.room_number }} - Kỳ tháng {{ payModalBill.billing_month }}</div>
+          </div>
+
+          <form @submit.prevent="confirmMarkAsPaid" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Hình thức thanh toán</label>
+              <select
+                v-model="payForm.payment_method"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"
+              >
+                <option value="cash">💵 Tiền mặt</option>
+                <option value="bank_transfer">🏦 Chuyển khoản ngân hàng</option>
+                <option value="vietqr">📱 VietQR</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Ghi chú giao dịch</label>
+              <input
+                v-model="payForm.note"
+                type="text"
+                placeholder="Ví dụ: Đã nhận chuyển khoản MB"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"
+              />
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                @click="payModalBill = null"
+                class="px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 text-sm"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                :disabled="submittingPay"
+                class="px-5 py-2 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 text-sm shadow-md shadow-emerald-600/30"
+              >
+                {{ submittingPay ? 'Đang lưu...' : '✅ Hoàn tất thu tiền' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Create Single Bill Modal -->
       <div v-if="showCreateModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -238,14 +439,14 @@
             </div>
             <div class="flex justify-between">
               <span class="text-slate-500 font-sans">Ngân hàng:</span>
-              <strong class="text-slate-900">MB (Nội Địa)</strong>
+              <strong class="text-slate-900">{{ selectedQRBill.bank_code || 'MB' }}</strong>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-500 font-sans">Số tài khoản:</span>
-              <strong class="text-indigo-600">0901234567</strong>
+              <strong class="text-indigo-600">{{ selectedQRBill.bank_account || '0901234567' }}</strong>
             </div>
             <div class="flex justify-between">
-              <span class="text-slate-500 font-sans">Nội dung chuyển khoản:</span>
+              <span class="text-slate-500 font-sans">Nội dung:</span>
               <strong class="text-slate-900 bg-amber-100 px-2 py-0.5 rounded text-xs">{{ selectedQRBill.bill_code }}</strong>
             </div>
           </div>
@@ -279,10 +480,17 @@ const bills = ref([])
 const rooms = ref([])
 const loading = ref(false)
 const submitting = ref(false)
+const submittingBatch = ref(false)
+const submittingPay = ref(false)
+
 const showCreateModal = ref(false)
+const showBatchModal = ref(false)
+const payModalBill = ref(null)
 const selectedQRBill = ref(null)
 const selectedPrintBill = ref(null)
+
 const searchQuery = ref('')
+const statusFilter = ref('all')
 
 const form = ref({
   room_id: '',
@@ -293,13 +501,23 @@ const form = ref({
   due_date: ''
 })
 
+const batchForm = ref({
+  billing_month: new Date().toISOString().slice(0, 7),
+  service_fee: 150000
+})
+
+const payForm = ref({
+  payment_method: 'bank_transfer',
+  note: 'Xác nhận thu tiền qua ngân hàng'
+})
+
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
 const getStatusBadge = (status) => {
-  if (status === 'paid' || status === 3) return 'bg-emerald-100 text-emerald-800'
-  if (status === 'partially_paid' || status === 2) return 'bg-amber-100 text-amber-800'
-  if (status === 'overdue' || status === 4) return 'bg-rose-100 text-rose-800'
-  return 'bg-blue-100 text-blue-800'
+  if (status === 'paid' || status === 3) return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+  if (status === 'partially_paid' || status === 2) return 'bg-amber-100 text-amber-800 border border-amber-200'
+  if (status === 'overdue' || status === 4) return 'bg-rose-100 text-rose-800 border border-rose-200'
+  return 'bg-blue-100 text-blue-800 border border-blue-200'
 }
 
 const getStatusLabel = (status) => {
@@ -327,8 +545,19 @@ const loadBills = async () => {
 
 onMounted(loadBills)
 
+const totalBilledAmount = computed(() => bills.value.reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
+const paidCount = computed(() => bills.value.filter(b => b.status === 'paid' || b.status === 3).length)
+const totalPaidAmount = computed(() => bills.value.filter(b => b.status === 'paid' || b.status === 3).reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
+const pendingCount = computed(() => bills.value.filter(b => b.status !== 'paid' && b.status !== 3).length)
+const totalPendingAmount = computed(() => bills.value.filter(b => b.status !== 'paid' && b.status !== 3).reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
+
 const filteredBills = computed(() => {
   return bills.value.filter(b => {
+    // Status filter
+    if (statusFilter.value === 'paid' && (b.status !== 'paid' && b.status !== 3)) return false
+    if (statusFilter.value === 'pending' && (b.status === 'paid' || b.status === 3)) return false
+
+    // Search query
     if (!searchQuery.value) return true
     const q = searchQuery.value.toLowerCase()
     return String(b.bill_code).toLowerCase().includes(q) ||
@@ -350,9 +579,45 @@ const generateBill = async () => {
   }
 }
 
+const runBatchGenerate = async () => {
+  submittingBatch.value = true
+  try {
+    const res = await api.post('/monthly_bills/batch_generate', batchForm.value)
+    alert(res?.message || 'Đã sinh hóa đơn hàng loạt thành công!')
+    showBatchModal.value = false
+    loadBills()
+  } catch (err) {
+    alert(err?.message || 'Sinh hóa đơn hàng loạt thất bại')
+  } finally {
+    submittingBatch.value = false
+  }
+}
+
+const openPayModal = (bill) => {
+  payModalBill.value = bill
+  payForm.value.note = `Xác nhận thu tiền hóa đơn ${bill.bill_code}`
+}
+
+const confirmMarkAsPaid = async () => {
+  if (!payModalBill.value) return
+  submittingPay.value = true
+  try {
+    const res = await api.post(`/monthly_bills/${payModalBill.value.id}/mark_as_paid`, payForm.value)
+    alert(res?.message || 'Đã xác nhận thanh toán thành công!')
+    payModalBill.value = null
+    loadBills()
+  } catch (err) {
+    alert(err?.message || 'Không thể xác nhận thanh toán')
+  } finally {
+    submittingPay.value = false
+  }
+}
+
 const openQRModal = (bill) => {
   selectedQRBill.value = bill
 }
+
+const submittingBatchReminder = ref(false)
 
 const sendDebtReminder = async (billId) => {
   try {
@@ -360,6 +625,19 @@ const sendDebtReminder = async (billId) => {
     alert(res?.message || 'Đã gửi tin nhắn nhắc nợ thành công!')
   } catch (err) {
     alert(err?.message || 'Gửi nhắc nợ thất bại')
+  }
+}
+
+const sendBatchDebtReminders = async () => {
+  if (!confirm('Bạn có chắc muốn gửi tin nhắn ZNS/SMS nhắc nợ cho TẤT CẢ các phòng chưa nộp tiền?')) return
+  submittingBatchReminder.value = true
+  try {
+    const res = await api.post('/notifications/send_batch_reminders', { billing_month: new Date().toISOString().slice(0, 7) })
+    alert(res?.message || 'Đã gửi tin nhắn nhắc nợ hàng loạt thành công!')
+  } catch (err) {
+    alert(err?.message || 'Có lỗi xảy ra khi gửi tin nhắn hàng loạt')
+  } finally {
+    submittingBatchReminder.value = false
   }
 }
 

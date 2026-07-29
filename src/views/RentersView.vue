@@ -1,15 +1,17 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="space-y-6 animate-slide-up">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Quản Lý Khách Thuê (Cư Dân)</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Lưu trữ thông tin định danh CCCD/CMND, số điện thoại và quê quán khách thuê</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>👥</span> Quản Lý Khách Thuê (Cư Dân)
+          </h1>
+          <p class="text-slate-500 text-xs mt-1 font-medium">Lưu trữ thông tin định danh CCCD/CMND, số điện thoại và quê quán khách thuê</p>
         </div>
 
         <button
           @click="openModal()"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+          class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
         >
           <span>👤</span> Thêm khách thuê mới
         </button>

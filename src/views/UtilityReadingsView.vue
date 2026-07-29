@@ -1,11 +1,13 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
+    <div class="space-y-6 animate-slide-up">
       <!-- Title & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Quản Lý Chỉ Số Điện Nước</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Nhập nhanh ma trận chỉ số công tơ điện nước hoặc quản lý danh sách phòng</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>⚡</span> Quản Lý Chỉ Số Điện Nước
+          </h1>
+          <p class="text-slate-500 text-xs mt-1 font-medium">Nhập nhanh ma trận chỉ số công tơ điện nước hoặc quản lý danh sách phòng</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -19,7 +21,7 @@
             @click="showModal = true"
             class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
           >
-            <span>⚡</span> Nhập phòng đơn lẻ
+            <span>⚡</span> Nhập 1 phòng
           </button>
         </div>
       </div>
@@ -45,9 +47,16 @@
       <!-- BATCH MATRIX INPUT TABLE -->
       <div v-if="activeMode === 'batch'" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
         <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-          <h3 class="font-bold text-slate-900 text-base">⚡ Bảng Ma Trận Nhập Nhanh Điện Nước Kỳ {{ selectedMonth }}</h3>
-          <button @click="saveBatchReadings" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition">
-            ✓ Lưu Tất Cả Chỉ Số Phòng
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">⚡ Bảng Ma Trận Nhập Nhanh Điện Nước Kỳ {{ selectedMonth }}</h3>
+            <p class="text-xs text-slate-500">Nhập trực tiếp số điện/nước mới cho tất cả các phòng và nhấn Lưu</p>
+          </div>
+          <button
+            @click="saveBatchReadings"
+            :disabled="submittingBatch"
+            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition"
+          >
+            {{ submittingBatch ? 'Đang lưu...' : '✓ Lưu Tất Cả Chỉ Số Phòng' }}
           </button>
         </div>
 
@@ -62,6 +71,7 @@
                 <th class="px-4 py-3">Nước cũ</th>
                 <th class="px-4 py-3">Nước mới (m³)</th>
                 <th class="px-4 py-3">💧 Dùng (m³)</th>
+                <th class="px-4 py-3">Cảnh báo</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -85,6 +95,15 @@
                 <td class="px-4 py-3 font-mono font-bold text-blue-600">
                   {{ Math.max(0, (item.water_new || 0) - (item.water_old || 0)) }}
                 </td>
+                <td class="px-4 py-3 text-xs font-bold">
+                  <span v-if="(item.electric_new - item.electric_old) > 250" class="text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                    ⚡ Tiêu thụ cao
+                  </span>
+                  <span v-else-if="(item.water_new - item.water_old) > 15" class="text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    💧 Nước tăng cao
+                  </span>
+                  <span v-else class="text-slate-400 font-normal">Bình thường</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -92,7 +111,7 @@
       </div>
 
       <!-- Readings Table -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div v-else class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div v-if="loading" class="p-8 text-center text-slate-500">
           Đang tải dữ liệu chỉ số điện nước...
         </div>
@@ -266,6 +285,26 @@ import api from '../services/api'
 
 const activeMode = ref('list')
 const batchItems = ref([])
+const loading = ref(false)
+const submitting = ref(false)
+const submittingBatch = ref(false)
+const showModal = ref(false)
+
+const readings = ref([])
+const rooms = ref([])
+const selectedMonth = ref(new Date().toISOString().slice(0, 7))
+
+const form = ref({
+  room_id: '',
+  billing_month: selectedMonth.value,
+  electric_old: 1200,
+  electric_new: 1350,
+  water_old: 40,
+  water_new: 48
+})
+
+const calculatedElectricUsage = computed(() => Math.max(0, (form.value.electric_new || 0) - (form.value.electric_old || 0)))
+const calculatedWaterUsage = computed(() => Math.max(0, (form.value.water_new || 0) - (form.value.water_old || 0)))
 
 const prepareBatchData = () => {
   batchItems.value = rooms.value.map(room => {
@@ -283,41 +322,18 @@ const prepareBatchData = () => {
 }
 
 const saveBatchReadings = async () => {
+  submittingBatch.value = true
   try {
-    const res = await fetch('/api/v1/utility_readings/batch_create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ readings: batchItems.value })
-    })
-
-    const json = await res.json()
-    if (res.ok) {
-      alert(json.message || 'Lưu chỉ số hàng loạt thành công!')
-      activeMode.value = 'list'
-      fetchData()
-    }
+    const res = await api.post('/utility_readings/batch_create', { readings: batchItems.value })
+    alert(res?.message || 'Lưu chỉ số hàng loạt thành công!')
+    activeMode.value = 'list'
+    fetchData()
   } catch (err) {
-    alert('Lỗi lưu chỉ số hàng loạt')
+    alert(err?.message || 'Lỗi lưu chỉ số hàng loạt')
+  } finally {
+    submittingBatch.value = false
   }
 }
-const submitting = ref(false)
-const showModal = ref(false)
-const readings = ref([])
-const rooms = ref([])
-
-const selectedMonth = ref(new Date().toISOString().slice(0, 7))
-
-const form = ref({
-  room_id: '',
-  billing_month: selectedMonth.value,
-  electric_old: 1200,
-  electric_new: 1350,
-  water_old: 40,
-  water_new: 48
-})
-
-const calculatedElectricUsage = computed(() => Math.max(0, (form.value.electric_new || 0) - (form.value.electric_old || 0)))
-const calculatedWaterUsage = computed(() => Math.max(0, (form.value.water_new || 0) - (form.value.water_old || 0)))
 
 const fetchData = async () => {
   loading.value = true

@@ -1,16 +1,18 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
+    <div class="space-y-6 animate-slide-up">
       <!-- Title & Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Chi Phí Vận Hành Tòa Nhà</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Theo dõi chi phí sửa chữa, điện nước chung, bảo trì và tính toán lợi nhuận ròng</p>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>📊</span> Chi Phí Vận Hành Tòa Nhà
+          </h1>
+          <p class="text-slate-500 text-xs mt-1 font-medium">Theo dõi chi phí sửa chữa, điện nước chung, bảo trì và tính toán lợi nhuận ròng</p>
         </div>
 
         <button
           @click="showModal = true"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+          class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
         >
           <span>➕</span> Thêm chi phí mới
         </button>
@@ -51,6 +53,23 @@
 
       <!-- Expenses Table -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              v-for="cat in ['all', 'sửa chữa', 'điện nước chung', 'internet', 'vệ sinh', 'khác']"
+              :key="cat"
+              @click="categoryFilter = cat; fetchData()"
+              :class="['px-3 py-1.5 rounded-xl text-xs font-bold transition capitalize', categoryFilter === cat ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >
+              {{ cat === 'all' ? 'Tất cả danh mục' : cat }}
+            </button>
+          </div>
+
+          <button @click="fetchData" class="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 self-end md:self-auto" title="Tải lại">
+            🔄
+          </button>
+        </div>
+
         <div v-if="loading" class="p-8 text-center text-slate-500">
           Đang tải dữ liệu chi phí vận hành...
         </div>
@@ -119,6 +138,19 @@
                 placeholder="Ví dụ: Thay bóng đèn hành lang, Tiền mạng Wifi..."
                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500"
               />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Thuộc Tòa nhà / Khu trọ</label>
+              <select
+                v-model="form.property_id"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">-- Chi phí chung (Tất cả tòa nhà) --</option>
+                <option v-for="p in properties" :key="p.id" :value="p.id">
+                  {{ p.name }}
+                </option>
+              </select>
             </div>
 
             <div>
@@ -200,9 +232,12 @@ const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
 const expenses = ref([])
+const properties = ref([])
 const totalAmount = ref(0)
+const categoryFilter = ref('all')
 
 const form = ref({
+  property_id: '',
   title: '',
   category: 'sửa chữa',
   amount: 0,
@@ -232,9 +267,17 @@ const topCategory = computed(() => {
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await api.get('/operating_expenses')
-    expenses.value = res?.data || []
-    totalAmount.value = res?.meta?.total_amount || 0
+    let url = '/operating_expenses'
+    if (categoryFilter.value !== 'all') {
+      url += `?category=${encodeURIComponent(categoryFilter.value)}`
+    }
+    const [resExp, resProp] = await Promise.all([
+      api.get(url),
+      api.get('/properties')
+    ])
+    expenses.value = resExp?.data || []
+    totalAmount.value = resExp?.meta?.total_amount || 0
+    properties.value = resProp?.data || []
   } catch (err) {
     console.warn('API error fetching operating expenses:', err)
   } finally {

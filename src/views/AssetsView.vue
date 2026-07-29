@@ -63,7 +63,8 @@
                 <th class="px-6 py-3.5">Loại / Danh mục</th>
                 <th class="px-6 py-3.5">Số lượng</th>
                 <th class="px-6 py-3.5">Tình trạng</th>
-                <th class="px-6 py-3.5">Giá mua</th>
+                <th class="px-6 py-3.5">Giá mua ban đầu</th>
+                <th class="px-6 py-3.5">Giá trị sau khấu hao</th>
                 <th class="px-6 py-3.5 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -79,6 +80,9 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 font-mono text-slate-900 font-medium">{{ formatCurrency(item.purchase_price) }}</td>
+                <td class="px-6 py-4 font-mono text-emerald-600 font-bold">
+                  {{ formatCurrency(getDepreciatedValue(item)) }}
+                </td>
                 <td class="px-6 py-4 text-right">
                   <button @click="deleteAsset(item.id)" class="text-rose-600 hover:text-rose-700 text-xs font-semibold">Xóa</button>
                 </td>
@@ -217,6 +221,15 @@ const getConditionText = (cond) => {
   if (cond === 'good' || cond === 'new') return 'Tốt'
   if (cond === 'worn') return 'Hơi cũ'
   return 'Hỏng'
+}
+
+const getDepreciatedValue = (item) => {
+  const original = item.purchase_price || 0
+  const installedDate = item.installed_at ? new Date(item.installed_at) : new Date(Date.now() - 365 * 24 * 3600 * 1000)
+  const years = Math.max(0.5, (new Date() - installedDate) / (1000 * 3600 * 24 * 365.25))
+  const ratePerYear = 0.20
+  const depreciated = Math.max(0, original * (1 - (years * ratePerYear)))
+  return Math.round(depreciated)
 }
 
 const formatCurrency = (val) => {

@@ -81,6 +81,47 @@
         </div>
       </div>
 
+      <!-- 6-Month Utility Consumption History Chart Card -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span>📊</span> Lịch Sử Tiêu Thụ Điện & Nước 6 Tháng Gần Nhất
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Theo dõi chỉ số kWh điện và m³ nước theo từng tháng</p>
+          </div>
+          <span class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
+            Phòng 102
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 pt-2">
+          <div v-for="(h, idx) in utilityHistory" :key="idx" class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-center space-y-2">
+            <span class="text-xs font-bold text-slate-500 block">{{ h.month }}</span>
+
+            <!-- Electric usage bar -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>⚡</span> <span>{{ h.electric }} kWh</span>
+              </div>
+              <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full rounded-full transition-all" :style="{ width: `${(h.electric / 200) * 100}%` }"></div>
+              </div>
+            </div>
+
+            <!-- Water usage bar -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+                <span>💧</span> <span>{{ h.water }} m³</span>
+              </div>
+              <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-full rounded-full transition-all" :style="{ width: `${(h.water / 15) * 100}%` }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Modals -->
       <PaymentQrModal
         :show="showPayQr"
@@ -147,6 +188,15 @@ const showPayQr = ref(false)
 const showSignModal = ref(false)
 const showTicketModal = ref(false)
 const submittingTicket = ref(false)
+
+const utilityHistory = ref([
+  { month: 'T02/26', electric: 110, water: 6 },
+  { month: 'T03/26', electric: 125, water: 7 },
+  { month: 'T04/26', electric: 140, water: 8 },
+  { month: 'T05/26', electric: 175, water: 10 },
+  { month: 'T06/26', electric: 190, water: 11 },
+  { month: 'T07/26', electric: 165, water: 9 }
+])
 
 const ticketForm = ref({
   title: '',

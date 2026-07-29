@@ -22,12 +22,19 @@ import TrashView from '../views/TrashView.vue'
 import { useAuthStore } from '../stores/auth'
 
 import LandingView from '../views/LandingView.vue'
+import RoomDetailView from '../views/RoomDetailView.vue'
 
 const routes = [
   {
     path: '/landing',
     name: 'Landing',
     component: LandingView,
+    meta: { public: true }
+  },
+  {
+    path: '/room-detail/:id',
+    name: 'RoomDetail',
+    component: RoomDetailView,
     meta: { public: true }
   },
   {

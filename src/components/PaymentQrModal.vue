@@ -1,6 +1,6 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl relative animate-fade-in">
+  <div v-if="show" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-slate-900 border border-slate-700/60 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl relative animate-scale-in">
       <button @click="$emit('close')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✕</button>
 
       <div class="text-center mb-6">

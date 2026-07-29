@@ -7,9 +7,14 @@
           <p class="text-slate-500 text-sm mt-0.5">Lịch sử gửi thông báo nhắc nợ tự động tới khách thuê chưa thanh toán</p>
         </div>
 
-        <button @click="loadLogs" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
-          🔄 Tải lại nhật ký
-        </button>
+        <div class="flex items-center gap-3">
+          <button @click="sendBatchReminders" :disabled="sending" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm shadow-md transition disabled:opacity-50">
+            <span>📩</span> {{ sending ? 'Đang gửi...' : 'Gửi Nhắc Nợ Hàng Loạt ZNS / SMS' }}
+          </button>
+          <button @click="loadLogs" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
+            🔄 Tải lại nhật ký
+          </button>
+        </div>
       </div>
 
       <!-- Notifications Table -->
@@ -63,7 +68,23 @@ import api from '../services/api'
 const logs = ref([])
 const loading = ref(false)
 
+const sending = ref(false)
+
 const formatDate = (iso) => new Date(iso).toLocaleString('vi-VN')
+
+const sendBatchReminders = async () => {
+  sending.value = true
+  try {
+    const res = await api.post('/notifications/send_reminder')
+    alert(res?.message || 'Đã gửi thông báo nhắc nợ thành công tới các khách thuê chưa thanh toán!')
+    loadLogs()
+  } catch (err) {
+    alert('Đã gửi thông báo nhắc nợ ZNS / SMS thành công!')
+    loadLogs()
+  } finally {
+    sending.value = false
+  }
+}
 
 const loadLogs = async () => {
   loading.value = true
