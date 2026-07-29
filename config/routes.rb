@@ -18,6 +18,12 @@ Rails.application.routes.draw do
       resources :audit_logs, only: [:index]
       resources :maintenance_requests, only: [:index, :create, :update, :destroy]
       resources :amenities, only: [:index, :create, :destroy]
+      resources :room_assets, only: [:index, :create, :update, :destroy]
+      resources :contract_templates, only: [:index, :create, :update]
+
+      resources :payment_transactions, only: [:index] do
+        post :webhook, on: :collection
+      end
 
       resources :notifications, only: [:index] do
         post :send_reminder, on: :collection
@@ -34,3 +40,4 @@ Rails.application.routes.draw do
     end
   end
 end
+
