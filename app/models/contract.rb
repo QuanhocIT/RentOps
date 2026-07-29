@@ -6,6 +6,8 @@ class Contract < ApplicationRecord
   belongs_to :room
   belongs_to :renter, class_name: "User", optional: true
   has_many :monthly_bills, dependent: :nullify
+  has_many :co_tenants, dependent: :destroy
+  has_many :payment_schedules, dependent: :destroy
 
   enum :status, { draft: 0, active: 1, ended: 2, cancelled: 3 }
 
@@ -15,5 +17,12 @@ class Contract < ApplicationRecord
   def signed?
     tenant_signature.present?
   end
-end
 
+  def unpaid_bills
+    monthly_bills.kept.where.not(status: :paid)
+  end
+
+  def total_unpaid_amount
+    unpaid_bills.sum(:remaining_amount)
+  end
+end
