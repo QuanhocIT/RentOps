@@ -4,12 +4,12 @@ Rails.application.routes.draw do
       post "auth/login", to: "auth#login"
       get "auth/me", to: "auth#me"
 
-      resources :properties, only: [:index, :create]
-      resources :rooms
-      resources :contracts, only: [:index, :create] do
+      resources :properties, only: [:index, :create, :destroy]
+      resources :rooms, only: [:index, :create, :update, :destroy]
+      resources :contracts, only: [:index, :create, :destroy] do
         post :checkout, on: :member
       end
-      resources :monthly_bills, only: [:index, :create] do
+      resources :monthly_bills, only: [:index, :create, :destroy] do
         post :generate, on: :collection
       end
     end

@@ -5,6 +5,7 @@ class Contract < ApplicationRecord
   belongs_to :tenant
   belongs_to :room
   belongs_to :renter, class_name: "User", optional: true
+  has_many :monthly_bills, dependent: :nullify
 
   enum :status, { draft: 0, active: 1, ended: 2, cancelled: 3 }
 

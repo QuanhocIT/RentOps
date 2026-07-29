@@ -8,7 +8,7 @@ module Api
         end
 
         user = User.first_or_create!(email: params[:email].presence || "admin@rentops.vn") do |record|
-          record.full_name = "Chủ Trọ Demo"
+          record.full_name = params[:full_name].presence || "Chủ Trọ Demo"
           record.tenant = tenant
         end
 
@@ -17,47 +17,47 @@ module Api
           message: "Đăng nhập thành công",
           data: {
             token: mock_jwt_token(user),
-            user: {
-              id: user.id,
-              email: user.email,
-              full_name: user.full_name
-            },
-            tenant: {
-              id: tenant.id,
-              name: tenant.name,
-              subdomain: tenant.subdomain
-            }
+            user: user_payload(user),
+            tenant: tenant_payload(tenant)
           },
           meta: {}
         }
       end
 
       def me
+        user = User.first
+        tenant = user&.tenant
+
         render json: {
           success: true,
           message: "Lấy thông tin người dùng thành công",
-          data: current_user_payload,
+          data: {
+            user: user_payload(user),
+            tenant: tenant_payload(tenant)
+          },
           meta: {}
         }
       end
 
       private
 
-      def current_user_payload
-        user = User.first
-        tenant = user&.tenant
+      def user_payload(user)
+        return nil unless user
 
         {
-          user: user && {
-            id: user.id,
-            email: user.email,
-            full_name: user.full_name
-          },
-          tenant: tenant && {
-            id: tenant.id,
-            name: tenant.name,
-            subdomain: tenant.subdomain
-          }
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name
+        }
+      end
+
+      def tenant_payload(tenant)
+        return nil unless tenant
+
+        {
+          id: tenant.id,
+          name: tenant.name,
+          subdomain: tenant.subdomain
         }
       end
 

@@ -2,7 +2,8 @@ module Api
   module V1
     class RoomsController < BaseController
       def index
-        rooms = Room.kept.select(:id, :tenant_id, :property_name, :room_number, :price, :status, :created_at)
+        rooms = Room.kept.where(tenant_id: current_tenant_record&.id)
+        rooms = rooms.select(:id, :tenant_id, :property_name, :room_number, :price, :status, :created_at)
 
         rooms = rooms.where(status: Room.statuses[params[:status]]) if params[:status].present? && Room.statuses.key?(params[:status])
 
@@ -23,7 +24,7 @@ module Api
       end
 
       def create
-        room = Room.new(room_params)
+        room = Room.new(room_params.merge(tenant: current_tenant_record))
 
         if room.save
           render_json_success(data: room.as_json, message: "Tạo phòng mới thành công", status: :created)
@@ -33,7 +34,7 @@ module Api
       end
 
       def update
-        room = Room.kept.find(params[:id])
+        room = Room.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
 
         if room.update(room_params)
           render_json_success(data: room.as_json, message: "Cập nhật thông tin phòng thành công")
@@ -43,7 +44,7 @@ module Api
       end
 
       def destroy
-        room = Room.kept.find(params[:id])
+        room = Room.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
         room.discard
 
         render_json_success(message: "Xóa mềm phòng trọ thành công")

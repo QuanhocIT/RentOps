@@ -5,6 +5,7 @@ class MonthlyBill < ApplicationRecord
   belongs_to :tenant
   belongs_to :room
   belongs_to :contract, optional: true
+  has_one :property, through: :room
 
   enum :status, { draft: 0, issued: 1, partially_paid: 2, paid: 3, overdue: 4, cancelled: 5 }
 

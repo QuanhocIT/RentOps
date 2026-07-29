@@ -2,7 +2,8 @@ module Api
   module V1
     class ContractsController < BaseController
       def index
-        contracts = Contract.kept.select(:id, :tenant_id, :room_id, :renter_id, :contract_code, :status, :start_date, :end_date, :created_at).order(created_at: :desc)
+        contracts = Contract.kept.where(tenant_id: current_tenant_record&.id)
+        contracts = contracts.select(:id, :tenant_id, :room_id, :renter_id, :contract_code, :status, :start_date, :end_date, :created_at).order(created_at: :desc)
 
         render_json_success(
           data: contracts.as_json,
@@ -12,7 +13,7 @@ module Api
       end
 
       def create
-        contract = Contract.new(contract_params)
+        contract = Contract.new(contract_params.merge(tenant: current_tenant_record))
 
         if contract.save
           room = contract.room
@@ -24,7 +25,7 @@ module Api
       end
 
       def checkout
-        contract = Contract.kept.find(params[:id])
+        contract = Contract.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
         contract.update(status: :ended, end_date: Date.current)
 
         if contract.room&.respond_to?(:status=)
@@ -32,6 +33,13 @@ module Api
         end
 
         render_json_success(data: contract.as_json, message: "Thanh lý hợp đồng thành công")
+      end
+
+      def destroy
+        contract = Contract.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
+        contract.discard
+
+        render_json_success(message: "Xóa mềm hợp đồng thành công")
       end
 
       private

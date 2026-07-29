@@ -28,6 +28,16 @@ module Api
         }, status: status
       end
 
+      def current_user
+        @current_user
+      end
+
+      def current_tenant_record
+        return current_tenant if defined?(current_tenant) && current_tenant.present?
+
+        current_user&.tenant
+      end
+
       private
 
       def authenticate_request!

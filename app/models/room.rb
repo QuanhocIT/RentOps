@@ -3,6 +3,7 @@ class Room < ApplicationRecord
   acts_as_tenant(:tenant)
 
   belongs_to :tenant
+  belongs_to :property, optional: true
 
   enum :status, { vacant: 0, occupied: 1, reserved: 2 }
 

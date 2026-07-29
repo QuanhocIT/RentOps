@@ -17,6 +17,9 @@
         >
           Làm mới
         </button>
+        <RouterLink to="/rooms" class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition">
+          Phòng
+        </RouterLink>
         <RouterLink to="/properties" class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition">
           Khu trọ
         </RouterLink>

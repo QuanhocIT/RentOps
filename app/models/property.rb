@@ -6,4 +6,5 @@ class Property < ApplicationRecord
   has_many :rooms, dependent: :destroy
 
   validates :name, presence: true
+  validates :address, presence: true, allow_blank: true
 end
