@@ -4,8 +4,8 @@
       <!-- Title & Actions -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Ghi Chỉ Số Điện Nước Hàng Loạt</h1>
-          <p class="text-slate-500 text-sm mt-0.5">Bảng ma trận nhập nhanh chỉ số công tơ điện nước cho tất cả các phòng trọ</p>
+          <h1 class="text-2xl font-bold text-slate-900">Quản Lý Chỉ Số Điện Nước</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Nhập nhanh ma trận chỉ số công tơ điện nước hoặc quản lý danh sách phòng</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -21,6 +21,73 @@
           >
             <span>⚡</span> Nhập phòng đơn lẻ
           </button>
+        </div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="flex space-x-2 bg-slate-200/60 p-1.5 rounded-xl w-fit">
+        <button
+          @click="activeMode = 'list'"
+          :class="activeMode === 'list' ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+          class="px-4 py-2 text-xs rounded-lg transition"
+        >
+          📋 Danh Sách Chỉ Số Tháng {{ selectedMonth }}
+        </button>
+        <button
+          @click="activeMode = 'batch'; prepareBatchData()"
+          :class="activeMode === 'batch' ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+          class="px-4 py-2 text-xs rounded-lg transition flex items-center space-x-1"
+        >
+          <span>⚡ Nhập Điện Nước Hàng Loạt Tất Cả Phòng</span>
+        </button>
+      </div>
+
+      <!-- BATCH MATRIX INPUT TABLE -->
+      <div v-if="activeMode === 'batch'" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h3 class="font-bold text-slate-900 text-base">⚡ Bảng Ma Trận Nhập Nhanh Điện Nước Kỳ {{ selectedMonth }}</h3>
+          <button @click="saveBatchReadings" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition">
+            ✓ Lưu Tất Cả Chỉ Số Phòng
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500 font-bold border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3">Phòng</th>
+                <th class="px-4 py-3">Điện cũ</th>
+                <th class="px-4 py-3">Điện mới (kWh)</th>
+                <th class="px-4 py-3">⚡ Dùng (kWh)</th>
+                <th class="px-4 py-3">Nước cũ</th>
+                <th class="px-4 py-3">Nước mới (m³)</th>
+                <th class="px-4 py-3">💧 Dùng (m³)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="item in batchItems" :key="item.room_id" class="hover:bg-slate-50/80">
+                <td class="px-4 py-3 font-bold text-slate-900">Phòng {{ item.room_number }}</td>
+                <td class="px-4 py-3">
+                  <input v-model.number="item.electric_old" type="number" class="w-24 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono" />
+                </td>
+                <td class="px-4 py-3">
+                  <input v-model.number="item.electric_new" type="number" class="w-28 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-900" />
+                </td>
+                <td class="px-4 py-3 font-mono font-bold text-amber-600">
+                  {{ Math.max(0, (item.electric_new || 0) - (item.electric_old || 0)) }}
+                </td>
+                <td class="px-4 py-3">
+                  <input v-model.number="item.water_old" type="number" class="w-24 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono" />
+                </td>
+                <td class="px-4 py-3">
+                  <input v-model.number="item.water_new" type="number" class="w-28 bg-blue-50 border border-blue-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-blue-900" />
+                </td>
+                <td class="px-4 py-3 font-mono font-bold text-blue-600">
+                  {{ Math.max(0, (item.water_new || 0) - (item.water_old || 0)) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -197,7 +264,42 @@ import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import api from '../services/api'
 
-const loading = ref(false)
+const activeMode = ref('list')
+const batchItems = ref([])
+
+const prepareBatchData = () => {
+  batchItems.value = rooms.value.map(room => {
+    const existing = readings.value.find(r => r.room_id === room.id || r.room_number === room.room_number)
+    return {
+      room_id: room.id,
+      room_number: room.room_number,
+      billing_month: selectedMonth.value,
+      electric_old: existing ? existing.electric_old : 1200,
+      electric_new: existing ? existing.electric_new : 1350,
+      water_old: existing ? existing.water_old : 40,
+      water_new: existing ? existing.water_new : 48
+    }
+  })
+}
+
+const saveBatchReadings = async () => {
+  try {
+    const res = await fetch('/api/v1/utility_readings/batch_create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ readings: batchItems.value })
+    })
+
+    const json = await res.json()
+    if (res.ok) {
+      alert(json.message || 'Lưu chỉ số hàng loạt thành công!')
+      activeMode.value = 'list'
+      fetchData()
+    }
+  } catch (err) {
+    alert('Lỗi lưu chỉ số hàng loạt')
+  }
+}
 const submitting = ref(false)
 const showModal = ref(false)
 const readings = ref([])
