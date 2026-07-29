@@ -5,6 +5,7 @@ class MonthlyBill < ApplicationRecord
   belongs_to :tenant
   belongs_to :room
   belongs_to :contract, optional: true
+  has_many :payment_transactions, dependent: :destroy
 
   enum :status, { draft: 0, issued: 1, partially_paid: 2, paid: 3, overdue: 4, cancelled: 5 }
 
@@ -21,3 +22,4 @@ class MonthlyBill < ApplicationRecord
     "https://img.vietqr.io/image/#{bank}-#{acc}-compact2.png?amount=#{amt}&addInfo=#{info}&accountName=#{ERB::Util.url_encode(acc_name)}"
   end
 end
+

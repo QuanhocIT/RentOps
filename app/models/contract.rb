@@ -11,4 +11,9 @@ class Contract < ApplicationRecord
 
   validates :contract_code, presence: true, uniqueness: true
   validates :start_date, presence: true
+
+  def signed?
+    tenant_signature.present?
+  end
 end
+
