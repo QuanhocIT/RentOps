@@ -41,6 +41,7 @@ Rails.application.routes.draw do
 
       resources :contracts, only: [:index, :create, :destroy] do
         post :checkout, on: :member
+        post :renew, on: :member
       end
 
       resources :monthly_bills, only: [:index, :create, :destroy] do

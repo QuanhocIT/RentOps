@@ -52,6 +52,13 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="font-bold text-slate-900 text-base">Danh Sách Tất Cả Phòng Trọ</div>
           <div class="flex items-center gap-3">
+            <select v-model="filterStatus" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">Tất cả trạng thái</option>
+              <option value="vacant">Trống 🟢</option>
+              <option value="occupied">Đang ở 🔴</option>
+              <option value="reserved">Đã cọc 🟡</option>
+              <option value="maintenance">Bảo trì 🔧</option>
+            </select>
             <input v-model="searchQuery" class="w-64 rounded-xl border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tìm theo số phòng hoặc khu..." />
             <button class="p-2 text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200" @click="loadRooms">🔄</button>
           </div>
@@ -71,13 +78,29 @@
               <div class="text-lg font-black text-indigo-600 font-mono mt-2">{{ formatCurrency(item.price) }} / tháng</div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
-              <button @click="openModal(item)" class="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg">
-                Sửa
-              </button>
-              <button @click="deleteRoom(item.id)" class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 px-2.5 py-1 rounded-lg">
-                Xóa
-              </button>
+            <div class="space-y-2 border-t border-slate-200 pt-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">Đổi trạng thái:</span>
+                <select
+                  :value="item.status"
+                  @change="quickUpdateStatus(item, $event.target.value)"
+                  class="px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700"
+                >
+                  <option value="vacant">Trống</option>
+                  <option value="occupied">Đang ở</option>
+                  <option value="reserved">Đã cọc</option>
+                  <option value="maintenance">Bảo trì</option>
+                </select>
+              </div>
+
+              <div class="flex items-center justify-end gap-2">
+                <button @click="openModal(item)" class="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg">
+                  Sửa
+                </button>
+                <button @click="deleteRoom(item.id)" class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 px-2.5 py-1 rounded-lg">
+                  Xóa
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -147,6 +170,7 @@ const showModal = ref(false)
 const editingRoom = ref(null)
 const submitting = ref(false)
 const searchQuery = ref('')
+const filterStatus = ref('')
 
 const form = ref({ property_name: 'Tòa Nhà A - Nam Từ Liêm', room_number: '', floor: 1, price: 3500000, status: 'vacant' })
 
@@ -177,12 +201,24 @@ const loadRooms = async () => {
 onMounted(loadRooms)
 
 const filteredRooms = computed(() =>
-  rooms.value.filter((r) =>
-    !searchQuery.value ||
-    String(r.room_number).toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    String(r.property_name).toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+  rooms.value.filter((r) => {
+    const matchesSearch = !searchQuery.value ||
+      String(r.room_number).toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      String(r.property_name).toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesStatus = !filterStatus.value || String(r.status) === filterStatus.value
+    return matchesSearch && matchesStatus
+  })
 )
+
+const quickUpdateStatus = async (room, newStatus) => {
+  try {
+    await api.put(`/rooms/${room.id}`, { room: { ...room, status: newStatus } })
+    room.status = newStatus
+  } catch (err) {
+    alert(err?.message || 'Không thể cập nhật trạng thái phòng')
+    loadRooms()
+  }
+}
 
 const openModal = (item = null) => {
   editingRoom.value = item

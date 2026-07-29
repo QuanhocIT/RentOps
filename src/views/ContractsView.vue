@@ -68,8 +68,21 @@
               </div>
               <div class="flex items-center gap-2">
                 <button
+                  @click="selectedPrintContract = item"
+                  class="text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 transition"
+                >
+                  🖨️ In A4
+                </button>
+                <button
                   v-if="item.status === 'active' || item.status === 1"
-                  class="text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200"
+                  @click="renewContract(item)"
+                  class="text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 transition"
+                >
+                  🔄 Gia Hạn
+                </button>
+                <button
+                  v-if="item.status === 'active' || item.status === 1"
+                  class="text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg border border-rose-200 transition"
                   @click="openCheckoutModal(item)"
                 >
                   Thanh lý & Hoàn cọc
@@ -91,6 +104,13 @@
         @close="selectedCheckoutContract = null"
         @success="loadContracts"
       />
+
+      <!-- Print Contract Modal -->
+      <PrintContractModal
+        v-if="selectedPrintContract"
+        :contract="selectedPrintContract"
+        @close="selectedPrintContract = null"
+      />
     </div>
   </AppLayout>
 </template>
@@ -99,6 +119,7 @@
 import { computed, onMounted, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import CheckoutContractModal from '../components/CheckoutContractModal.vue'
+import PrintContractModal from '../components/PrintContractModal.vue'
 import api from '../services/api'
 
 const contracts = ref([])
@@ -108,6 +129,7 @@ const message = ref('')
 const messageType = ref('success')
 const searchQuery = ref('')
 const selectedCheckoutContract = ref(null)
+const selectedPrintContract = ref(null)
 
 const form = ref({
   contract_code: `CTR-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(100 + Math.random() * 900)}`,
@@ -166,6 +188,24 @@ const createContract = async () => {
 
 const openCheckoutModal = (item) => {
   selectedCheckoutContract.value = item
+}
+
+const renewContract = async (item) => {
+  const monthsStr = prompt('Nhập số tháng muốn gia hạn hợp đồng (ví dụ: 6 hoặc 12):', '6')
+  if (!monthsStr) return
+  const months = parseInt(monthsStr, 10)
+  if (isNaN(months) || months <= 0) {
+    alert('Số tháng gia hạn không hợp lệ')
+    return
+  }
+
+  try {
+    const res = await api.post(`/contracts/${item.id}/renew`, { months })
+    alert(res?.message || 'Gia hạn hợp đồng thành công!')
+    loadContracts()
+  } catch (err) {
+    alert(err?.message || 'Gia hạn hợp đồng thất bại')
+  }
 }
 
 const deleteContract = async (id) => {

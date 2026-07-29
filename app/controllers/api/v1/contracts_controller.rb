@@ -81,6 +81,36 @@ module Api
         )
       end
 
+      def renew
+        contract = Contract.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
+
+        new_end_date = if params[:new_end_date].present?
+                         Date.parse(params[:new_end_date])
+                       elsif params[:months].present?
+                         (contract.end_date || Date.current).to_date + params[:months].to_i.months
+                       else
+                         (contract.end_date || Date.current).to_date + 6.months
+                       end
+
+        updates = { end_date: new_end_date, status: :active }
+        updates[:monthly_rent] = params[:new_monthly_rent].to_f if params[:new_monthly_rent].present?
+
+        contract.update!(updates)
+
+        AuditLog.log_action(
+          tenant: current_tenant_record,
+          user: current_user,
+          action: "RENEW_CONTRACT",
+          record: contract,
+          payload: { contract_code: contract.contract_code, new_end_date: new_end_date }
+        )
+
+        render_json_success(
+          data: contract.as_json,
+          message: "Gia hạn hợp đồng thành công đến ngày #{new_end_date.strftime('%d/%m/%Y')}"
+        )
+      end
+
       def destroy
         contract = Contract.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
         contract.discard
