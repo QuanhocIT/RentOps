@@ -5,6 +5,16 @@ import RoomsView from '../views/RoomsView.vue'
 import PropertiesView from '../views/PropertiesView.vue'
 import ContractsView from '../views/ContractsView.vue'
 import BillsView from '../views/BillsView.vue'
+import UtilityReadingsView from '../views/UtilityReadingsView.vue'
+import ServicesView from '../views/ServicesView.vue'
+import ExpensesView from '../views/ExpensesView.vue'
+import RentersView from '../views/RentersView.vue'
+import ReportsView from '../views/ReportsView.vue'
+import MaintenanceView from '../views/MaintenanceView.vue'
+import AmenitiesView from '../views/AmenitiesView.vue'
+import AuditLogsView from '../views/AuditLogsView.vue'
+import SettingsView from '../views/SettingsView.vue'
+import NotificationsView from '../views/NotificationsView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -29,14 +39,64 @@ const routes = [
     component: PropertiesView
   },
   {
+    path: '/renters',
+    name: 'Renters',
+    component: RentersView
+  },
+  {
     path: '/contracts',
     name: 'Contracts',
     component: ContractsView
   },
   {
+    path: '/utility-readings',
+    name: 'UtilityReadings',
+    component: UtilityReadingsView
+  },
+  {
+    path: '/services',
+    name: 'Services',
+    component: ServicesView
+  },
+  {
     path: '/bills',
     name: 'Bills',
     component: BillsView
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: NotificationsView
+  },
+  {
+    path: '/maintenance',
+    name: 'Maintenance',
+    component: MaintenanceView
+  },
+  {
+    path: '/amenities',
+    name: 'Amenities',
+    component: AmenitiesView
+  },
+  {
+    path: '/expenses',
+    name: 'Expenses',
+    component: ExpensesView
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    component: ReportsView
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: SettingsView
+  },
+  {
+    path: '/audit-logs',
+    name: 'AuditLogs',
+    component: AuditLogsView
   }
 ]
 
