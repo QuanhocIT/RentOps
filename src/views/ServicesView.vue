@@ -7,16 +7,41 @@
           <p class="text-slate-500 text-sm mt-0.5">Quản lý đơn giá cố định cho Điện, Nước, Internet, Vệ sinh, Gửi xe áp dụng toàn hệ thống</p>
         </div>
 
+        <div class="flex items-center gap-3">
+          <button
+            @click="seedSampleData"
+            :disabled="seeding"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md transition"
+          >
+            <span>✨</span> {{ seeding ? 'Đang tạo mẫu...' : 'Khởi Tạo Mẫu Dịch Vụ' }}
+          </button>
+          <button
+            @click="openModal()"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+          >
+            <span>⚡</span> Thêm loại dịch vụ mới
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="services.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm space-y-4">
+        <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mx-auto">💡</div>
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Tài khoản chưa có bảng giá dịch vụ mẫu</h3>
+          <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">Bấm nút bên dưới để hệ thống tự động thiết lập đơn giá tiêu chuẩn (Điện 3.800đ/kWh, Nước 30.000đ/m³, Internet 100.000đ, Vệ sinh 50.000đ...)</p>
+        </div>
         <button
-          @click="openModal()"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+          @click="seedSampleData"
+          :disabled="seeding"
+          class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition inline-flex items-center gap-2"
         >
-          <span>⚡</span> Thêm loại dịch vụ mới
+          <span>✨</span> {{ seeding ? 'Đang tạo dữ liệu mẫu...' : 'Khởi Tạo Bộ Dữ Liệu Mẫu (1-Click)' }}
         </button>
       </div>
 
       <!-- Services List Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div v-for="item in services" :key="item.id" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
           <div>
             <div class="flex items-center justify-between">
@@ -90,6 +115,7 @@ const services = ref([])
 const showModal = ref(false)
 const editingService = ref(null)
 const submitting = ref(false)
+const seeding = ref(false)
 
 const form = ref({ name: '', unit_price: 3800, unit_name: 'kWh' })
 
@@ -101,6 +127,19 @@ const loadServices = async () => {
     services.value = Array.isArray(res?.data) ? res.data : []
   } catch (err) {
     console.warn('Error loading services:', err)
+  }
+}
+
+const seedSampleData = async () => {
+  seeding.value = true
+  try {
+    const res = await api.post('/tenant_settings/seed_sample_data')
+    alert(res?.message || 'Đã khởi tạo bảng giá dịch vụ và dữ liệu mẫu thành công!')
+    loadServices()
+  } catch (err) {
+    alert(err?.message || 'Khởi tạo dữ liệu mẫu thất bại')
+  } finally {
+    seeding.value = false
   }
 }
 

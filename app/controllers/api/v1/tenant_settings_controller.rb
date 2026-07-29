@@ -49,6 +49,15 @@ module Api
         end
       end
 
+      def seed_sample_data
+        tenant = current_tenant_record
+        TenantSampleSeeder.seed_for(tenant)
+
+        render_json_success(
+          message: "Khởi tạo bộ dữ liệu mẫu thành công cho tòa nhà của bạn!"
+        )
+      end
+
       private
 
       def tenant_params

@@ -12,6 +12,8 @@ module Api
           record.tenant = tenant
         end
 
+        TenantSampleSeeder.seed_for(tenant) if Service.where(tenant_id: tenant.id).count.zero?
+
         render json: {
           success: true,
           message: "Đăng nhập thành công",
@@ -43,6 +45,8 @@ module Api
           phone: phone,
           tenant: tenant
         )
+
+        TenantSampleSeeder.seed_for(tenant)
 
         render json: {
           success: true,
@@ -80,6 +84,8 @@ module Api
       def me
         user = User.first
         tenant = user&.tenant
+
+        TenantSampleSeeder.seed_for(tenant) if tenant && Service.where(tenant_id: tenant.id).count.zero?
 
         render json: {
           success: true,

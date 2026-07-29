@@ -15,7 +15,9 @@ Rails.application.routes.draw do
       get "trash", to: "trash#index"
       post "trash/restore", to: "trash#restore"
 
-      resource :tenant_settings, only: [:show, :update]
+      resource :tenant_settings, only: [:show, :update] do
+        post :seed_sample_data, on: :collection
+      end
 
       resources :properties, only: [:index, :create, :destroy]
       resources :rooms, only: [:index, :create, :update, :destroy]
