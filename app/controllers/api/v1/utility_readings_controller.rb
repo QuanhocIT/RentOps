@@ -45,6 +45,35 @@ module Api
         end
       end
 
+      def batch_create
+        readings_params = params[:readings] || []
+        created_count = 0
+
+        UtilityReading.transaction do
+          readings_params.each do |item|
+            next if item[:room_id].blank? || item[:billing_month].blank?
+
+            r = UtilityReading.find_or_initialize_by(
+              tenant: current_tenant_record,
+              room_id: item[:room_id],
+              billing_month: item[:billing_month]
+            )
+            r.assign_attributes(
+              electric_old: item[:electric_old].to_i,
+              electric_new: item[:electric_new].to_i,
+              water_old: item[:water_old].to_i,
+              water_new: item[:water_new].to_i,
+              note: item[:note]
+            )
+            if r.save
+              created_count += 1
+            end
+          end
+        end
+
+        render_json_success(message: "Đã lưu thành công #{created_count} chỉ số điện nước!")
+      end
+
       def destroy
         reading = UtilityReading.kept.where(tenant_id: current_tenant_record&.id).find(params[:id])
         reading.discard

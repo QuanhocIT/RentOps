@@ -7,13 +7,21 @@ Rails.application.routes.draw do
       get "dashboard/summary", to: "dashboard#summary"
       post "webhooks/vietqr", to: "webhooks#vietqr"
 
+      get "super_admin/overview", to: "super_admin#index"
+      post "super_admin/update_plan", to: "super_admin#update_tenant_plan"
+
+      get "trash", to: "trash#index"
+      post "trash/restore", to: "trash#restore"
+
       resource :tenant_settings, only: [:show, :update]
 
       resources :properties, only: [:index, :create, :destroy]
       resources :rooms, only: [:index, :create, :update, :destroy]
       resources :renters, only: [:index, :create, :update, :destroy]
       resources :services, only: [:index, :create, :update, :destroy]
-      resources :utility_readings, only: [:index, :create, :destroy]
+      resources :utility_readings, only: [:index, :create, :destroy] do
+        post :batch_create, on: :collection
+      end
       resources :operating_expenses, only: [:index, :create, :destroy]
       resources :audit_logs, only: [:index]
       resources :maintenance_requests, only: [:index, :create, :update, :destroy]
