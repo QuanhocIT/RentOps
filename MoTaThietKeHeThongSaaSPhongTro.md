@@ -1,6 +1,6 @@
-# Tài liệu mô tả thiết kế hệ thống SaaS quản lý phòng trọ RentOps
+﻿# Tài liệu mô tả thiết kế hệ thống SaaS quản lý phòng trọ RentOps
 
-**Phiên bản:** 1.0  
+**Phiên bản:** 1.1  
 **Phạm vi:** Kiến trúc hệ thống, hiệu năng, bảo mật, API, UI/UX, cơ sở dữ liệu, lộ trình triển khai  
 **Mục tiêu:** Mô tả đầy đủ một nền tảng SaaS multi-tenant cho chủ trọ, nhân viên vận hành và khách thuê
 
@@ -58,10 +58,10 @@ Hệ thống được triển khai theo mô hình:
 
 ### 3.1. Vai trò người dùng
 
-- **Super Admin:** quản trị toàn hệ thống, xem danh sách tenant, cấu hình gói cước, xử lý sự cố.
-- **Tenant Owner:** chủ trọ/chủ doanh nghiệp, quản lý toàn bộ dữ liệu trong tenant của mình.
-- **Staff:** nhân viên vận hành, nhập chỉ số điện, cập nhật phòng, hỗ trợ tạo hóa đơn.
-- **Renter:** khách thuê, xem hóa đơn, thanh toán, tra cứu thông tin hợp đồng.
+- **Super Admin:** Quản trị toàn hệ thống, xem danh sách tenant, cấu hình gói cước, xử lý sự cố.
+- **Tenant Owner:** Chủ trọ/chủ doanh nghiệp, quản lý toàn bộ dữ liệu trong tenant của mình.
+- **Staff:** Nhân viên vận hành, nhập chỉ số điện, cập nhật phòng, hỗ trợ tạo hóa đơn.
+- **Renter:** Khách thuê, xem hóa đơn, thanh toán, tra cứu thông tin hợp đồng.
 
 ### 3.2. Chức năng cốt lõi
 
@@ -153,7 +153,7 @@ Sidekiq được dùng cho:
 
 ### 5.2. Composite index theo tenant
 
-Trong mô hình multi-tenant, gần như mọi truy vấn đều đi kèm `tenant_id`. Vì vậy, index phải được thiết kế theo nguyên tắc:
+Trong mô hình multi-tenant, gần như mọi truy vấn đều đi kèm `tenant_id`. Vì vậy, index nên được thiết kế theo nguyên tắc:
 
 - Cột đầu tiên thường là `tenant_id`.
 - Sau đó là cột lọc chính như `property_id`, `status`, `billing_month`, `room_id`.
@@ -205,7 +205,7 @@ class Contract < ApplicationRecord
 
   acts_as_tenant(:tenant)
 
-  has_encrypted :id_card_number
+  encrypts :id_card_number
 end
 ```
 
@@ -275,7 +275,7 @@ Rails đảm nhiệm:
 Hệ thống dùng mô hình:
 
 - **Single database**
-- **Shared schema**
+- **Shared tables**
 - **tenant_id trên các bảng nghiệp vụ**
 
 Lý do:
@@ -300,6 +300,8 @@ class Api::V1::BaseController < ActionController::API
   private
 
   def set_tenant
+    return if current_user.super_admin?
+
     set_current_tenant(current_user.tenant)
   end
 end

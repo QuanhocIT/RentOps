@@ -10,7 +10,6 @@ module Api
 
       protected
 
-      # Standardized JSON success response helper
       def render_json_success(data: nil, message: "Thành công", meta: {}, status: :ok)
         render json: {
           success: true,
@@ -20,7 +19,6 @@ module Api
         }, status: status
       end
 
-      # Standardized JSON error response helper
       def render_json_error(message: "Đã có lỗi xảy ra", errors: [], meta: {}, status: :unprocessable_entity)
         render json: {
           success: false,
@@ -32,37 +30,34 @@ module Api
 
       private
 
-      # Extract & verify JWT token from Authorization Header
       def authenticate_request!
-        header = request.headers["Authorization"]
-        token = header.split(" ").last if header.present?
+        header = request.headers["Authorization"].to_s
+        token = header.split(" ").last
+        @current_user = decode_mock_user(token) if token.present?
 
-        # Dummy/JWT auth payload decoding logic for Base skeleton
-        if token.present?
-          # In full Devise JWT setup, warden / jwt payload resolution identifies current_user
-          @current_user ||= mock_or_decode_user(token)
-        end
+        return if @current_user
 
-        unless @current_user
-          render_json_error(message: "Không có quyền truy cập. Token không hợp lệ.", status: :unauthorized)
-        end
+        render_json_error(message: "Không có quyền truy cập. Token không hợp lệ.", status: :unauthorized)
       end
 
-      # Set current tenant dynamically using acts_as_tenant filter
       def set_tenant_from_user
+        return if @current_user&.respond_to?(:super_admin?) && @current_user.super_admin?
         return unless @current_user&.tenant
 
         set_current_tenant(@current_user.tenant)
       end
 
-      def mock_or_decode_user(token)
-        # Mocking user & tenant fallback for base controller bootstrap & testing
-        Tenant.first_or_create!(name: "Demo Tenant", subdomain: "demo") do |t|
+      def decode_mock_user(token)
+        return nil if token.blank?
+
+        tenant = Tenant.first_or_create!(subdomain: "demo") do |t|
+          t.name = "Demo Tenant"
           t.phone = "0901234567"
-        end.yield_self do |tenant|
-          User.first_or_create!(email: "admin@rentops.vn", tenant: tenant) do |u|
-            u.full_name = "Quản trị viên RentOps"
-          end
+        end
+
+        User.first_or_create!(email: "admin@rentops.vn") do |u|
+          u.full_name = "Quản trị viên RentOps"
+          u.tenant = tenant
         end
       end
 

@@ -6,6 +6,8 @@ gem "rails", "~> 8.0.0"
 
 # Database
 gem "mysql2", "~> 0.5.5"
+gem "tzinfo-data", platforms: %i[ mingw x64_mingw mswin mswin64 jruby ]
+gem "fiddle"
 
 # Multi-tenancy & Soft Delete
 gem "acts_as_tenant", "~> 1.0"
