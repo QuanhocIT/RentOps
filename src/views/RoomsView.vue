@@ -516,7 +516,10 @@ import AppLayout from '../components/AppLayout.vue'
 import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+import { useAuthStore } from '../stores/auth'
+
 const dataStore = useDataStore()
+const authStore = useAuthStore()
 const toastStore = useToastStore()
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -531,7 +534,13 @@ const showDetailModal = ref(false)
 const selectedDetailRoom = ref(null)
 
 const rooms = computed(() => {
-  return dataStore.rooms.map(r => ({
+  const isStaff = authStore.currentUser?.role === 'staff'
+  const assignedPropId = authStore.currentUser?.assignedPropertyId
+  let list = dataStore.rooms
+  if (isStaff && assignedPropId) {
+    list = list.filter(r => Number(r.propertyId) === Number(assignedPropId))
+  }
+  return list.map(r => ({
     ...r,
     propertyId: r.propertyId,
     propertyName: r.propertyName,
