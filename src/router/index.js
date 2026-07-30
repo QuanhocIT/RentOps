@@ -162,6 +162,10 @@ router.beforeEach((to) => {
   const isSuperAdminUser = authStore.currentUser?.role === 'super_admin' || authStore.currentUser?.email?.toLowerCase().includes('superadmin')
   const isRenterUser = authStore.currentUser?.role === 'renter'
 
+  if (authStore.isAuthenticated && to.name === 'TenantPortal' && !isRenterUser) {
+    return { name: 'Dashboard' }
+  }
+
   if (authStore.isAuthenticated) {
     if (isSuperAdminUser && to.path === '/') {
       return { name: 'SuperAdmin' }

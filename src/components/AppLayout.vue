@@ -72,9 +72,9 @@
           <div class="app-header-actions">
             <button class="app-header-action app-notification" type="button" aria-label="Thông báo" @click="$router.push('/notifications')">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              <span>3</span>
+              <span v-if="unreadCount > 0">{{ unreadCount }}</span>
             </button>
-            <button class="app-header-action" type="button" aria-label="Tin nhắn" @click="$router.push('/tenant-portal')">
+            <button v-if="isRenter" class="app-header-action" type="button" aria-label="Tin nhắn" @click="$router.push('/tenant-portal')">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 6.5A3.5 3.5 0 0 1 8.5 3h7A3.5 3.5 0 0 1 19 6.5v5a3.5 3.5 0 0 1-3.5 3.5H12l-4 3v-3.5A3.5 3.5 0 0 1 5 11.5v-5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" /><path d="M9 8.5h6M9 11h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg>
             </button>
             <button class="app-property-switcher" type="button" @click="$router.push('/settings')">
@@ -100,12 +100,16 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useDataStore } from '../stores/data'
 import ToastContainer from './ToastContainer.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const dataStore = useDataStore()
 const sidebarOpen = ref(false)
+
+const unreadCount = computed(() => dataStore.unreadNotificationsCount)
 
 const isSuperAdmin = computed(() => authStore.currentUser?.role === 'super_admin' || authStore.currentUser?.email?.toLowerCase().includes('superadmin'))
 const isRenter = computed(() => authStore.currentUser?.role === 'renter')
@@ -117,20 +121,18 @@ const landlordNavItems = [
   { name: 'Đặt phòng', path: '/contracts', icon: 'booking' },
   { name: 'Lịch', path: '/rooms', icon: 'calendar' },
   { name: 'Khách hàng', path: '/renters', icon: 'users' },
-  { name: 'Đánh giá', path: '/maintenance', icon: 'heart' },
+  { name: 'Đánh giá', path: '/maintenance', icon: 'heart', badge: computed(() => dataStore.pendingMaintenanceCount ? `${dataStore.pendingMaintenanceCount}` : null) },
   { name: 'Doanh thu', path: '/reports', icon: 'chart' },
   { name: 'Chi phí', path: '/expenses', icon: 'wallet' },
   { name: 'Chỉ số điện nước', path: '/utility-readings', icon: 'bolt' },
   { name: 'Dịch vụ & Tiện ích', path: '/services', icon: 'light' },
   { name: 'Tiện ích phòng', path: '/amenities', icon: 'sofa' },
   { name: 'Tài sản', path: '/assets', icon: 'box' },
-  { name: 'Thông báo', path: '/notifications', icon: 'bell' },
-  { name: 'Tin nhắn', path: '/tenant-portal', icon: 'message' },
+  { name: 'Thông báo', path: '/notifications', icon: 'bell', badge: computed(() => unreadCount.value ? `${unreadCount.value}` : null) },
   { name: 'Báo cáo', path: '/bills', icon: 'document' },
-  { name: 'Cổng cư dân', path: '/tenant-portal', icon: 'phone' },
   { name: 'Cài đặt', path: '/settings', icon: 'settings' },
   { name: 'Nhật ký thao tác', path: '/audit-logs', icon: 'history' },
-  { name: 'Thùng rác', path: '/trash', icon: 'trash' }
+  { name: 'Thùng rác', path: '/trash', icon: 'trash', badge: computed(() => dataStore.trash.length ? `${dataStore.trash.length}` : null) }
 ]
 
 const renterNavItems = [
@@ -155,11 +157,11 @@ const roleLabel = computed(() => {
   return 'Chủ doanh nghiệp'
 })
 const profileName = computed(() => authStore.currentUser?.full_name || 'Nguyễn Văn Minh')
-const propertyLabel = computed(() => authStore.currentTenant?.name || 'Minh House')
+const propertyLabel = computed(() => dataStore.properties[0]?.name || authStore.currentTenant?.name || 'Minh House')
 const propertyImage = '/images/rooms/living.png'
 const profileImage = '/images/rooms/main.png'
 const currentRouteName = computed(() => navItems.value.find((item) => item.path === route.path)?.name || 'Tổng quan')
-const subtitle = computed(() => 'Cập nhật tình hình kinh doanh của bạn hôm nay')
+const subtitle = computed(() => `${dataStore.settings.companyName || 'RentOps'} - Quản lý bất động sản`)
 
 const navIconPaths = {
   dashboard: '<path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>',
