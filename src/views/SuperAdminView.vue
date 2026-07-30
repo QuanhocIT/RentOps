@@ -58,7 +58,12 @@
         <div class="sa-security-copy">Bảo mật liên tục 24/7<br />100% dữ liệu được mã hóa</div>
         <button type="button" @click="setActiveTab('health')">Xem chi tiết</button>
       </div>
-      <div class="sa-sidebar-footer">© 2025 StayRent SaaS</div>
+      <div class="sa-sidebar-footer">
+        <button type="button" class="sa-sidebar-logout" @click="handleLogout">
+          🚪 Đăng xuất
+        </button>
+        <div class="sa-copyright-text">© 2025 StayRent SaaS</div>
+      </div>
     </aside>
 
     <div v-if="mobileSidebarOpen" class="sa-sidebar-backdrop" @click="mobileSidebarOpen = false"></div>
@@ -84,13 +89,27 @@
             ♧<span>12</span>
           </button>
           <button type="button" class="sa-icon-button" aria-label="Ngôn ngữ">◎</button>
-          <div class="sa-user-menu">
-            <div class="sa-avatar">{{ adminInitials }}</div>
-            <div class="sa-user-copy">
-              <strong>{{ adminName }}</strong>
-              <small>{{ adminEmail }}</small>
+
+          <div class="sa-user-wrapper">
+            <div class="sa-user-menu" @click="showProfileDropdown = !showProfileDropdown">
+              <div class="sa-avatar">{{ adminInitials }}</div>
+              <div class="sa-user-copy">
+                <strong>{{ adminName }}</strong>
+                <small>{{ adminEmail }}</small>
+              </div>
+              <span class="sa-user-chevron">⌄</span>
             </div>
-            <span class="sa-user-chevron">⌄</span>
+
+            <div v-if="showProfileDropdown" class="sa-profile-dropdown">
+              <div class="sa-dropdown-header">
+                <strong>{{ adminName }}</strong>
+                <p>{{ adminEmail }}</p>
+              </div>
+              <div class="sa-dropdown-divider"></div>
+              <button type="button" class="sa-dropdown-item sa-logout-item" @click="handleLogout">
+                🚪 Đăng xuất tài khoản
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -296,14 +315,24 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useToastStore } from '../stores/toast'
 import api from '../services/api'
 
+const router = useRouter()
 const authStore = useAuthStore()
+const toastStore = useToastStore()
 const activeTab = ref('tenants')
 const activeNavGroup = ref('overview')
 const mobileSidebarOpen = ref(false)
+const showProfileDropdown = ref(false)
 const searchTerm = ref('')
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/login')
+}
 
 const data = ref({ tenants: [], plans: [], total_tenants: 0, active_tenants: 0, mrr_estimate: 0, total_rooms: 0, total_contracts: 0, total_renters: 0 })
 const healthData = ref({})
@@ -416,7 +445,7 @@ const fetchSystemHealth = async () => {
     const res = await api.get('/super_admin/system_health')
     const payload = res?.data || res
     if (payload) healthData.value = payload
-  } catch (err) { console.error('Lỗi lấy thông số sức khỏe hệ thống:', err) }
+  } catch (err) { console.error('Lỗi lấy thông số hệ thống:', err) }
 }
 
 const fetchGlobalAuditLogs = async () => {
@@ -430,17 +459,17 @@ const fetchGlobalAuditLogs = async () => {
 const sendBroadcast = async () => {
   try {
     const res = await api.post('/super_admin/broadcast_notification', broadcastForm.value)
-    if (res?.success) { alert(res.message || 'Đã phát thông báo thành công!'); broadcastForm.value.title = ''; broadcastForm.value.content = '' }
-  } catch (err) { alert('Lỗi phát thông báo') }
+    if (res?.success) { toastStore.success(res.message || 'Đã phát thông báo thành công!'); broadcastForm.value.title = ''; broadcastForm.value.content = '' }
+  } catch (err) { toastStore.error('Lỗi phát thông báo') }
 }
 
 const openCreateTenantModal = () => { tenantForm.value = { name: '', subdomain: `tenant-${Date.now().toString().slice(-4)}`, phone: '0901234567', owner_name: '', owner_email: '', owner_password: 'Password123!', plan_id: data.value.plans?.[0]?.id || null }; showCreateTenantModal.value = true }
-const submitCreateTenant = async () => { try { const res = await api.post('/super_admin/create_tenant', tenantForm.value); if (res?.success) { alert(res.message || 'Tạo chủ trọ thành công!'); showCreateTenantModal.value = false; fetchOverview() } } catch (err) { alert(err?.message || 'Lỗi khi tạo chủ trọ mới') } }
+const submitCreateTenant = async () => { try { const res = await api.post('/super_admin/create_tenant', tenantForm.value); if (res?.success) { toastStore.success(res.message || 'Tạo chủ trọ thành công!'); showCreateTenantModal.value = false; fetchOverview() } } catch (err) { toastStore.error(err?.message || 'Lỗi khi tạo chủ trọ mới') } }
 const openCreatePlanModal = (plan = null) => { planForm.value = plan ? { id: plan.id, name: plan.name, max_rooms: plan.max_rooms, monthly_price: plan.monthly_price, description: plan.description || '' } : { id: null, name: '', max_rooms: 50, monthly_price: 299000, description: '' }; showPlanModal.value = true }
-const submitPlanForm = async () => { try { const res = planForm.value.id ? await api.put('/super_admin/update_plan_details', planForm.value) : await api.post('/super_admin/create_plan', planForm.value); if (res?.success) { alert(res.message || 'Cập nhật gói cước thành công!'); showPlanModal.value = false; fetchOverview() } } catch (err) { alert(err?.message || 'Lỗi xử lý gói cước') } }
-const changePlan = async (tenantId, planId) => { if (!planId) return; try { const res = await api.post('/super_admin/update_plan', { tenant_id: tenantId, plan_id: planId }); if (res?.success) { alert('Đã cập nhật gói cước thành công!'); fetchOverview() } } catch (err) { alert('Lỗi cập nhật gói cước') } }
-const toggleTenantStatus = async (tenantId) => { try { const res = await api.post('/super_admin/toggle_tenant_status', { tenant_id: tenantId }); if (res?.success) fetchOverview() } catch (err) { alert('Lỗi cập nhật trạng thái tenant') } }
-const deleteTenant = async (tenant) => { if (!confirm(`Bạn có chắc chắn muốn xóa Tenant "${tenant.name}"? Thao tác này không thể hoàn tác.`)) return; try { const res = await api.delete('/super_admin/delete_tenant', { data: { tenant_id: tenant.id } }); if (res?.success) { alert(res.message || 'Đã xóa tenant thành công!'); fetchOverview() } } catch (err) { alert('Lỗi khi xóa tenant') } }
+const submitPlanForm = async () => { try { const res = planForm.value.id ? await api.put('/super_admin/update_plan_details', planForm.value) : await api.post('/super_admin/create_plan', planForm.value); if (res?.success) { toastStore.success(res.message || 'Cập nhật gói cước thành công!'); showPlanModal.value = false; fetchOverview() } } catch (err) { toastStore.error(err?.message || 'Lỗi xử lý gói cước') } }
+const changePlan = async (tenantId, planId) => { if (!planId) return; try { const res = await api.post('/super_admin/update_plan', { tenant_id: tenantId, plan_id: planId }); if (res?.success) { toastStore.success('Đã cập nhật gói cước thành công!'); fetchOverview() } } catch (err) { toastStore.error('Lỗi cập nhật gói cước') } }
+const toggleTenantStatus = async (tenantId) => { try { const res = await api.post('/super_admin/toggle_tenant_status', { tenant_id: tenantId }); if (res?.success) { toastStore.success('Cập nhật trạng thái tenant thành công!'); fetchOverview() } } catch (err) { toastStore.error('Lỗi cập nhật trạng thái tenant') } }
+const deleteTenant = async (tenant) => { if (!confirm(`Bạn có chắc chắn muốn xóa Tenant "${tenant.name}"? Thao tác này không thể hoàn tác.`)) return; try { const res = await api.delete('/super_admin/delete_tenant', { data: { tenant_id: tenant.id } }); if (res?.success) { toastStore.success(res.message || 'Đã xóa tenant thành công!'); fetchOverview() } } catch (err) { toastStore.error('Lỗi khi xóa tenant') } }
 
 onMounted(() => { fetchOverview(); fetchSystemHealth(); fetchGlobalAuditLogs() })
 </script>
@@ -465,12 +494,25 @@ onMounted(() => { fetchOverview(); fetchSystemHealth(); fetchGlobalAuditLogs() }
 .sa-security-title { font-size: 10px; font-weight: 700; }
 .sa-security-copy { margin-top: 5px; color: #bbc4ed; font-size: 8px; line-height: 1.45; }
 .sa-security-card button { width: 100%; margin-top: 11px; padding: 7px 4px; border: 0; border-radius: 4px; background: linear-gradient(90deg, #7440ed, #6330d8); color: #fff; font: inherit; font-size: 9px; font-weight: 700; cursor: pointer; }
-.sa-sidebar-footer { padding: 13px 18px 15px; color: #7885ac; font-size: 8px; }
+.sa-sidebar-footer { padding: 13px 18px 15px; color: #7885ac; font-size: 8px; display: flex; flex-direction: column; gap: 8px; }
+.sa-sidebar-logout { width: 100%; padding: 8px 10px; border: 1px solid rgba(255,255,255,.15); border-radius: 6px; background: rgba(255, 64, 91, 0.15); color: #ff6b81; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s ease; text-align: center; }
+.sa-sidebar-logout:hover { background: #ff405b; color: #fff; box-shadow: 0 4px 12px rgba(255,64,91,.3); }
+.sa-copyright-text { font-size: 8px; opacity: .8; }
 .sa-sidebar-backdrop { display: none; }
 .sa-shell { min-height: 100vh; margin-left: clamp(154px, 15vw, 232px); }
 .sa-topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; min-height: 62px; padding: 0 26px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.94); backdrop-filter: blur(14px); }
 .sa-topbar-left, .sa-topbar-actions, .sa-user-menu, .sa-card-heading, .sa-kpi-head, .sa-kpi-foot, .sa-page-toolbar { display: flex; align-items: center; }
 .sa-topbar-left { gap: 12px; }
+.sa-user-wrapper { position: relative; }
+.sa-user-menu { cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: background .15s ease; }
+.sa-user-menu:hover { background: #f0f2f8; }
+.sa-profile-dropdown { position: absolute; right: 0; top: calc(100% + 8px); width: 220px; padding: 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(7, 18, 53, 0.15); z-index: 50; }
+.sa-dropdown-header { display: flex; flex-direction: column; gap: 2px; }
+.sa-dropdown-header strong { color: #151b3c; font-size: 13px; font-weight: 700; }
+.sa-dropdown-header p { color: var(--muted); font-size: 10px; margin: 0; }
+.sa-dropdown-divider { height: 1px; background: var(--border); margin: 8px 0; }
+.sa-dropdown-item { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 12px; border: 0; border-radius: 8px; background: #fff0f3; color: #e11d48; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+.sa-dropdown-item:hover { background: #e11d48; color: #ffffff; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25); }
 .sa-topbar-left h1 { margin: 0; color: #141b43; font-size: 17px; font-weight: 800; letter-spacing: -.35px; }
 .sa-topbar-left p { margin: 3px 0 0; color: #8790a8; font-size: 9px; }
 .sa-menu-button { display: none; }

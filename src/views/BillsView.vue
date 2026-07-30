@@ -676,9 +676,10 @@ const deleteBill = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa hóa đơn này?')) return
   try {
     await api.delete(`/monthly_bills/${id}`)
+    toast.success('Xóa hóa đơn thành công!')
     loadBills()
   } catch (err) {
-    alert(err?.message || 'Không thể xóa hóa đơn')
+    toast.error(err?.message || 'Không thể xóa hóa đơn')
   }
 }
 </script>

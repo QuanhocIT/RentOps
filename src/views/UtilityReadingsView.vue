@@ -348,11 +348,11 @@ const saveBatchReadings = async () => {
   submittingBatch.value = true
   try {
     const res = await api.post('/utility_readings/batch_create', { readings: batchItems.value })
-    alert(res?.message || 'Lưu chỉ số hàng loạt thành công!')
+    toastStore.success(res?.message || 'Lưu chỉ số hàng loạt thành công!')
     activeMode.value = 'list'
     fetchData()
   } catch (err) {
-    alert(err?.message || 'Lỗi lưu chỉ số hàng loạt')
+    toastStore.error(err?.message || 'Lỗi lưu chỉ số hàng loạt')
   } finally {
     submittingBatch.value = false
   }
@@ -380,11 +380,12 @@ const submitForm = async () => {
   submitting.value = true
   try {
     await api.post('/utility_readings', { utility_reading: form.value })
+    toastStore.success('Lưu chỉ số thành công!')
     showModal.value = false
     form.value.room_id = ''
     fetchData()
   } catch (err) {
-    alert(err?.message || 'Có lỗi xảy ra khi lưu chỉ số')
+    toastStore.error(err?.message || 'Có lỗi xảy ra khi lưu chỉ số')
   } finally {
     submitting.value = false
   }
@@ -394,9 +395,10 @@ const deleteReading = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa bản ghi chỉ số này?')) return
   try {
     await api.delete(`/utility_readings/${id}`)
+    toastStore.success('Đã xóa chỉ số thành công!')
     fetchData()
   } catch (err) {
-    alert(err?.message || 'Không thể xóa chỉ số')
+    toastStore.error(err?.message || 'Không thể xóa chỉ số')
   }
 }
 </script>

@@ -19,9 +19,9 @@
 
         <div class="home-actions">
           <button class="favorite-action" type="button" @click="toggleFavorite">♡ Yêu thích</button>
-          <button class="bell-action" type="button" aria-label="Thông báo">♧</button>
+          <button class="bell-action" type="button" aria-label="Thông báo" @click="notify('Bạn chưa có thông báo mới')">♧</button>
           <RouterLink class="home-login" to="/login">Đăng nhập</RouterLink>
-          <button class="home-listing" type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin phòng +</button>
+          <button class="home-listing" type="button" @click="showPostRoomModal = true">Đăng tin phòng +</button>
         </div>
       </div>
     </header>
@@ -49,10 +49,10 @@
       <section id="search" class="search-section">
         <div class="home-container">
           <form class="search-card" @submit.prevent="searchRooms">
-            <label class="search-field search-location"><span>Tìm kiếm</span><input v-model="searchTerm" type="text" placeholder="Nhập khu vực, tên đường..." /><b>⌖</b></label>
-            <label class="search-field"><span>Loại phòng</span><select v-model="roomType"><option>Tất cả loại phòng</option><option>Phòng trọ</option><option>Căn hộ dịch vụ</option><option>Homestay</option></select><b>⌄</b></label>
-            <label class="search-field"><span>Khoảng giá</span><select v-model="priceRange"><option>0đ - Không giới hạn</option><option>Dưới 3 triệu</option><option>3 - 7 triệu</option><option>Trên 7 triệu</option></select><b>⌄</b></label>
-            <label class="search-field"><span>Tiện ích</span><select v-model="amenity"><option>Chọn tiện ích</option><option>Wi-Fi miễn phí</option><option>Máy giặt</option><option>Bãi đỗ xe</option></select><b>⌄</b></label>
+            <label class="search-field search-location"><span>Tìm kiếm</span><input v-model="searchTerm" type="text" placeholder="Nhập khu vực, tên đường..." /></label>
+            <label class="search-field"><span>Loại phòng</span><select v-model="roomType"><option>Tất cả loại phòng</option><option>Phòng trọ</option><option>Căn hộ mini</option><option>Căn hộ dịch vụ</option><option>Homestay</option><option>Ở ghép</option></select></label>
+            <label class="search-field"><span>Khoảng giá</span><select v-model="priceRange"><option>0đ - Không giới hạn</option><option>Dưới 3 triệu</option><option>3 - 7 triệu</option><option>Trên 7 triệu</option></select></label>
+            <label class="search-field"><span>Tiện ích</span><select v-model="amenity"><option>Chọn tiện ích</option><option>Điều hòa</option><option>Máy giặt</option><option>Wi-Fi</option><option>Ban công</option><option>Nội thất</option></select></label>
             <button class="search-button" type="submit">⌕ <span>Tìm kiếm</span></button>
           </form>
         </div>
@@ -60,7 +60,14 @@
 
       <section id="categories" class="home-container category-section">
         <div class="category-list">
-          <button v-for="category in categories" :key="category.title" class="category-card" type="button" @click="notify(`Đang tìm ${category.title.toLowerCase()}`)">
+          <button
+            v-for="category in categories"
+            :key="category.title"
+            class="category-card"
+            :class="{ active: selectedCategory === category.title }"
+            type="button"
+            @click="selectCategory(category.title)"
+          >
             <div class="category-thumb">
               <img :src="category.image" :alt="category.title" />
               <span class="category-badge" v-html="category.svg"></span>
@@ -74,9 +81,18 @@
       </section>
 
       <section id="featured" class="home-container home-section featured-section">
-        <div class="section-title"><div><h2>Phòng nổi bật</h2><span class="title-note"><i>✓</i> Được xem nhiều nhất</span></div><button type="button" @click="notify('Đã hiển thị tất cả phòng nổi bật')">Xem tất cả →</button></div>
-        <div class="featured-grid">
-          <article v-for="room in featuredRooms" :key="room.id" class="featured-card" @click="goToRoomDetail(room)">
+        <div class="section-title">
+          <div>
+            <h2>Phòng nổi bật {{ activeFilterTag ? `(${activeFilterTag})` : '' }}</h2>
+            <span class="title-note"><i>✓</i> {{ filteredRoomsList.length }} phòng khả dụng</span>
+          </div>
+          <button type="button" @click="resetFilters">Xem tất cả phòng →</button>
+        </div>
+        <div v-if="filteredRoomsList.length === 0" class="p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-500">
+          Không tìm thấy phòng phù hợp với tiêu chí của bạn. <button @click="resetFilters" class="text-indigo-600 font-bold underline ml-1">Xóa bộ lọc</button>
+        </div>
+        <div v-else class="featured-grid">
+          <article v-for="room in filteredRoomsList" :key="room.id" class="featured-card" @click="goToRoomDetail(room)">
             <div class="featured-image"><img :src="room.image" :alt="room.title" /><span v-if="room.badge" class="room-badge">{{ room.badge }}</span><button class="card-heart" type="button" aria-label="Lưu phòng" @click.stop="toggleFavorite">♡</button><span class="room-image-count">◉ {{ room.photos }}</span></div>
             <div class="featured-body"><h3>{{ room.title }}</h3><p>{{ room.location }}</p><strong class="featured-price">{{ room.price }}</strong><div class="room-tags"><span v-for="tag in room.tags" :key="tag">{{ tag }}</span></div><div class="room-meta"><span>★ {{ room.rating }} <small>({{ room.reviews }})</small></span><span>{{ room.area }}</span><span>{{ room.shortAmenity }}</span></div></div>
           </article>
@@ -84,8 +100,21 @@
       </section>
 
       <section id="areas" class="home-container home-section areas-section">
-        <div class="section-title"><h2>Khu vực phổ biến</h2><button type="button" @click="notify('Đã hiển thị tất cả khu vực')">Xem tất cả →</button></div>
-        <div class="area-grid"><button v-for="area in areas" :key="area.name" class="area-card" type="button" @click="notify(`Đang tìm phòng tại ${area.name}`)"><img :src="area.image" :alt="area.name" /><span class="area-overlay"></span><span class="area-copy"><strong>⌖ {{ area.name }}</strong><small>{{ area.rooms }} phòng</small></span></button></div>
+        <div class="section-title"><h2>Khu vực phổ biến</h2><button type="button" @click="resetFilters">Tất cả khu vực →</button></div>
+        <div class="area-grid">
+          <button
+            v-for="area in areas"
+            :key="area.name"
+            class="area-card"
+            :class="{ active: selectedArea === area.name }"
+            type="button"
+            @click="selectArea(area.name)"
+          >
+            <img :src="area.image" :alt="area.name" />
+            <span class="area-overlay"></span>
+            <span class="area-copy"><strong>⌖ {{ area.name }}</strong><small>{{ area.rooms }} phòng</small></span>
+          </button>
+        </div>
       </section>
 
       <section id="amenities" class="home-container why-section">
@@ -123,26 +152,93 @@
 
       <section class="home-container reviews-section">
         <h2>Khách hàng nói gì về chúng tôi?</h2>
-        <div class="reviews-grid"><button class="review-arrow" type="button" aria-label="Đánh giá trước">‹</button><article v-for="review in reviews" :key="review.name"><div class="review-user"><img :src="review.avatar" :alt="review.name" /><span><strong>{{ review.name }}</strong><small>{{ review.role }}</small><b>★★★★★</b></span></div><p>“{{ review.comment }}”</p></article><button class="review-arrow" type="button" aria-label="Đánh giá tiếp">›</button></div>
+        <div class="reviews-grid">
+          <button class="review-arrow" type="button" aria-label="Đánh giá trước" @click="prevReview">‹</button>
+          <article v-for="review in visibleReviews" :key="review.name">
+            <div class="review-user">
+              <img :src="review.avatar" :alt="review.name" />
+              <span><strong>{{ review.name }}</strong><small>{{ review.role }}</small><b>★★★★★</b></span>
+            </div>
+            <p>“{{ review.comment }}”</p>
+          </article>
+          <button class="review-arrow" type="button" aria-label="Đánh giá tiếp" @click="nextReview">›</button>
+        </div>
       </section>
 
-      <section class="home-container listing-cta"><div><h2>Đăng tin cho thuê phòng ngay hôm nay!</h2><p>Tiếp cận hàng ngàn người tìm thuê mỗi ngày.</p><button type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin miễn phí <span>→</span></button></div><div class="cta-room-art"><img src="/images/rooms/living.png" alt="Không gian cho thuê" /><span>⌂</span></div></section>
+      <section class="home-container listing-cta">
+        <div>
+          <h2>Đăng tin cho thuê phòng ngay hôm nay!</h2>
+          <p>Tiếp cận hàng ngàn người tìm thuê mỗi ngày.</p>
+          <button type="button" @click="showPostRoomModal = true">Đăng tin miễn phí <span>→</span></button>
+        </div>
+        <div class="cta-room-art"><img src="/images/rooms/living.png" alt="Không gian cho thuê" /><span>⌂</span></div>
+      </section>
 
       <footer class="home-footer">
         <div class="home-container footer-grid">
-          <div class="footer-intro"><button class="home-brand" type="button" @click="scrollToTop"><span class="home-brand-mark">R</span><span>Rentalio</span></button><p>Nền tảng kết nối người thuê và chủ nhà đáng tin cậy, giúp bạn tìm không gian sống lý tưởng.</p><div class="footer-social"><button type="button">f</button><button type="button">◎</button><button type="button">▶</button><button type="button">◉</button></div></div>
+          <div class="footer-intro"><button class="home-brand" type="button" @click="scrollToTop"><span class="home-brand-mark">R</span><span>Rentalio</span></button><p>Nền tảng kết nối người thuê và chủ nhà đáng tin cậy, giúp bạn tìm không gian sống lý tưởng.</p><div class="footer-social"><button type="button" @click="notify('Kênh Facebook Rentalio')">f</button><button type="button" @click="notify('Kênh Instagram Rentalio')">◎</button><button type="button" @click="notify('Kênh YouTube Rentalio')">▶</button><button type="button" @click="notify('Kênh Zalo Rentalio')">◉</button></div></div>
           <div v-for="column in footerColumns" :key="column.title" class="footer-column"><h3>{{ column.title }}</h3><button v-for="item in column.items" :key="item" type="button" @click="notify(item)">{{ item }}</button></div>
         </div>
         <div class="home-container footer-copyright">© 2024 Rentalio. Tất cả quyền được bảo lưu.<button type="button" @click="scrollToTop">↑</button></div>
       </footer>
     </main>
 
+    <!-- Post Room Listing Modal -->
+    <div v-if="showPostRoomModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 text-slate-900 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><span>🏠</span> Đăng Tin Cho Thuê Phòng Mới</h3>
+          <button @click="showPostRoomModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+        </div>
+        <form @submit.prevent="submitNewListing" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Tiêu đề tin đăng *</label>
+            <input v-model="postForm.title" required type="text" placeholder="vd: Phòng trọ cao cấp ban công Quận 1" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium focus:outline-none focus:border-indigo-500" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Loại phòng *</label>
+              <select v-model="postForm.type" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+                <option>Phòng trọ</option>
+                <option>Căn hộ mini</option>
+                <option>Căn hộ dịch vụ</option>
+                <option>Homestay</option>
+                <option>Ở ghép</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Giá thuê hàng tháng *</label>
+              <input v-model="postForm.price" required type="text" placeholder="vd: 4.5 triệu/tháng" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Địa chỉ phòng *</label>
+            <input v-model="postForm.location" required type="text" placeholder="vd: 123 Nguyễn Thị Minh Khai, Quận 1, TP. HCM" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Diện tích (m²)</label>
+              <input v-model="postForm.area" type="text" placeholder="25m²" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Số điện thoại liên hệ *</label>
+              <input v-model="postForm.phone" required type="tel" placeholder="0901234567" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+            </div>
+          </div>
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+            <button type="button" @click="showPostRoomModal = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl">Hủy</button>
+            <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md">Đăng Tin Ngay</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div v-if="toastMessage" class="home-toast">✓ {{ toastMessage }}</div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -151,9 +247,22 @@ const searchTerm = ref('')
 const roomType = ref('Tất cả loại phòng')
 const priceRange = ref('0đ - Không giới hạn')
 const amenity = ref('Chọn tiện ích')
+const selectedCategory = ref('')
+const selectedArea = ref('')
 const toastMessage = ref('')
 const isFavorite = ref(false)
+const showPostRoomModal = ref(false)
+const activeReviewIndex = ref(0)
 let toastTimer
+
+const postForm = ref({
+  title: '',
+  type: 'Phòng trọ',
+  price: '',
+  location: '',
+  area: '25m²',
+  phone: ''
+})
 
 const heroImage = '/images/rooms/main.png'
 const dashboardStats = ref({ total_rooms: 0, occupied_rooms: 0, vacant_rooms: 0, occupancy_rate: 0, pending_maintenance_count: 0 })
@@ -170,12 +279,15 @@ const categories = [
   { title: 'Homestay', price: 'Giá từ 500k/đêm', image: '/images/rooms/kitchen.png', svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23214a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M12 11.5c-1.3 0-2.2.8-2.2 1.8 0 1.5 2.2 3.2 2.2 3.2s2.2-1.7 2.2-3.2c0-1-1-1.8-2.2-1.8z" fill="#23214a"/></svg>` },
   { title: 'Ở ghép', price: 'Giá từ 800k/người', image: '/images/studio.png', svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23214a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>` }
 ]
-const featuredRooms = [
-  { id: 101, title: 'Phòng trọ cao cấp Full nội thất', location: 'Quận 1, TP. Hồ Chí Minh', price: '4.5 triệu/tháng', image: '/images/suite.png', tags: ['Điều hòa', 'Máy giặt', 'Wi-Fi'], rating: '4.8', reviews: 120, badge: 'VIP', photos: 8, area: '25m²', shortAmenity: 'Đầy đủ nội thất' },
-  { id: 102, title: 'Căn hộ mini ban công thoáng mát', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '5.8 triệu/tháng', image: '/images/studio.png', tags: ['Ban công', 'Bếp riêng', 'Máy giặt'], rating: '4.9', reviews: 98, photos: 6, area: '32m²', shortAmenity: 'Có ban công' },
-  { id: 401, title: 'Căn hộ dịch vụ cao cấp', location: 'Phú Nhuận, TP. Hồ Chí Minh', price: '8.5 triệu/tháng', image: '/images/bedroom.png', tags: ['Nội thất', 'Hồ bơi', 'Gym'], rating: '4.8', reviews: 76, badge: 'VIP', photos: 10, area: '45m²', shortAmenity: 'Gym & hồ bơi' },
-  { id: 301, title: 'Homestay xinh xắn Đà Lạt', location: 'Đà Lạt, Lâm Đồng', price: '600k/đêm', image: '/images/rooms/bathroom.png', tags: ['View đẹp', 'Bếp chung', 'Yên tĩnh'], rating: '4.9', reviews: 56, photos: 12, area: '20m²', shortAmenity: 'View đẹp' }
+const initialFeaturedRooms = [
+  { id: 101, title: 'Phòng trọ cao cấp Full nội thất', location: 'Quận 1, TP. Hồ Chí Minh', price: '4.5 triệu/tháng', image: '/images/suite.png', tags: ['Điều hòa', 'Máy giặt', 'Wi-Fi'], rating: '4.8', reviews: 120, badge: 'VIP', photos: 8, area: '25m²', shortAmenity: 'Đầy đủ nội thất', category: 'Phòng trọ' },
+  { id: 102, title: 'Căn hộ mini ban công thoáng mát', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '5.8 triệu/tháng', image: '/images/studio.png', tags: ['Ban công', 'Bếp riêng', 'Máy giặt'], rating: '4.9', reviews: 98, photos: 6, area: '32m²', shortAmenity: 'Có ban công', category: 'Căn hộ mini' },
+  { id: 401, title: 'Căn hộ dịch vụ cao cấp', location: 'Phú Nhuận, TP. Hồ Chí Minh', price: '8.5 triệu/tháng', image: '/images/bedroom.png', tags: ['Nội thất', 'Hồ bơi', 'Gym'], rating: '4.8', reviews: 76, badge: 'VIP', photos: 10, area: '45m²', shortAmenity: 'Gym & hồ bơi', category: 'Căn hộ dịch vụ' },
+  { id: 301, title: 'Homestay xinh xắn Đà Lạt', location: 'Đà Lạt, Lâm Đồng', price: '600k/đêm', image: '/images/rooms/bathroom.png', tags: ['View đẹp', 'Bếp chung', 'Yên tĩnh'], rating: '4.9', reviews: 56, photos: 12, area: '20m²', shortAmenity: 'View đẹp', category: 'Homestay' }
 ]
+
+const featuredRooms = ref([...initialFeaturedRooms])
+
 const areas = [
   { name: 'Quận 1', rooms: '1.234', image: '/images/rooms/main.png' },
   { name: 'Bình Thạnh', rooms: '2.345', image: '/images/rooms/living.png' },
@@ -183,12 +295,6 @@ const areas = [
   { name: 'Thủ Đức', rooms: '2.125', image: '/images/hero_banner.png' },
   { name: 'Gò Vấp', rooms: '1.654', image: '/images/bedroom.png' },
   { name: 'Đà Lạt', rooms: '987', image: '/images/studio.png' }
-]
-const amenityCards = [
-  { icon: '⌂', title: 'Phòng đầy đủ nội thất', desc: 'Dọn vào ở ngay' },
-  { icon: '⌁', title: 'Không gian yên tĩnh', desc: 'Phù hợp làm việc' },
-  { icon: '◉', title: 'An ninh đảm bảo', desc: 'Hỗ trợ 24/7' },
-  { icon: '♧', title: 'Vị trí thuận tiện', desc: 'Gần trung tâm' }
 ]
 const whyItems = [
   { icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>', title: 'Tin đăng xác thực', desc: '100% tin đăng được kiểm duyệt thông tin rõ ràng.' },
@@ -205,7 +311,9 @@ const steps = [
 const reviews = [
   { name: 'Nguyễn Minh Anh', role: 'Sinh viên', avatar: '/images/rooms/main.png', comment: 'Tìm được phòng ưng ý chỉ trong 1 ngày! Giao diện dễ dùng, thông tin rõ ràng và chủ phòng rất nhiệt tình.' },
   { name: 'Trần Hoàng Nam', role: 'Nhân viên văn phòng', avatar: '/images/rooms/living.png', comment: 'Rất hài lòng với dịch vụ của Rentalio. Hỗ trợ nhanh chóng và nhiều lựa chọn phòng chất lượng.' },
-  { name: 'Lê Thu Trang', role: 'Freelancer', avatar: '/images/rooms/kitchen.png', comment: 'Homestay ở Đà Lạt rất xinh và sạch sẽ. Giá cả hợp lý, sẽ tiếp tục ủng hộ Rentalio!' }
+  { name: 'Lê Thu Trang', role: 'Freelancer', avatar: '/images/rooms/kitchen.png', comment: 'Homestay ở Đà Lạt rất xinh và sạch sẽ. Giá cả hợp lý, sẽ tiếp tục ủng hộ Rentalio!' },
+  { name: 'Phạm Đăng Khoa', role: 'Kỹ sư CNTT', avatar: '/images/suite.png', comment: 'Thanh toán qua VietQR gạch nợ tự động 24/7 vô cùng tiện lợi. Không còn lo trễ hạn đóng tiền nhà.' },
+  { name: 'Vũ Ngọc Khánh', role: 'Chủ chuỗi trọ Quận 7', avatar: '/images/studio.png', comment: 'Phần mềm giúp tôi quản lý 30 phòng dễ dàng. Hóa đơn và nhắc nợ ZNS tự động siêu tiết kiệm thời gian.' }
 ]
 const footerColumns = [
   { title: 'Về chúng tôi', items: ['Giới thiệu', 'Cách hoạt động', 'Tin tức', 'Tuyển dụng', 'Liên hệ'] },
@@ -214,16 +322,116 @@ const footerColumns = [
   { title: 'Liên hệ', items: ['1900 1234', 'support@rentalio.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
 ]
 
+const visibleReviews = computed(() => {
+  const count = reviews.length
+  return [
+    reviews[activeReviewIndex.value % count],
+    reviews[(activeReviewIndex.value + 1) % count],
+    reviews[(activeReviewIndex.value + 2) % count]
+  ]
+})
+
+const nextReview = () => {
+  activeReviewIndex.value = (activeReviewIndex.value + 1) % reviews.length
+}
+
+const prevReview = () => {
+  activeReviewIndex.value = (activeReviewIndex.value - 1 + reviews.length) % reviews.length
+}
+
+const activeFilterTag = computed(() => {
+  if (selectedCategory.value) return selectedCategory.value
+  if (selectedArea.value) return selectedArea.value
+  if (roomType.value !== 'Tất cả loại phòng') return roomType.value
+  return ''
+})
+
+const filteredRoomsList = computed(() => {
+  return featuredRooms.value.filter(room => {
+    if (searchTerm.value && !room.title.toLowerCase().includes(searchTerm.value.toLowerCase()) && !room.location.toLowerCase().includes(searchTerm.value.toLowerCase())) {
+      return false
+    }
+    if (roomType.value !== 'Tất cả loại phòng' && room.category && room.category !== roomType.value && !room.title.includes(roomType.value)) {
+      return false
+    }
+    if (selectedCategory.value && room.category !== selectedCategory.value && !room.title.includes(selectedCategory.value)) {
+      return false
+    }
+    if (selectedArea.value && !room.location.includes(selectedArea.value)) {
+      return false
+    }
+    if (amenity.value !== 'Chọn tiện ích' && !room.tags.some(t => t.includes(amenity.value)) && !room.shortAmenity.includes(amenity.value)) {
+      return false
+    }
+    return true
+  })
+})
+
+const selectCategory = (title) => {
+  if (selectedCategory.value === title) {
+    selectedCategory.value = ''
+  } else {
+    selectedCategory.value = title
+    selectedArea.value = ''
+  }
+  notify(`Đã lọc danh sách theo danh mục: ${title}`)
+}
+
+const selectArea = (name) => {
+  if (selectedArea.value === name) {
+    selectedArea.value = ''
+  } else {
+    selectedArea.value = name
+    selectedCategory.value = ''
+  }
+  notify(`Đã lọc danh sách theo khu vực: ${name}`)
+}
+
+const resetFilters = () => {
+  searchTerm.value = ''
+  roomType.value = 'Tất cả loại phòng'
+  priceRange.value = '0đ - Không giới hạn'
+  amenity.value = 'Chọn tiện ích'
+  selectedCategory.value = ''
+  selectedArea.value = ''
+  notify('Đã hiển thị tất cả danh sách phòng')
+}
+
+const searchRooms = () => {
+  notify(searchTerm.value ? `Đã tìm thấy ${filteredRoomsList.value.length} phòng tại "${searchTerm.value}"` : 'Đã lọc theo bộ lọc được chọn')
+}
+
+const submitNewListing = () => {
+  const newId = Date.now()
+  featuredRooms.value.unshift({
+    id: newId,
+    title: postForm.value.title,
+    location: postForm.value.location,
+    price: postForm.value.price,
+    image: '/images/rooms/main.png',
+    tags: ['Mới đăng', 'Chính chủ', 'Wi-Fi'],
+    rating: '5.0',
+    reviews: 1,
+    badge: 'MỚI',
+    photos: 5,
+    area: postForm.value.area || '25m²',
+    shortAmenity: 'Nội thất cơ bản',
+    category: postForm.value.type
+  })
+  showPostRoomModal.value = false
+  postForm.value = { title: '', type: 'Phòng trọ', price: '', location: '', area: '25m²', phone: '' }
+  notify('Đã đăng tin phòng thành công! Tin đăng của bạn đang hiển thị ở danh mục nổi bật.')
+}
+
 const notify = (message) => {
   toastMessage.value = message
   window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(() => { toastMessage.value = '' }, 2600)
 }
+
 const goToRoomDetail = (room) => router.push(`/room-detail/${room.id}`)
 const toggleFavorite = () => { isFavorite.value = !isFavorite.value; notify(isFavorite.value ? 'Đã lưu vào danh sách yêu thích' : 'Đã bỏ lưu') }
-const searchRooms = () => notify(searchTerm.value ? `Đang tìm phòng tại ${searchTerm.value}` : 'Hãy nhập khu vực bạn muốn tìm')
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
-const scrollToSearch = () => document.querySelector('#search')?.scrollIntoView({ behavior: 'smooth' })
 
 const loadDashboardStats = async () => {
   try {
@@ -237,7 +445,7 @@ const loadDashboardStats = async () => {
       pending_maintenance_count: counters.pending_maintenance_count ?? 0
     }
   } catch {
-    // Keep the showcase fallback content when the API is unavailable.
+    // Fallback
   }
 }
 
@@ -248,7 +456,7 @@ onMounted(loadDashboardStats)
 :global(*) { box-sizing: border-box; }
 :global(body) { margin: 0; background: #f8f9fc; }
 button, input, select { font: inherit; }
-.home-page { min-height: 100vh; overflow: hidden; color: #273147; background: #f8f9fc; font-family: "Times New Roman", Times, serif; }
+.home-page { min-height: 100vh; overflow: hidden; color: #273147; background: #f8f9fc; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
 .home-container { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
 .home-header { position: sticky; z-index: 20; top: 0; height: 76px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); backdrop-filter: blur(14px); }
 .home-header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; }

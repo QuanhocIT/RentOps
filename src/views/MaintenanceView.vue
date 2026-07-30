@@ -275,7 +275,9 @@
 import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import api from '../services/api'
+import { useToastStore } from '../stores/toast'
 
+const toastStore = useToastStore()
 const requests = ref([])
 const rooms = ref([])
 const loading = ref(false)
@@ -324,7 +326,7 @@ const getPriorityBadge = (p) => {
 const getStatusBadge = (s) => {
   if (s === 'resolved' || s === 2) return 'bg-emerald-100 text-emerald-800'
   if (s === 'in_progress' || s === 1) return 'bg-blue-100 text-blue-800'
-  return 'bg-amber-100 text-amber-800'
+  return 'bg-rose-100 text-rose-800'
 }
 
 const getStatusLabel = (s) => {
@@ -359,11 +361,12 @@ const createRequest = async () => {
   submitting.value = true
   try {
     await api.post('/maintenance_requests', { maintenance_request: form.value })
+    toastStore.success('Gửi yêu cầu bảo trì thành công!')
     showModal.value = false
     form.value = { title: '', room_id: '', priority: 'medium', description: '', cost_bearer: 'owner', handyman_name: '' }
     loadData()
   } catch (err) {
-    alert(err?.message || 'Có lỗi xảy ra')
+    toastStore.error(err?.message || 'Có lỗi xảy ra')
   } finally {
     submitting.value = false
   }
@@ -376,9 +379,10 @@ const openResolveModal = async (req) => {
     await api.put(`/maintenance_requests/${req.id}`, {
       maintenance_request: { status: 'resolved', cost: Number(cost) }
     })
+    toastStore.success('Đã cập nhật trạng thái sự cố thành công!')
     loadData()
   } catch (err) {
-    alert(err?.message || 'Không thể cập nhật sự cố')
+    toastStore.error(err?.message || 'Không thể cập nhật sự cố')
   }
 }
 
@@ -386,9 +390,10 @@ const deleteRequest = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa yêu cầu sự cố này?')) return
   try {
     await api.delete(`/maintenance_requests/${id}`)
+    toastStore.success('Đã xóa sự cố thành công!')
     loadData()
   } catch (err) {
-    alert(err?.message || 'Lỗi xóa sự cố')
+    toastStore.error(err?.message || 'Lỗi xóa sự cố')
   }
 }
 </script>

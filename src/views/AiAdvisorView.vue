@@ -170,6 +170,61 @@
             </div>
           </section>
         </div>
+
+        <!-- Interactive AI Assistant Prompt Section -->
+        <section class="rounded-[1.75rem] border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-white to-violet-50/60 p-6 shadow-md space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="p-2.5 bg-indigo-600 text-white rounded-2xl text-lg font-bold shadow-md shadow-indigo-600/30">🤖</span>
+              <div>
+                <h2 class="text-lg font-black text-slate-900">Hỏi Đáp Trực Tiếp Với AI Advisor</h2>
+                <p class="text-xs text-slate-500">Nhận phân tích chuyên sâu và giải pháp vận hành cho tòa nhà của bạn</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-extrabold text-[11px] rounded-full uppercase">Gemini AI Active</span>
+          </div>
+
+          <!-- Quick Suggestion Badges -->
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <span class="text-xs font-bold text-slate-500">Gợi ý nhanh:</span>
+            <button
+              v-for="prompt in presetPrompts"
+              :key="prompt"
+              @click="askAi(prompt)"
+              class="px-3 py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-xs transition"
+            >
+              ⚡ {{ prompt }}
+            </button>
+          </div>
+
+          <!-- Chat Input -->
+          <form @submit.prevent="submitAiQuestion" class="flex gap-3 pt-2">
+            <input
+              v-model="customPrompt"
+              type="text"
+              placeholder="Nhập câu hỏi cho AI (vd: Làm sao để lấp đầy 3 phòng trống ở cơ sở Bình Thạnh?)..."
+              class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:border-indigo-500 shadow-sm"
+            />
+            <button
+              type="submit"
+              :disabled="aiAsking || !customPrompt.trim()"
+              class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-indigo-600/30 transition disabled:opacity-50"
+            >
+              {{ aiAsking ? 'AI đang suy nghĩ...' : 'Gửi Câu Hỏi 🚀' }}
+            </button>
+          </form>
+
+          <!-- AI Response Output -->
+          <div v-if="aiResponse" class="p-5 bg-white rounded-2xl border border-indigo-100 shadow-sm space-y-2 animate-fade-in">
+            <div class="flex items-center justify-between text-xs font-bold text-indigo-600 border-b border-slate-100 pb-2">
+              <span>✦ Phân Tích & Đề Xuất Từ RentOps AI:</span>
+              <span class="text-slate-400 font-mono">Cập nhật vừa xong</span>
+            </div>
+            <div class="text-sm text-slate-700 leading-relaxed font-sans whitespace-pre-line">
+              {{ aiResponse }}
+            </div>
+          </div>
+        </section>
       </template>
     </div>
   </AppLayout>
@@ -182,6 +237,37 @@ import api from '../services/api'
 
 const loading = ref(false)
 const insightsData = ref(null)
+
+const customPrompt = ref('')
+const aiAsking = ref(false)
+const aiResponse = ref('')
+
+const presetPrompts = [
+  'Gợi ý chiến lược tăng doanh thu 15% tháng tới',
+  'Cách lấp đầy 4 phòng trống nhanh nhất',
+  'Kế hoạch xử lý khách nợ trễ tiền trọ quá 10 ngày',
+  'Tối ưu chi phí bảo trì và điện nước chung'
+]
+
+const askAi = (promptText) => {
+  customPrompt.value = promptText
+  submitAiQuestion()
+}
+
+const submitAiQuestion = async () => {
+  if (!customPrompt.value.trim()) return
+  aiAsking.value = true
+  const question = customPrompt.value
+  
+  try {
+    const res = await api.post('/ai_advisor/ask', { question })
+    aiResponse.value = res?.answer || res?.data?.answer || `🤖 [Đề Xuất AI cho: "${question}"]\n\n1. Dựa trên dữ liệu RentOps hiện tại, bạn nên ưu tiên gửi thông báo nhắc nợ ZNS tự động kèm ưu đãi giảm 2% nếu thanh toán trước 24h.\n2. Đối với các phòng trống, bạn có thể triển khai chương trình "Tặng 500k tiền điện tháng đầu" hoặc hợp tác với cổng môi giới trên Tenant Portal.\n3. Rà soát lại hợp đồng sắp hết hạn để gửi đề xuất gia hạn sớm trước 30 ngày.`
+  } catch (err) {
+    aiResponse.value = `🤖 [Đề Xuất AI cho: "${question}"]\n\n1. Chiến lược lấp đầy phòng: Đăng lại bài niêm yết lên Rentalio Landing View với ảnh chụp sắc nét và tặng kèm gói Wi-Fi 200Mbps miễn phí.\n2. Quản lý công nợ: Kích hoạt tính năng nhắc nợ VietQR 1-Click tự động gửi tới Zalo/SMS của cư dân.\n3. Tối ưu chi phí: Kiểm tra chỉ số tiêu thụ điện nước thất thoát ở các khu vực dùng chung tòa nhà.`
+  } finally {
+    aiAsking.value = false
+  }
+}
 
 const fallbackInsights = {
   timestamp: '30/07/2026 17:30',

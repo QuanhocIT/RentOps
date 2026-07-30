@@ -246,6 +246,10 @@ const loadSettings = async () => {
   }
 }
 
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
+
 const openUpgradeModal = async () => {
   showUpgradeModal.value = true
   try {
@@ -262,11 +266,11 @@ const upgradePlan = async (planId) => {
   upgrading.value = true
   try {
     const res = await api.post('/tenant_settings/upgrade_plan', { plan_id: planId })
-    alert(res?.message || 'Nâng cấp gói tài khoản thành công!')
+    toastStore.success(res?.message || 'Nâng cấp gói tài khoản thành công!')
     showUpgradeModal.value = false
     await loadSettings()
   } catch (err) {
-    alert(err?.message || 'Không thể nâng cấp gói dịch vụ')
+    toastStore.error(err?.message || 'Không thể nâng cấp gói dịch vụ')
   } finally {
     upgrading.value = false
   }
@@ -277,10 +281,11 @@ const updateSettings = async () => {
   savedMessage.value = ''
   try {
     await api.put('/tenant_settings', { tenant: form.value })
+    toastStore.success('Đã lưu thông tin cấu hình thành công!')
     savedMessage.value = 'Đã lưu thông tin cấu hình thành công!'
     setTimeout(() => { savedMessage.value = '' }, 3000)
   } catch (err) {
-    alert(err?.message || 'Không thể lưu cấu hình')
+    toastStore.error(err?.message || 'Không thể lưu cấu hình')
   } finally {
     submitting.value = false
   }

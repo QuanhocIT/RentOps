@@ -136,6 +136,9 @@
 import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import api from '../services/api'
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
 
 const defaultSampleAmenities = [
   { id: 1, name: "Điều Hòa Inverter 2 Chiều", icon: "❄️" },
@@ -203,7 +206,7 @@ const seedSampleData = async () => {
     }
   }
   await loadAmenities()
-  alert('Đã khởi tạo xong dữ liệu mẫu tiện ích!')
+  toastStore.success('Đã khởi tạo xong dữ liệu mẫu tiện ích!')
 }
 
 onMounted(loadAmenities)

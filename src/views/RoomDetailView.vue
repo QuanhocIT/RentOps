@@ -421,7 +421,7 @@ const UiIcon = (props) => h('svg', { width: props.size || 18, height: props.size
 :global(body) { background: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button { font: inherit; }
 .detail-page { min-height: 100vh; color: #172033; background: #fff; font-size: 15px; }
-.detail-header { height: 76px; background: rgba(255,255,255,.98); border-bottom: 1px solid #eef0f5; font-family: "Times New Roman", Times, serif; }
+.detail-header { height: 76px; background: rgba(255,255,255,.98); border-bottom: 1px solid #eef0f5; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
 .header-inner { max-width: 1280px; height: 100%; margin: auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
 .brand, .header-link, .avatar-button, .round-action, .gallery-arrow, .photo-count, .thumbnail, .detail-tabs button, .read-more, .section-heading button, .host-card button, .modal-header button { border: 0; background: transparent; cursor: pointer; }
 .brand { display: flex; align-items: center; gap: 9px; color: #101828; }

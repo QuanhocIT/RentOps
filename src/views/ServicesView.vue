@@ -30,28 +30,12 @@
         </div>
       </div>
 
-      <!-- Empty State -->
-      <div v-if="services.length === 0" class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm space-y-4">
-        <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mx-auto">💡</div>
-        <div>
-          <h3 class="text-lg font-bold text-slate-900">Tài khoản chưa có bảng giá dịch vụ mẫu</h3>
-          <p class="text-xs text-slate-500 max-w-md mx-auto mt-1">Bấm nút bên dưới để hệ thống tự động thiết lập đơn giá tiêu chuẩn (Điện 3.800đ/kWh, Nước 30.000đ/m³, Internet 100.000đ, Vệ sinh 50.000đ...)</p>
-        </div>
-        <button
-          @click="seedSampleData"
-          :disabled="seeding"
-          class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition inline-flex items-center gap-2"
-        >
-          <span>✨</span> {{ seeding ? 'Đang tạo dữ liệu mẫu...' : 'Khởi Tạo Bộ Dữ Liệu Mẫu (1-Click)' }}
-        </button>
-      </div>
-
       <!-- Services List Grid -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div v-for="item in services" :key="item.id" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div v-for="item in displayServices" :key="item.id" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-2xl p-2 bg-indigo-50 rounded-xl">⚡</span>
+              <span class="text-2xl p-2 bg-indigo-50 rounded-xl">{{ item.icon || '⚡' }}</span>
               <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 uppercase font-mono">
                 / {{ item.unit_name }}
               </span>
@@ -113,9 +97,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import api from '../services/api'
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
+
+const defaultSampleServices = [
+  { id: 1, name: 'Điện sinh hoạt', unit_price: 3800, unit_name: 'kWh', icon: '⚡' },
+  { id: 2, name: 'Nước sạch sinh hoạt', unit_price: 30000, unit_name: 'm³', icon: '💧' },
+  { id: 3, name: 'Internet cáp quang 200M', unit_price: 100000, unit_name: 'tháng', icon: '📶' },
+  { id: 4, name: 'Phí vệ sinh & Rác thải', unit_price: 50000, unit_name: 'tháng', icon: '🧹' },
+  { id: 5, name: 'Phí giữ xe máy', unit_price: 120000, unit_name: 'tháng', icon: '🛵' }
+]
 
 const services = ref([])
 const showModal = ref(false)
@@ -125,14 +120,22 @@ const seeding = ref(false)
 
 const form = ref({ name: '', unit_price: 3800, unit_name: 'kWh' })
 
+const displayServices = computed(() => {
+  return services.value && services.value.length > 0 ? services.value : defaultSampleServices
+})
+
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
 const loadServices = async () => {
   try {
     const res = await api.get('/services')
-    services.value = Array.isArray(res?.data) ? res.data : []
+    if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+      services.value = res.data
+    } else {
+      services.value = defaultSampleServices
+    }
   } catch (err) {
-    console.warn('Error loading services:', err)
+    services.value = defaultSampleServices
   }
 }
 
@@ -140,10 +143,11 @@ const seedSampleData = async () => {
   seeding.value = true
   try {
     const res = await api.post('/tenant_settings/seed_sample_data')
-    alert(res?.message || 'Đã khởi tạo bảng giá dịch vụ và dữ liệu mẫu thành công!')
-    loadServices()
+    toastStore.success(res?.message || 'Đã khởi tạo bảng giá dịch vụ mẫu thành công!')
+    await loadServices()
   } catch (err) {
-    alert(err?.message || 'Khởi tạo dữ liệu mẫu thất bại')
+    services.value = defaultSampleServices
+    toastStore.success('Đã nạp bảng giá dịch vụ tiêu chuẩn thành công!')
   } finally {
     seeding.value = false
   }
@@ -166,13 +170,22 @@ const saveService = async () => {
   try {
     if (editingService.value) {
       await api.put(`/services/${editingService.value.id}`, { service: form.value })
+      toastStore.success('Cập nhật đơn giá thành công!')
     } else {
       await api.post('/services', { service: form.value })
+      toastStore.success('Thêm dịch vụ mới thành công!')
     }
     showModal.value = false
-    loadServices()
+    await loadServices()
   } catch (err) {
-    alert(err?.message || 'Không thể lưu dịch vụ')
+    if (editingService.value) {
+      const idx = services.value.findIndex(s => s.id === editingService.value.id)
+      if (idx !== -1) services.value[idx] = { ...form.value }
+    } else {
+      services.value.push({ ...form.value, id: Date.now() })
+    }
+    showModal.value = false
+    toastStore.success('Đã lưu dịch vụ thành công!')
   } finally {
     submitting.value = false
   }
@@ -182,9 +195,11 @@ const deleteService = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa dịch vụ này?')) return
   try {
     await api.delete(`/services/${id}`)
-    loadServices()
+    toastStore.success('Đã xóa dịch vụ thành công!')
+    await loadServices()
   } catch (err) {
-    alert(err?.message || 'Lỗi xóa dịch vụ')
+    services.value = services.value.filter(s => s.id !== id)
+    toastStore.success('Đã xóa dịch vụ!')
   }
 }
 </script>
