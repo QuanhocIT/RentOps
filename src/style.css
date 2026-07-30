@@ -134,3 +134,138 @@
   transform: none !important;
 }
 
+/* --- Owner Workspace UI --- */
+.owner-page {
+  width: 100%;
+  max-width: 1440px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.owner-page > div:first-child {
+  position: relative;
+}
+
+.owner-page > div:first-child h1 {
+  max-width: 860px;
+}
+
+.owner-page > div:first-child > div:first-child > div:first-child > span:first-child {
+  color: #5d48ef;
+  border-color: #e1ddff;
+  background: #efedff;
+}
+
+.owner-page .shadow-xs {
+  box-shadow: 0 6px 20px rgba(40, 54, 88, 0.045);
+}
+
+.owner-page .rounded-xl,
+.owner-page .rounded-2xl {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.owner-page .rounded-xl.border:hover,
+.owner-page .rounded-2xl.border:hover {
+  border-color: #d9d4ff;
+}
+
+.owner-page .bg-slate-100.p-1 {
+  border-color: #e4e8f1;
+  background: #f4f6fb;
+}
+
+.owner-page .bg-slate-100.p-1 button {
+  min-height: 30px;
+}
+
+.app-content > .space-y-6 {
+  color: #1d2946;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-content > .space-y-6 > div:first-child h1 {
+  color: #18223d;
+  font-size: clamp(1.65rem, 2vw, 2rem);
+  letter-spacing: -0.045em;
+  line-height: 1.15;
+}
+
+.app-content > .space-y-6 > div:first-child p {
+  color: #8993a8;
+  line-height: 1.55;
+}
+
+.app-content .bg-white.rounded-2xl.border.border-slate-200,
+.app-content .bg-white\/90.rounded-2xl.border,
+.app-content .bg-white\/95.rounded-2xl.border {
+  border-color: #e4e9f2;
+  box-shadow: 0 6px 20px rgba(40, 54, 88, 0.045);
+}
+
+.app-content .bg-white.rounded-2xl.border.border-slate-200:hover,
+.app-content .bg-white\/90.rounded-2xl.border:hover,
+.app-content .bg-white\/95.rounded-2xl.border:hover {
+  border-color: #d8d3ff;
+}
+
+.app-content input:not([type="checkbox"]):not([type="radio"]),
+.app-content select,
+.app-content textarea {
+  border-color: #e0e6f0;
+  border-radius: 10px;
+  color: #2b3650;
+  font-family: inherit;
+  background: #fbfcff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.app-content input:not([type="checkbox"]):not([type="radio"]):focus,
+.app-content select:focus,
+.app-content textarea:focus {
+  border-color: #a69bfa;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(105, 77, 245, 0.1);
+}
+
+.app-content button.bg-indigo-600,
+.app-content button.bg-indigo-500 {
+  border: 0;
+  background: linear-gradient(100deg, #5542e9, #7653f2);
+  box-shadow: 0 9px 18px rgba(92, 70, 234, 0.16);
+}
+
+.app-content button.bg-indigo-600:hover,
+.app-content button.bg-indigo-500:hover {
+  background: linear-gradient(100deg, #4936d5, #6843e5);
+}
+
+.app-content table thead {
+  color: #69758c;
+  background: #fafbfe;
+}
+
+.app-content table th {
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+}
+
+.app-content table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+.app-content table tbody tr:hover {
+  background: #f7f6ff;
+}
+
+.app-content .font-mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 640px) {
+  .app-content > .space-y-6 > div:first-child h1 {
+    font-size: 1.5rem;
+  }
+}
