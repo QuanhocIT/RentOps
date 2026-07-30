@@ -1038,4 +1038,229 @@ const contactUs = () => {
   .support-cta-action { width: 100%; }
   .support-cta-action a { justify-content: center; width: 100%; }
 }
+
+.about-main { position: relative; padding-top: 36px; padding-bottom: 34px; }
+
+.about-breadcrumb {
+  display: inline-flex;
+  padding: 8px 13px;
+  border: 1px solid #eaecf5;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .7);
+  box-shadow: 0 5px 15px rgba(36, 44, 78, .03);
+}
+
+.about-hero {
+  position: relative;
+  margin-top: 24px;
+  margin-bottom: 92px !important;
+}
+
+.about-hero-copy { position: relative; z-index: 1; }
+
+.about-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6756dc;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.about-hero-eyebrow span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6756dc;
+  box-shadow: 0 0 0 5px rgba(103, 86, 220, .1);
+}
+
+.about-hero-eyebrow b { color: #b0a9d9; font-size: 14px; }
+
+.about-hero-copy h1 {
+  max-width: 520px;
+  margin-top: 17px;
+  color: #141a35;
+  font-size: clamp(40px, 4.15vw, 54px);
+  letter-spacing: -.065em;
+  line-height: 1.04;
+}
+
+.about-hero-copy h1 + div {
+  width: 54px;
+  height: 4px;
+  margin-top: 18px;
+  box-shadow: 0 4px 10px rgba(91, 70, 224, .22);
+}
+
+.about-hero-copy > p {
+  max-width: 475px;
+  margin-top: 23px;
+  color: #6d7891;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.about-hero-copy a { min-height: 49px; padding-right: 19px; padding-left: 19px; border-radius: 15px; }
+.about-hero-copy a:first-child { box-shadow: 0 12px 22px rgba(91, 70, 224, .2); }
+
+.about-hero-media-wrap { position: relative; }
+
+.about-hero-media {
+  min-height: 380px;
+  border: 6px solid rgba(255, 255, 255, .76) !important;
+  border-radius: 30px !important;
+  background: #dfe5f2;
+  box-shadow: 0 24px 48px rgba(32, 40, 73, .14) !important;
+}
+
+.about-hero-media::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(145deg, rgba(23, 31, 62, .05), transparent 48%, rgba(37, 28, 87, .25));
+  content: '';
+}
+
+.about-hero-media img {
+  height: 380px !important;
+  filter: saturate(.92) contrast(1.03);
+}
+
+.about-hero-image-badge {
+  position: absolute;
+  z-index: 2;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px 10px 10px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 15px;
+  background: rgba(23, 29, 54, .58);
+  box-shadow: 0 8px 22px rgba(12, 18, 38, .2);
+  backdrop-filter: blur(12px);
+}
+
+.about-hero-image-badge > span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #6e5be7;
+  border-radius: 10px;
+  background: #efedff;
+  font-size: 15px;
+}
+
+.about-hero-image-badge div { display: flex; flex-direction: column; gap: 2px; }
+.about-hero-image-badge strong { font-size: 11px; font-weight: 800; }
+.about-hero-image-badge small { color: rgba(255, 255, 255, .72); font-size: 10px; }
+
+.about-mission-wrap { position: relative; }
+
+.about-mission-card {
+  position: relative;
+  overflow: hidden;
+  padding: 22px !important;
+  border: 1px solid #e3e5f6 !important;
+  border-radius: 27px !important;
+  background: linear-gradient(160deg, #fbfbff, #f1f1ff) !important;
+  box-shadow: 0 18px 38px rgba(44, 45, 104, .09) !important;
+}
+
+.about-mission-card::after {
+  position: absolute;
+  top: -60px;
+  right: -55px;
+  width: 150px;
+  height: 150px;
+  border: 1px solid rgba(103, 86, 220, .12);
+  border-radius: 50%;
+  content: '';
+}
+
+.about-mission-heading { position: relative; z-index: 1; padding-bottom: 14px; border-bottom: 1px solid #e8e9f6; }
+.about-mission-heading span { display: block; margin-bottom: 5px; color: #7463dd; font-size: 9px; font-weight: 800; letter-spacing: .17em; }
+.about-mission-heading strong { display: block; color: #202744; font-size: 16px; font-weight: 800; }
+.about-mission-heading small { display: block; margin-top: 4px; color: #8b93aa; font-size: 11px; line-height: 1.5; }
+
+.about-mission-item { position: relative; z-index: 1; padding-top: 2px; }
+.about-mission-item + .about-mission-item { padding-top: 17px; border-top: 1px solid #e8e9f6; }
+.about-mission-icon { width: 42px !important; height: 42px !important; border-radius: 14px !important; box-shadow: 0 5px 12px rgba(103, 86, 220, .08); }
+.about-mission-item h3 { font-size: 14px; }
+.about-mission-item p { font-size: 12px; line-height: 1.55; }
+
+.about-values { position: relative; }
+.about-values > div:first-child { position: relative; margin-bottom: 30px; }
+.about-values > div:first-child::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #e9eaf4;
+  content: '';
+}
+
+.about-values > div:first-child h2,
+.about-values > div:first-child > div { position: relative; z-index: 1; background: #f7f8fc; }
+.about-values > div:first-child h2 { display: inline-block; padding: 0 18px; font-size: 31px; }
+.about-values > div:first-child > div { width: 42px; margin-right: auto; margin-left: auto; }
+.about-values-grid { gap: 16px !important; }
+
+.about-value-card {
+  position: relative;
+  min-height: 210px;
+  overflow: hidden;
+  padding: 29px 22px !important;
+  border: 1px solid #e8eaf3 !important;
+  border-radius: 24px !important;
+  background: linear-gradient(160deg, #fff 10%, #fbfbff 100%);
+  box-shadow: 0 10px 25px rgba(32, 41, 74, .045) !important;
+}
+
+.about-value-card::before {
+  position: absolute;
+  top: -34px;
+  right: -34px;
+  width: 110px;
+  height: 110px;
+  border: 1px solid rgba(106, 86, 225, .1);
+  border-radius: 50%;
+  content: '';
+}
+
+.about-value-icon {
+  position: relative;
+  z-index: 1;
+  width: 58px !important;
+  height: 58px !important;
+  margin-bottom: 18px !important;
+  border: 1px solid #e4defe;
+  background: linear-gradient(145deg, #eeeaff, #f8f6ff) !important;
+  box-shadow: 0 8px 18px rgba(91, 70, 224, .11);
+}
+
+.about-value-icon svg { width: 22px !important; height: 22px !important; }
+.about-value-card h3 { position: relative; z-index: 1; font-size: 15px; }
+.about-value-card p { position: relative; z-index: 1; font-size: 12.5px; }
+
+@media (max-width: 1024px) {
+  .about-hero-copy h1 { font-size: 40px; }
+  .about-hero-media, .about-hero-media img { height: 340px !important; min-height: 340px; }
+}
+
+@media (max-width: 640px) {
+  .about-main { padding-top: 21px; }
+  .about-hero { margin-top: 16px; margin-bottom: 55px !important; }
+  .about-hero-copy h1 { font-size: 38px; }
+  .about-hero-media, .about-hero-media img { height: 285px !important; min-height: 285px; }
+  .about-hero-image-badge { right: 12px; bottom: 12px; }
+  .about-values > div:first-child h2 { padding: 0 10px; font-size: 27px; }
+}
 </style>
