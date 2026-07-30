@@ -114,14 +114,85 @@
         <!-- Properties List -->
         <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
-            <h2 class="font-bold text-slate-900 text-lg">Danh Sách Bất Động Sản ({{ filteredProperties.length }})</h2>
+            <h2 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+              <span>Danh Sách Bất Động Sản</span>
+              <span class="text-xs font-normal text-slate-400">({{ filteredProperties.length }})</span>
+            </h2>
             <div class="flex items-center gap-3">
-              <input v-model="searchQuery" class="w-64 rounded-xl border border-slate-300 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tìm theo tên hoặc địa chỉ..." />
+              <!-- View Switcher -->
+              <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button 
+                  @click="viewMode = 'grid'"
+                  :class="['px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1', viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+                >
+                  <span>🎴</span> Dạng Thẻ
+                </button>
+                <button 
+                  @click="viewMode = 'table'"
+                  :class="['px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1', viewMode === 'table' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+                >
+                  <span>📊</span> Dạng Bảng
+                </button>
+              </div>
+
+              <input v-model="searchQuery" class="w-56 rounded-xl border border-slate-300 px-3.5 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tìm theo tên hoặc địa chỉ..." />
               <button class="p-2 text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition" @click="loadProperties">🔄</button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <!-- Table View Mode -->
+          <div v-if="viewMode === 'table' && filteredProperties.length" class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100/80 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-600 tracking-wider">
+                  <th class="py-3 px-4">Tên Bất Động Sản</th>
+                  <th class="py-3 px-4">Loại Hình</th>
+                  <th class="py-3 px-4">Địa Chỉ</th>
+                  <th class="py-3 px-4">Tổng Căn / Đã Thuê</th>
+                  <th class="py-3 px-4">Lấp Đầy</th>
+                  <th class="py-3 px-4 text-right">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr v-for="item in filteredProperties" :key="item.id" class="hover:bg-slate-50 transition">
+                  <td class="py-3 px-4 font-extrabold text-slate-900 whitespace-nowrap">
+                    <span class="text-base mr-1.5">{{ item.property_type_icon || getPropertyIcon(item.property_type) }}</span>
+                    <span>{{ item.name }}</span>
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <span :class="['px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase shadow-2xs', getBadgeColor(item.property_type)]">
+                      {{ item.property_type_label || getPropertyTypeLabel(item.property_type) }}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-slate-600 max-w-xs truncate">
+                    📍 {{ item.address || 'Chưa cập nhật' }}
+                  </td>
+                  <td class="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+                    {{ item.occupied_rooms || 0 }} / {{ item.total_rooms || 0 }} căn
+                  </td>
+                  <td class="py-3 px-4 font-mono font-extrabold text-indigo-600 whitespace-nowrap">
+                    {{ calculateOccupancy(item) }}%
+                  </td>
+                  <td class="py-3 px-4 text-right whitespace-nowrap">
+                    <div class="flex items-center justify-end gap-2">
+                      <button
+                        @click="openDetailModal(item)"
+                        class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center gap-1"
+                      >
+                        <span>👁️</span> <span>Xem Chi Tiết</span>
+                      </button>
+                      <button class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-2.5 py-1.5 rounded-xl transition" @click="deleteProperty(item.id)">
+                        Xóa
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Grid Cards Mode -->
+          <div v-else-if="viewMode === 'grid' && filteredProperties.length" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div v-for="item in filteredProperties" :key="item.id" class="rounded-2xl border border-slate-200 p-5 hover:shadow-lg transition-all duration-200 bg-slate-50/60 flex flex-col justify-between space-y-4 group">
               <div>
                 <div class="flex items-start justify-between gap-2">
@@ -137,7 +208,7 @@
                   <span>📍</span>
                   <span class="line-clamp-1">{{ item.address || 'Chưa cập nhật địa chỉ' }}</span>
                 </div>
-                <p v-if="item.description" class="text-xs text-slate-600 bg-white/80 rounded-lg p-2 mt-2.5 border border-slate-100 italic">
+                <p v-if="item.description" class="text-xs text-slate-600 bg-white/80 rounded-lg p-2 mt-2.5 border border-slate-100 italic line-clamp-2">
                   "{{ item.description }}"
                 </p>
               </div>
@@ -168,9 +239,15 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-end gap-2 pt-1">
-                <button class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition" @click="deleteProperty(item.id)">
-                  Xóa tòa nhà
+              <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60">
+                <button
+                  @click="openDetailModal(item)"
+                  class="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1"
+                >
+                  <span>👁️</span> <span>Xem Chi Tiết</span>
+                </button>
+                <button class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-3 py-1.5 rounded-xl transition" @click="deleteProperty(item.id)">
+                  Xóa
                 </button>
               </div>
             </div>
@@ -180,6 +257,74 @@
             <span class="text-4xl block mb-2">🏢</span>
             <p class="text-sm font-bold text-slate-700">Chưa có tòa nhà / bất động sản nào phù hợp.</p>
             <p class="text-xs text-slate-400 mt-1">Hãy thêm bất động sản mới ở form bên trái.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Property Detail Modal -->
+      <div v-if="showDetailModal && selectedDetailProperty" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+            <div class="space-y-1">
+              <span :class="['px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase', getBadgeColor(selectedDetailProperty.property_type)]">
+                {{ selectedDetailProperty.property_type_label || getPropertyTypeLabel(selectedDetailProperty.property_type) }}
+              </span>
+              <h2 class="text-2xl font-black text-slate-900 flex items-center gap-2">
+                <span>{{ selectedDetailProperty.property_type_icon || getPropertyIcon(selectedDetailProperty.property_type) }}</span>
+                <span>{{ selectedDetailProperty.name }}</span>
+              </h2>
+            </div>
+            <button @click="showDetailModal = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center">✕</button>
+          </div>
+
+          <!-- Address Banner -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+            <div class="font-extrabold text-slate-700 uppercase tracking-wider text-[10px]">📍 Địa chỉ chi tiết</div>
+            <div class="text-slate-900 font-semibold text-sm">{{ selectedDetailProperty.address || 'Chưa cập nhật địa chỉ' }}</div>
+          </div>
+
+          <!-- Room Stats breakdown -->
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="bg-indigo-50/80 p-3 rounded-2xl border border-indigo-100">
+              <span class="block text-[10px] uppercase font-extrabold text-indigo-600">Tổng Căn</span>
+              <span class="font-black text-indigo-900 text-xl font-mono mt-1 block">{{ selectedDetailProperty.total_rooms || 0 }}</span>
+            </div>
+            <div class="bg-emerald-50/80 p-3 rounded-2xl border border-emerald-100">
+              <span class="block text-[10px] uppercase font-extrabold text-emerald-600">Sẵn Sàng (Trống)</span>
+              <span class="font-black text-emerald-800 text-xl font-mono mt-1 block">{{ selectedDetailProperty.vacant_rooms || 0 }}</span>
+            </div>
+            <div class="bg-rose-50/80 p-3 rounded-2xl border border-rose-100">
+              <span class="block text-[10px] uppercase font-extrabold text-rose-600">Đã Cho Thuê</span>
+              <span class="font-black text-rose-800 text-xl font-mono mt-1 block">{{ selectedDetailProperty.occupied_rooms || 0 }}</span>
+            </div>
+          </div>
+
+          <!-- Occupancy Rate Bar -->
+          <div class="bg-indigo-950 text-white p-4 rounded-2xl space-y-2 shadow-lg">
+            <div class="flex justify-between text-xs font-bold">
+              <span>📊 Tỷ Lệ Lấp Đầy Hiện Tại</span>
+              <span class="font-mono text-emerald-400">{{ calculateOccupancy(selectedDetailProperty) }}%</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-indigo-400 to-emerald-400 transition-all duration-500" :style="{ width: calculateOccupancy(selectedDetailProperty) + '%' }"></div>
+            </div>
+          </div>
+
+          <!-- Description / Amenities Notes -->
+          <div v-if="selectedDetailProperty.description" class="space-y-1 text-xs">
+            <span class="font-extrabold text-slate-700 uppercase text-[10px] tracking-wider">📝 Ghi Chú & Tiện Ích Tòa Nhà</span>
+            <p class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 italic">"{{ selectedDetailProperty.description }}"</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+            <RouterLink to="/rooms" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+              <span>🔑 Xem Danh Sách Phòng</span>
+            </RouterLink>
+            <button @click="showDetailModal = false" class="px-6 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition">
+              Đóng
+            </button>
           </div>
         </div>
       </div>
@@ -195,6 +340,15 @@ import api from '../services/api'
 const properties = ref([])
 const loading = ref(false)
 const selectedTypeFilter = ref('')
+const viewMode = ref('grid')
+const showDetailModal = ref(false)
+const selectedDetailProperty = ref(null)
+
+const openDetailModal = (item) => {
+  selectedDetailProperty.value = item
+  showDetailModal.value = true
+}
+
 const form = ref({
   name: '',
   address: '',

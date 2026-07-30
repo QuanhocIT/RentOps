@@ -64,9 +64,28 @@
       <!-- Rooms List -->
       <div class="bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div class="font-extrabold text-slate-900 text-base">Danh Sách Tất Cả Căn Hộ</div>
+          <div class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+            <span>Danh Sách Tất Cả Căn Hộ</span>
+            <span class="text-xs font-normal text-slate-400">({{ filteredRooms.length }} phòng)</span>
+          </div>
           
           <div class="flex flex-wrap items-center gap-3">
+            <!-- View Mode Switcher (Dạng Bảng / Dạng Thẻ) -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button 
+                @click="viewMode = 'table'"
+                :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5', viewMode === 'table' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+              >
+                <span>📊</span> Dạng Bảng
+              </button>
+              <button 
+                @click="viewMode = 'grid'"
+                :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5', viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+              >
+                <span>🎴</span> Dạng Thẻ
+              </button>
+            </div>
+
             <select v-model="filterProperty" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="">Tất cả tòa nhà / khu</option>
               <option v-for="p in properties" :key="p.id" :value="p.id">{{ p.name }} ({{ p.property_type_label }})</option>
@@ -85,7 +104,79 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <!-- Table View Mode -->
+        <div v-if="viewMode === 'table' && filteredRooms.length" class="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-100/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase text-slate-600 tracking-wider">
+                <th class="py-3.5 px-4">Mã / Số Phòng</th>
+                <th class="py-3.5 px-4">Tòa Nhà / Bất Động Sản</th>
+                <th class="py-3.5 px-4">Vị Trí & Mô Hình</th>
+                <th class="py-3.5 px-4">Giá Thuê</th>
+                <th class="py-3.5 px-4">Trạng Thái</th>
+                <th class="py-3.5 px-4 text-right">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs">
+              <tr v-for="item in filteredRooms" :key="item.id" class="hover:bg-indigo-50/30 transition-colors">
+                <td class="py-3.5 px-4 font-black text-slate-900 text-sm whitespace-nowrap">
+                  Mã/Phòng {{ item.room_number }}
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>{{ item.property_type_icon || '🏢' }}</span>
+                    <span>{{ item.property_name }}</span>
+                  </span>
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <div class="font-bold text-slate-700">Tầng {{ item.floor || 1 }}</div>
+                  <div class="text-[10px] font-extrabold uppercase text-indigo-600">
+                    {{ item.room_type_label || getRoomTypeLabel(item.room_type) }}
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 font-mono font-black text-indigo-600 text-sm whitespace-nowrap">
+                  {{ formatCurrency(item.price) }} <span class="text-[10px] font-medium text-slate-400">/tháng</span>
+                </td>
+                <td class="py-3.5 px-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span :class="['px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase shadow-2xs', getStatusBadge(item.status)]">
+                      {{ getStatusLabel(item.status) }}
+                    </span>
+                    <select
+                      :value="item.status"
+                      @change="quickUpdateStatus(item, $event.target.value)"
+                      class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="vacant">Trống</option>
+                      <option value="occupied">Đang ở</option>
+                      <option value="reserved">Đã cọc</option>
+                      <option value="maintenance">Bảo trì</option>
+                    </select>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2">
+                    <button
+                      @click="openDetailModal(item)"
+                      class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center gap-1"
+                    >
+                      <span>👁️</span> <span>Xem Chi Tiết</span>
+                    </button>
+                    <button @click="openModal(item)" class="text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition">
+                      Sửa
+                    </button>
+                    <button @click="deleteRoom(item.id)" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-3 py-1.5 rounded-xl transition">
+                      Xóa
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Grid View Mode -->
+        <div v-else-if="viewMode === 'grid' && filteredRooms.length" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           <div v-for="item in filteredRooms" :key="item.id" class="rounded-2xl border border-slate-200/80 p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between space-y-4 bg-slate-50/50 group">
             <div>
               <div class="flex items-center justify-between gap-1">
@@ -108,20 +199,6 @@
                 </span>
               </div>
 
-              <!-- Detailed Layout Specs Badge -->
-              <div class="mt-3 p-2.5 bg-white rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-700 space-y-1">
-                <div class="flex items-center justify-between text-[11px]">
-                  <span class="text-slate-500">Cấu trúc căn:</span>
-                  <span class="font-extrabold text-indigo-600 font-mono">{{ item.layout_summary || formatLayout(item) }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                  <span v-if="item.bedrooms_count">🛏️ {{ item.bedrooms_count }} PN</span>
-                  <span v-if="item.living_rooms_count">🛋️ {{ item.living_rooms_count }} PK</span>
-                  <span v-if="item.bathrooms_count">🚿 {{ item.bathrooms_count }} WC</span>
-                  <span v-if="item.has_balcony" class="text-emerald-600 font-bold">🌅 Ban công</span>
-                </div>
-              </div>
-
               <div class="text-lg font-black text-indigo-600 font-mono mt-3">{{ formatCurrency(item.price) }} / tháng</div>
             </div>
 
@@ -140,11 +217,17 @@
                 </select>
               </div>
 
-              <div class="flex items-center justify-end gap-2">
-                <button @click="openModal(item)" class="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition">
-                  Sửa Layout
+              <div class="flex items-center justify-between gap-1.5 pt-1">
+                <button
+                  @click="openDetailModal(item)"
+                  class="flex-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-1"
+                >
+                  <span>👁️</span> <span>Chi Tiết</span>
                 </button>
-                <button @click="deleteRoom(item.id)" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-3 py-1.5 rounded-lg transition">
+                <button @click="openModal(item)" class="text-xs font-bold text-slate-700 bg-slate-200/70 hover:bg-slate-300 px-2.5 py-1.5 rounded-xl transition">
+                  Sửa
+                </button>
+                <button @click="deleteRoom(item.id)" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-2.5 py-1.5 rounded-xl transition">
                   Xóa
                 </button>
               </div>
@@ -285,6 +368,117 @@
           </form>
         </div>
       </div>
+
+      <!-- Room Detail View Modal -->
+      <div v-if="showDetailModal && selectedDetailRoom" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold uppercase px-2.5 py-0.5 bg-indigo-100 text-indigo-700 rounded-lg">
+                  {{ selectedDetailRoom.property_type_icon || '🏢' }} {{ selectedDetailRoom.property_name }}
+                </span>
+                <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase', getStatusBadge(selectedDetailRoom.status)]">
+                  {{ getStatusLabel(selectedDetailRoom.status) }}
+                </span>
+              </div>
+              <h2 class="text-2xl font-black text-slate-900">Chi Tiết Căn Hộ / Phòng {{ selectedDetailRoom.room_number }}</h2>
+              <p class="text-xs text-slate-500 font-medium">📍 Tầng {{ selectedDetailRoom.floor || 1 }} • {{ selectedDetailRoom.room_type_label || getRoomTypeLabel(selectedDetailRoom.room_type) }}</p>
+            </div>
+            <button @click="showDetailModal = false" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center transition">✕</button>
+          </div>
+
+          <!-- Price & Summary Badge -->
+          <div class="bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-2xl p-5 text-white flex items-center justify-between shadow-lg">
+            <div>
+              <span class="text-xs font-medium text-indigo-200 uppercase tracking-wider block">Giá thuê niêm yết</span>
+              <div class="text-2xl md:text-3xl font-black font-mono mt-0.5">{{ formatCurrency(selectedDetailRoom.price) }} <span class="text-xs font-normal text-indigo-200">/tháng</span></div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-medium text-indigo-200 block">Diện tích</span>
+              <span class="text-xl font-bold font-mono">{{ selectedDetailRoom.area || 45 }} m²</span>
+            </div>
+          </div>
+
+          <!-- Detailed Specs Grid -->
+          <div class="space-y-3">
+            <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📐 Cấu Trúc Layout & Không Gian</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+                <span class="text-lg block">🛏️</span>
+                <span class="font-bold text-slate-800 text-sm font-mono block mt-1">{{ selectedDetailRoom.bedrooms_count || 1 }}</span>
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Phòng Ngủ</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+                <span class="text-lg block">🛋️</span>
+                <span class="font-bold text-slate-800 text-sm font-mono block mt-1">{{ selectedDetailRoom.living_rooms_count || 0 }}</span>
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Phòng Khách</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+                <span class="text-lg block">🚿</span>
+                <span class="font-bold text-slate-800 text-sm font-mono block mt-1">{{ selectedDetailRoom.bathrooms_count || 1 }}</span>
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Nhà Vệ Sinh</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-center">
+                <span class="text-lg block">🍳</span>
+                <span class="font-bold text-slate-800 text-sm font-mono block mt-1">{{ selectedDetailRoom.kitchens_count || 1 }}</span>
+                <span class="text-[10px] text-slate-500 uppercase font-semibold">Khu Bếp</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extra Amenities & Features Badges -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">✨ Đặc Điểm & Tiện Ích Đi Kèm</h3>
+            <div class="flex flex-wrap gap-2 text-xs font-semibold">
+              <span class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 flex items-center gap-1">
+                {{ getFurnishedLabel(selectedDetailRoom.furnished_status) }}
+              </span>
+              <span v-if="selectedDetailRoom.has_balcony" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 flex items-center gap-1">
+                🌅 Có Ban Công Thông Thoáng
+              </span>
+              <span v-if="selectedDetailRoom.is_mezzanine" class="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 flex items-center gap-1">
+                🏠 Có Gác Lửng Tối Ưu Diện Tích
+              </span>
+              <span v-if="!selectedDetailRoom.is_shared_bathroom" class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 flex items-center gap-1">
+                🚽 Nhà Vệ Sinh Khép Kín Riêng
+              </span>
+              <span class="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-xl border border-amber-200 flex items-center gap-1">
+                🔑 Khóa Vân Tay / Giờ Giấc Tự Do
+              </span>
+            </div>
+          </div>
+
+          <!-- Utility Standard Pricing -->
+          <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 space-y-2 text-xs">
+            <h3 class="font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span>⚡</span> <span>Biểu Phí Điện Nước Dịch Vụ Chuẩn</span>
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-slate-700 font-medium pt-1">
+              <div>⚡ Điện: <strong>3.500đ / kWh</strong></div>
+              <div>💧 Nước: <strong>100.000đ / người</strong></div>
+              <div>📶 Wifi & Rác: <strong>Miễn phí</strong></div>
+            </div>
+          </div>
+
+          <!-- Modal Actions -->
+          <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+            <button
+              @click="openModal(selectedDetailRoom); showDetailModal = false"
+              class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
+            >
+              <span>⚙️</span> <span>Chỉnh Sửa Layout</span>
+            </button>
+            <button
+              @click="showDetailModal = false"
+              class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -301,6 +495,23 @@ const editingRoom = ref(null)
 const filterStatus = ref('')
 const filterProperty = ref('')
 const searchQuery = ref('')
+const viewMode = ref('table')
+const showDetailModal = ref(false)
+const selectedDetailRoom = ref(null)
+
+const openDetailModal = (room) => {
+  selectedDetailRoom.value = room
+  showDetailModal.value = true
+}
+
+const getFurnishedLabel = (status) => {
+  switch (status) {
+    case 'full_noi_that': return '🛋️ Full Nội Thất Premium'
+    case 'co_ban': return '🪑 Nội Thất Cơ Bản'
+    case 'nha_tho': return '🧱 Bàn Giao Thô'
+    default: return '🛋️ Đầy đủ nội thất'
+  }
+}
 
 const form = ref({
   property_id: '',

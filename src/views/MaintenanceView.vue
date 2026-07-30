@@ -88,69 +88,121 @@
         <div v-else-if="requests.length === 0" class="p-12 text-center text-slate-500">Chưa có sự cố nào cần xử lý.</div>
 
         <div v-else class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50 text-slate-700 uppercase font-semibold text-xs border-b border-slate-200">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100/80 text-slate-700 uppercase font-extrabold text-[11px] border-b border-slate-200 tracking-wider">
               <tr>
-                <th class="px-6 py-4">Tên sự cố / Tiêu đề</th>
-                <th class="px-6 py-4">Phòng</th>
-                <th class="px-6 py-4">Thợ / Đơn vị sửa</th>
-                <th class="px-6 py-4">Bên trả chi phí</th>
-                <th class="px-6 py-4">Độ ưu tiên</th>
-                <th class="px-6 py-4">Trạng thái</th>
-                <th class="px-6 py-4">Chi phí (VNĐ)</th>
-                <th class="px-6 py-4 text-right">Thao tác</th>
+                <th class="px-5 py-3.5">Tiêu Đề Sự Cố</th>
+                <th class="px-5 py-3.5">Phòng</th>
+                <th class="px-5 py-3.5">Độ Ưu Tiên</th>
+                <th class="px-5 py-3.5">Trạng Thái</th>
+                <th class="px-5 py-3.5">Chi Phí (VNĐ)</th>
+                <th class="px-5 py-3.5 text-right">Thao Tác</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="req in requests" :key="req.id" class="hover:bg-slate-50/80 transition">
-                <td class="px-6 py-4 font-bold text-slate-900">
-                  {{ req.title }}
-                  <span v-if="req.description" class="block text-xs font-normal text-slate-400 mt-0.5">{{ req.description }}</span>
+              <tr v-for="req in requests" :key="req.id" class="hover:bg-indigo-50/30 transition">
+                <td class="px-5 py-3.5 font-black text-slate-900 text-sm whitespace-nowrap">
+                  🔧 {{ req.title }}
                 </td>
-                <td class="px-6 py-4 font-bold text-slate-800">Phòng {{ req.room_number }}</td>
-                <td class="px-6 py-4 text-xs font-medium text-slate-700">
-                  <div v-if="req.handyman_name" class="font-semibold text-indigo-900">
-                    👨‍🔧 {{ req.handyman_name }}
-                    <span v-if="req.handyman_phone" class="block font-mono text-[11px] text-slate-400">📞 {{ req.handyman_phone }}</span>
-                  </div>
-                  <span v-else class="text-slate-400 italic">Chưa phân công</span>
-                </td>
-                <td class="px-6 py-4">
-                  <span v-if="req.cost_bearer === 'renter'" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                    👤 Khách thuê trả
-                  </span>
-                  <span v-else class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                    🏠 Chủ nhà chịu
-                  </span>
-                </td>
-                <td class="px-6 py-4">
-                  <span :class="['px-2 py-0.5 rounded-full text-xs font-bold uppercase', getPriorityBadge(req.priority)]">
+                <td class="px-5 py-3.5 font-bold text-slate-800 whitespace-nowrap">Phòng {{ req.room_number }}</td>
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase shadow-2xs', getPriorityBadge(req.priority)]">
                     {{ req.priority }}
                   </span>
                 </td>
-                <td class="px-6 py-4">
-                  <span :class="['px-2.5 py-1 rounded-full text-xs font-bold uppercase', getStatusBadge(req.status)]">
+                <td class="px-5 py-3.5 whitespace-nowrap">
+                  <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase shadow-2xs', getStatusBadge(req.status)]">
                     {{ getStatusLabel(req.status) }}
                   </span>
                 </td>
-                <td class="px-6 py-4 font-mono font-bold text-rose-600">
+                <td class="px-5 py-3.5 font-mono font-bold text-rose-600 whitespace-nowrap">
                   {{ formatCurrency(req.cost) }}
                 </td>
-                <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
-                  <button
-                    v-if="req.status !== 'resolved' && req.status !== 2"
-                    @click="openResolveModal(req)"
-                    class="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200"
-                  >
-                    Đánh dấu đã xong
-                  </button>
-                  <button @click="deleteRequest(req.id)" class="text-xs font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 px-2 py-1 rounded-lg">
-                    Xóa
-                  </button>
+                <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2">
+                    <button
+                      @click="openDetailModal(req)"
+                      class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition flex items-center gap-1"
+                    >
+                      <span>👁️</span> <span>Xem Chi Tiết</span>
+                    </button>
+                    <button
+                      v-if="req.status !== 'resolved' && req.status !== 2"
+                      @click="openResolveModal(req)"
+                      class="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition"
+                    >
+                      Đã xong
+                    </button>
+                    <button @click="deleteRequest(req.id)" class="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 px-2.5 py-1.5 rounded-xl transition">
+                      Xóa
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Maintenance Detail Modal -->
+      <div v-if="showDetailModal && selectedDetailReq" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-in max-h-[90vh] overflow-y-auto">
+          <!-- Modal Header -->
+          <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase', getStatusBadge(selectedDetailReq.status)]">
+                  {{ getStatusLabel(selectedDetailReq.status) }}
+                </span>
+                <span :class="['px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase', getPriorityBadge(selectedDetailReq.priority)]">
+                  Ưu tiên: {{ selectedDetailReq.priority }}
+                </span>
+              </div>
+              <h2 class="text-2xl font-black text-slate-900">🔧 {{ selectedDetailReq.title }}</h2>
+              <p class="text-xs text-slate-500 font-medium">🔑 Phòng {{ selectedDetailReq.room_number }}</p>
+            </div>
+            <button @click="showDetailModal = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center">✕</button>
+          </div>
+
+          <!-- Description Box -->
+          <div v-if="selectedDetailReq.description" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1 text-xs">
+            <span class="font-extrabold text-slate-700 uppercase text-[10px] tracking-wider block">📝 Mô Tả Hỏng Hóc Chi Tiết</span>
+            <p class="text-slate-800 italic">"{{ selectedDetailReq.description }}"</p>
+          </div>
+
+          <!-- Technician & Cost Info -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100 space-y-1">
+              <span class="font-extrabold text-indigo-900 uppercase text-[10px] block">👨‍🔧 Thợ Sửa Chữa / Đơn Vị</span>
+              <div class="font-bold text-slate-900 text-sm">{{ selectedDetailReq.handyman_name || 'Chưa phân công thợ' }}</div>
+              <div v-if="selectedDetailReq.handyman_phone" class="font-mono text-slate-500 text-[11px]">📞 {{ selectedDetailReq.handyman_phone }}</div>
+            </div>
+
+            <div class="bg-rose-50/60 p-3.5 rounded-2xl border border-rose-100 space-y-1">
+              <span class="font-extrabold text-rose-900 uppercase text-[10px] block">💰 Chi Phí Sửa Chữa</span>
+              <div class="font-black text-rose-700 text-base font-mono">{{ formatCurrency(selectedDetailReq.cost) }}</div>
+              <span v-if="selectedDetailReq.cost_bearer === 'renter'" class="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md inline-block">
+                👤 Khách thuê trả
+              </span>
+              <span v-else class="text-[10px] font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded-md inline-block">
+                🏠 Chủ nhà chịu
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+            <button
+              v-if="selectedDetailReq.status !== 'resolved' && selectedDetailReq.status !== 2"
+              @click="openResolveModal(selectedDetailReq); showDetailModal = false"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+            >
+              <span>✓</span> <span>Đánh Dấu Đã Xử Lý</span>
+            </button>
+            <button @click="showDetailModal = false" class="px-6 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition">
+              Đóng
+            </button>
+          </div>
         </div>
       </div>
 
@@ -231,6 +283,14 @@ const submitting = ref(false)
 const showModal = ref(false)
 const filterStatus = ref('')
 const filterPriority = ref('')
+
+const showDetailModal = ref(false)
+const selectedDetailReq = ref(null)
+
+const openDetailModal = (req) => {
+  selectedDetailReq.value = req
+  showDetailModal.value = true
+}
 
 const form = ref({
   title: '',
