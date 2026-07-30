@@ -1,782 +1,448 @@
 <template>
-  <div class="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
-    <!-- Navbar -->
-    <header class="bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80 sticky top-0 z-40 px-6 py-4 shadow-xl">
-      <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-3 cursor-pointer group" @click="$router.push('/')">
-          <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/30">
-            R
-          </div>
-          <div>
-            <h1 class="font-black text-xl text-white tracking-wide leading-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">RentOps</h1>
-            <p class="text-[10px] text-indigo-400 font-bold tracking-widest uppercase">Platform Quản Lý & Cho Thuê Phòng Trọ</p>
-          </div>
-        </div>
+  <div class="min-h-screen bg-[#f6f7fb] text-slate-900 relative overflow-hidden">
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-0 h-[720px] bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%),linear-gradient(to_bottom,rgba(255,255,255,0.92),rgba(246,247,251,1))]"></div>
+    <div class="pointer-events-none absolute left-[-140px] top-40 -z-0 h-72 w-72 rounded-full bg-indigo-300/20 blur-3xl"></div>
+    <div class="pointer-events-none absolute right-[-120px] top-[520px] -z-0 h-80 w-80 rounded-full bg-violet-300/20 blur-3xl"></div>
 
-        <div class="hidden md:flex items-center space-x-8 text-xs font-bold text-slate-300">
-          <a href="#gallery" class="hover:text-indigo-400 transition">📸 Bố Cục Phòng</a>
-          <a href="#rooms" class="hover:text-indigo-400 transition">🔑 Phòng Cho Thuê</a>
-          <a href="#features" class="hover:text-indigo-400 transition">⚡ Tính Năng SaaS</a>
-        </div>
+    <header class="sticky top-0 z-50 border-b border-white/70 bg-white/85 backdrop-blur-xl">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <button class="flex items-center gap-3" @click="$router.push('/landing')">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25">
+            <span class="text-lg font-black">R</span>
+          </div>
+          <div class="text-left">
+            <div class="text-xl font-black tracking-tight text-slate-900">Rentalio</div>
+          </div>
+        </button>
 
-        <div class="flex items-center space-x-3">
-          <button @click="demoAccess" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs rounded-xl border border-slate-700/80 transition shadow-sm">
-            🚀 Trải Nghiệm Demo
-          </button>
-          <RouterLink to="/login" class="px-4.5 py-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition">
-            🔑 Đăng Nhập / Đăng Ký
+        <nav class="hidden items-center gap-8 text-sm font-semibold text-slate-600 lg:flex">
+          <a v-for="item in navItems" :key="item" href="#" class="transition hover:text-indigo-600">{{ item }}</a>
+          <a href="#" class="flex items-center gap-2 transition hover:text-indigo-600">♡ Yêu thích</a>
+          <RouterLink to="/login" class="rounded-2xl border border-indigo-200 bg-white px-5 py-3 font-semibold text-indigo-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50">
+            Đăng nhập
           </RouterLink>
-        </div>
+          <button class="rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-white shadow-lg shadow-indigo-500/25 transition hover:opacity-95">
+            Đăng tin phòng +
+          </button>
+        </nav>
       </div>
     </header>
 
-    <!-- Hero Section (Original Hero Restored) -->
-    <section class="relative px-6 py-20 md:py-28 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden border-b border-slate-800">
-      <div class="max-w-5xl mx-auto text-center space-y-7 relative z-10">
-        <span class="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/15 text-indigo-300 font-extrabold text-xs rounded-full border border-indigo-500/30 uppercase tracking-widest shadow-inner">
-          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-          Nền Tảng Quản Lý & Cho Thuê Bất Động Sản Hàng Đầu
-        </span>
-        <h1 class="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight">
-          Tìm Phòng Ương Ý • Quản Lý Trọ <span class="bg-gradient-to-r from-indigo-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">Thông Minh & Tự Động</span>
-        </h1>
-        <p class="text-slate-300 text-base md:text-lg max-w-3xl mx-auto font-normal leading-relaxed">
-          Trải nghiệm hệ thống quản lý phòng trọ Multi-tenant thế thế hệ mới. Tự động hóa gạch nợ VietQR 24/7, hợp đồng điện tử chữ ký số, cổng tự phục vụ khách thuê và báo cáo tài chính chuyên sâu.
-        </p>
+    <main>
+      <section class="relative overflow-hidden bg-gradient-to-r from-white via-[#f6f7fb] to-[#edf2ff]">
+        <div class="mx-auto grid max-w-7xl items-center gap-8 px-4 pb-10 pt-10 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pb-24 lg:pt-14">
+          <div class="relative z-10 max-w-2xl">
+            <div class="mb-6 inline-flex items-center gap-3 rounded-full border border-indigo-100 bg-white px-4 py-2 shadow-sm">
+              <span class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white">✦</span>
+              <span class="text-xs font-bold uppercase tracking-[0.22em] text-indigo-600">RentOps SaaS Multi-tenant</span>
+            </div>
+            <p class="mb-4 inline-flex rounded-full bg-indigo-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-indigo-600">
+              Không gian sống hiện đại
+            </p>
+            <h1 class="max-w-xl text-4xl font-black leading-tight tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
+              Quản lý phòng trọ
+              <span class="block">thông minh cho</span>
+              <span class="block text-transparent bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text">chủ trọ & cư dân</span>
+            </h1>
+            <p class="mt-6 max-w-xl text-base leading-8 text-slate-600">
+              Nền tảng SaaS giúp chủ nhà quản lý khu trọ, tòa nhà, hợp đồng, hóa đơn VietQR, sự cố bảo trì và cổng khách thuê trên cùng một hệ thống.
+            </p>
 
-        <div class="flex justify-center items-center gap-4 pt-4">
-          <a href="#rooms" class="px-7 py-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 font-extrabold text-white rounded-2xl shadow-xl shadow-indigo-600/35 transition text-sm flex items-center space-x-2">
-            <span>🔑 Khám Phá Phòng Cho Thuê</span>
-          </a>
-          <button @click="demoAccess" class="px-7 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 font-extrabold rounded-2xl border border-slate-700/80 transition text-sm">
-            ⚡ Thử Nghiệm Hệ Thống Demo
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Creative Room Photo Bento-Grid Showcase Section -->
-    <section id="gallery" class="px-6 py-16 bg-slate-950 border-b border-slate-800">
-      <div class="max-w-7xl mx-auto space-y-10">
-        <div class="text-center space-y-3">
-          <span class="px-3.5 py-1 bg-indigo-500/20 text-indigo-300 font-black text-xs rounded-full border border-indigo-500/30 uppercase tracking-widest">
-            Bố Cục Không Gian Sáng Tạo
-          </span>
-          <h2 class="text-3xl md:text-4xl font-black text-white">📸 Không Gian Căn Hộ Thực Tế Cho Thuê</h2>
-          <p class="text-slate-400 text-xs max-w-2xl mx-auto font-medium">Khám phá kiến trúc nội thất hiện đại được tối ưu hóa cho phong cách sống năng động</p>
-        </div>
-
-        <!-- Asymmetric Bento Photo Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Big Feature Card (Spans 2 columns on desktop) -->
-          <div class="md:col-span-2 relative rounded-3xl overflow-hidden border border-slate-800 group h-[380px]">
-            <img src="/images/hero_banner.png" alt="Căn hộ Studio Luxury" class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-            <div class="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-              <div>
-                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-black rounded-lg">🟢 Studio Ban Công View Phố</span>
-                <h3 class="text-2xl font-black text-white mt-2">Căn Hộ Dịch Vụ RentOps Penthouse</h3>
-                <p class="text-slate-300 text-xs mt-1">Diện tích 45m² • Điều hòa Inverter • Full Nội Thất Sồi</p>
+            <div class="mt-7 grid max-w-xl gap-4 sm:grid-cols-3">
+              <div class="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.08)]">
+                <div class="text-xs font-semibold text-slate-500">Tổng phòng</div>
+                <div class="mt-1 text-2xl font-black text-slate-900">{{ dashboardStats.total_rooms }}</div>
+                <div class="mt-1 text-xs text-indigo-500">Từ dashboard RentOps</div>
               </div>
-              <span class="text-xl font-black text-emerald-400 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-emerald-500/30">6.8tr/tháng</span>
-            </div>
-          </div>
-
-          <!-- Secondary Grid Item 1 -->
-          <div class="relative rounded-3xl overflow-hidden border border-slate-800 group h-[380px]">
-            <img src="/images/studio.png" alt="Phòng Trọ Smart Studio" class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-            <div class="absolute bottom-6 left-6 right-6">
-              <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-black rounded-lg">✨ Smart Studio 28m²</span>
-              <h3 class="text-xl font-black text-white mt-2">Phòng Trọ Khép Kín Hiện Đại</h3>
-              <p class="text-emerald-400 font-black font-mono mt-1 text-base">4.200.000 đ/tháng</p>
-            </div>
-          </div>
-
-          <!-- Secondary Grid Item 2 -->
-          <div class="relative rounded-3xl overflow-hidden border border-slate-800 group h-[280px]">
-            <img src="/images/suite.png" alt="Căn Hộ Suite Đôi" class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-            <div class="absolute bottom-5 left-5 right-5">
-              <span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black rounded-lg">🛋️ Full Sofa TV 50 inch</span>
-              <h3 class="text-lg font-black text-white mt-1.5">Suite 1 Phòng Ngủ</h3>
-              <p class="text-emerald-400 font-black font-mono text-sm">5.500.000 đ/tháng</p>
-            </div>
-          </div>
-
-          <!-- Secondary Grid Item 3 (Spans 2 cols) -->
-          <div class="md:col-span-2 relative rounded-3xl overflow-hidden border border-slate-800 group h-[280px]">
-            <img src="/images/bedroom.png" alt="Phòng Ngủ Minimalist" class="w-full h-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-            <div class="absolute bottom-5 left-6 right-6 flex items-center justify-between">
-              <div>
-                <span class="px-2.5 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/40 text-xs font-black rounded-lg">🌿 Minimalist Bedroom Decor</span>
-                <h3 class="text-xl font-black text-white mt-1.5">Phòng Ngủ Decor Phong Cách Tối Giản</h3>
+              <div class="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.08)]">
+                <div class="text-xs font-semibold text-slate-500">Phòng đang ở</div>
+                <div class="mt-1 text-2xl font-black text-slate-900">{{ dashboardStats.occupied_rooms }}</div>
+                <div class="mt-1 text-xs text-rose-500">{{ dashboardStats.occupancy_rate }}% lấp đầy</div>
               </div>
-              <span class="text-lg font-black text-emerald-400 font-mono bg-slate-950/90 px-3.5 py-1.5 rounded-xl border border-emerald-500/30">3.8tr/tháng</span>
+              <div class="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.08)]">
+                <div class="text-xs font-semibold text-slate-500">Phòng trống</div>
+                <div class="mt-1 text-2xl font-black text-slate-900">{{ dashboardStats.vacant_rooms }}</div>
+                <div class="mt-1 text-xs text-amber-500">Sẵn sàng cho thuê</div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- Public Rooms Showcase Section with Real Room Photos & Property Tabs -->
-    <section id="rooms" class="px-4 sm:px-6 py-20 bg-slate-950 border-b border-slate-800/80 relative overflow-hidden">
-      <!-- Ambient Gradient Glow Effects -->
-      <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-gradient-to-tr from-indigo-600/10 via-purple-600/10 to-emerald-500/10 blur-[140px] pointer-events-none rounded-full"></div>
+            <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div v-for="feature in topFeatures" :key="feature.title" class="rounded-2xl bg-white/90 p-4 shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+                <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">{{ feature.icon }}</div>
+                <div class="text-sm font-bold text-slate-900">{{ feature.title }}</div>
+                <div class="mt-1 text-xs leading-5 text-slate-500">{{ feature.desc }}</div>
+              </div>
+            </div>
 
-      <div class="max-w-7xl mx-auto space-y-10 relative z-10">
-        <!-- Header Controls -->
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div>
-            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-3">
-              <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+              <span class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-slate-900/15">
+                <span>⚡</span> Hợp đồng, hóa đơn, bảo trì
               </span>
-              Bộ Sưu Tập Bất Động Sản Cho Thuê
-            </div>
-            <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Khám Phá Căn Hộ & Phòng Trọ <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-emerald-400">Cao Cấp</span>
-            </h2>
-            <p class="text-slate-400 text-xs sm:text-sm mt-2 max-w-2xl font-normal leading-relaxed">
-              Trải nghiệm không gian sống hiện đại, tiện nghi vượt trội với quy trình thuê minh bạch và tự động hóa 100%.
-            </p>
-          </div>
-
-          <!-- Right Side Controls: Search Box & View Mode Toggle -->
-          <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div class="relative flex-1 sm:w-72">
-              <input
-                v-model="searchFilter"
-                class="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500/70 rounded-2xl px-4 py-3 pl-10 text-xs text-white placeholder-slate-500 transition-all outline-none shadow-xl focus:ring-2 focus:ring-indigo-500/20"
-                placeholder="Tìm số phòng, tòa nhà, tiện ích..."
-              />
-              <span class="absolute left-3.5 top-3.5 text-slate-500 text-sm">🔍</span>
-            </div>
-
-            <!-- View Mode Switcher: Grid vs List -->
-            <div class="flex bg-slate-900/90 p-1 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md">
-              <button
-                @click="viewMode = 'grid'"
-                :class="viewMode === 'grid' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-white font-semibold'"
-                class="px-3.5 py-2 rounded-xl text-xs transition flex items-center gap-1.5"
-                title="Chế độ Lưới Thẻ"
-              >
-                <span>❖</span> <span class="hidden sm:inline">Lưới Thẻ</span>
-              </button>
-              <button
-                @click="viewMode = 'list'"
-                :class="viewMode === 'list' ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-white font-semibold'"
-                class="px-3.5 py-2 rounded-xl text-xs transition flex items-center gap-1.5"
-                title="Chế độ Danh Sách"
-              >
-                <span>☰</span> <span class="hidden sm:inline">Danh Sách</span>
-              </button>
+              <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200">
+                <span>🧾</span> VietQR và nhắc nợ tự động
+              </span>
             </div>
           </div>
-        </div>
 
-        <!-- Filter Bar: Property Building Tabs + Status Tabs -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900/60 p-2.5 sm:p-3 rounded-2xl border border-slate-800/80 backdrop-blur-md">
-          <!-- Property Tabs -->
-          <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-            <button
-              @click="selectedPropertyTab = 'all'"
-              :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap', selectedPropertyTab === 'all' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 border border-indigo-400/30' : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800']"
-            >
-              🏢 Tất Cả Tòa Nhà
-            </button>
-            <button
-              @click="selectedPropertyTab = 'Tòa Nhà RentOps A'"
-              :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap', selectedPropertyTab === 'Tòa Nhà RentOps A' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 border border-indigo-400/30' : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800']"
-            >
-              🏛️ Tòa RentOps A (Nam Từ Liêm)
-            </button>
-            <button
-              @click="selectedPropertyTab = 'Tòa Nhà RentOps B'"
-              :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap', selectedPropertyTab === 'Tòa Nhà RentOps B' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 border border-indigo-400/30' : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800']"
-            >
-              🏬 Tòa RentOps B (Cầu Giấy)
-            </button>
-            <button
-              @click="selectedPropertyTab = 'Căn Hộ Dịch Vụ RentOps C'"
-              :class="['px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap', selectedPropertyTab === 'Căn Hộ Dịch Vụ RentOps C' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 border border-indigo-400/30' : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800']"
-            >
-              ⭐ Căn Hộ RentOps C (Đống Đa)
-            </button>
-          </div>
-
-          <!-- Status Filter -->
-          <div class="flex items-center gap-2 self-end sm:self-auto">
-            <button
-              @click="statusFilter = 'all'"
-              :class="['px-3.5 py-1.5 rounded-xl text-xs font-bold transition', statusFilter === 'all' ? 'bg-slate-800 text-white border border-slate-700' : 'text-slate-400 hover:text-white']"
-            >
-              Tất cả
-            </button>
-            <button
-              @click="statusFilter = 'vacant'"
-              :class="['px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5', statusFilter === 'vacant' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-slate-400 hover:text-emerald-400']"
-            >
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              Chỉ phòng trống
-            </button>
-          </div>
-        </div>
-
-        <!-- 1. GRID VIEW MODE -->
-        <div v-if="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-          <div
-            v-for="room in visibleRooms"
-            :key="room.id"
-            class="group bg-slate-900/80 hover:bg-slate-900 rounded-3xl border border-slate-800/90 hover:border-indigo-500/40 overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 flex flex-col justify-between transition-all duration-500 hover:-translate-y-1.5 backdrop-blur-xl"
-          >
-            <div>
-              <!-- Image Container -->
-              <div class="h-60 relative overflow-hidden bg-slate-950">
-                <img
-                  :src="getRoomPhoto(room)"
-                  :alt="room.room_number"
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                />
-                <!-- Subtle Gradient Overlays -->
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-black/40"></div>
-
-                <!-- Status Badge (Floating Glassmorphism) -->
-                <div class="absolute top-3.5 left-3.5 flex items-center gap-1.5">
-                  <span
-                    :class="room.status === 0 || room.status === 'vacant' ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/80 border-rose-500/40 text-rose-300'"
-                    class="px-3 py-1.5 text-[11px] font-extrabold rounded-xl border backdrop-blur-md shadow-lg flex items-center gap-1.5"
-                  >
-                    <span
-                      v-if="room.status === 0 || room.status === 'vacant'"
-                      class="relative flex h-2 w-2"
-                    >
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span>{{ room.status === 0 || room.status === 'vacant' ? 'Còn Trống' : 'Đang Thuê' }}</span>
-                  </span>
-                </div>
-
-                <!-- Price Tag (Luxury Gold/Emerald Accent) -->
-                <div class="absolute top-3.5 right-3.5">
-                  <div class="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-emerald-500/30 shadow-xl flex items-baseline gap-1">
-                    <span class="text-emerald-400 font-extrabold text-sm tracking-tight font-mono">{{ formatCurrency(room.price) }}</span>
-                    <span class="text-[10px] text-slate-400 font-medium">/tháng</span>
-                  </div>
-                </div>
-
-                <!-- Building & Floor Badge on Image Bottom -->
-                <div class="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between">
-                  <span class="bg-slate-950/80 backdrop-blur-md text-indigo-300 font-bold text-[11px] px-3 py-1 rounded-xl border border-indigo-500/30 truncate max-w-[70%]">
-                    🏢 {{ room.property_name }}
-                  </span>
-                  <span class="bg-slate-950/80 backdrop-blur-md text-slate-300 font-medium text-[11px] px-2.5 py-1 rounded-xl border border-slate-700/60">
-                    Tầng {{ room.floor || 1 }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Body Details -->
-              <div class="p-6 space-y-4">
-                <!-- Type Tag & Area -->
-                <div class="flex items-center justify-between text-xs">
-                  <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                    {{ room.property_type_label || 'Bất Động Sản Cho Thuê' }}
-                  </span>
-                  <span class="font-bold text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/50 flex items-center gap-1">
-                    <span>📐</span> {{ room.area || 25 }} m²
-                  </span>
-                </div>
-
-                <!-- Title & Type -->
-                <div class="flex justify-between items-baseline pt-1">
-                  <h3 class="text-2xl font-black text-white group-hover:text-indigo-300 transition-colors">
-                    Phòng {{ room.room_number }}
-                  </h3>
-                  <span class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">
-                    {{ room.room_type_label || 'Phòng khép kín' }}
-                  </span>
-                </div>
-
-                <!-- Key Specs Ribbon (PN, PK, WC, Ban Công) -->
-                <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-300 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/60">
-                  <span class="flex items-center gap-1 text-slate-300">
-                    <span>🛏️</span> <strong>{{ room.bedrooms_count || 1 }}</strong> PN
-                  </span>
-                  <span class="text-slate-600">•</span>
-                  <span v-if="room.living_rooms_count > 0" class="flex items-center gap-1 text-slate-300">
-                    <span>🛋️</span> <strong>{{ room.living_rooms_count }}</strong> PK
-                  </span>
-                  <span v-if="room.living_rooms_count > 0" class="text-slate-600">•</span>
-                  <span class="flex items-center gap-1 text-slate-300">
-                    <span>🚿</span> <strong>{{ room.bathrooms_count || 1 }}</strong> WC
-                  </span>
-                  <span v-if="room.has_balcony" class="text-slate-600">•</span>
-                  <span v-if="room.has_balcony" class="flex items-center gap-1 text-cyan-300 font-semibold">
-                    <span>🌅</span> Ban công
-                  </span>
-                </div>
-
-                <!-- Amenities Pill Tags -->
-                <div>
-                  <p class="text-[10px] text-slate-400 mb-2 font-bold uppercase tracking-wider">Tiện nghi nổi bật:</p>
-                  <div class="flex flex-wrap gap-1.5">
-                    <span v-for="(amenity, idx) in (room.amenities || []).slice(0, 3)" :key="idx" class="px-2.5 py-1 bg-slate-800/80 text-slate-300 text-[11px] rounded-lg font-medium border border-slate-700/60">
-                      ✓ {{ amenity }}
-                    </span>
-                    <span v-if="(room.amenities || []).length > 3" class="px-2 py-1 bg-indigo-500/10 text-indigo-300 text-[10px] rounded-lg font-bold border border-indigo-500/20">
-                      +{{ room.amenities.length - 3 }} tiện ích
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div class="relative">
+            <div class="absolute inset-0 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-200/40 via-white to-violet-200/30 blur-3xl"></div>
+            <div class="overflow-hidden rounded-[2rem] shadow-[0_24px_80px_rgba(15,23,42,0.18)] ring-1 ring-white/80">
+              <img :src="heroImage" alt="Phòng mẫu" class="h-[420px] w-full object-cover sm:h-[520px]" />
             </div>
-
-            <!-- Footer Button -->
-            <div class="p-6 pt-0">
-              <button
-                @click="openRoomDetail(room)"
-                class="w-full py-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2 group/btn"
-              >
-                <span>Xem Chi Tiết & Đặt Lịch</span>
-                <span class="group-hover/btn:translate-x-1 transition-transform">➔</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. LIST VIEW MODE -->
-        <div v-else class="space-y-4">
-          <div
-            v-for="room in visibleRooms"
-            :key="room.id"
-            class="group bg-slate-900/80 hover:bg-slate-900 rounded-3xl border border-slate-800/80 hover:border-indigo-500/40 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 backdrop-blur-xl"
-          >
-            <!-- Left Thumbnail -->
-            <div class="w-full md:w-56 h-40 rounded-2xl overflow-hidden relative bg-slate-950 flex-shrink-0">
-              <img :src="getRoomPhoto(room)" :alt="room.room_number" class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500" />
-              <div class="absolute top-2 left-2">
-                <span
-                  :class="room.status === 0 || room.status === 'vacant' ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40' : 'bg-rose-950/90 text-rose-300 border-rose-500/40'"
-                  class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg border backdrop-blur"
-                >
-                  {{ room.status === 0 || room.status === 'vacant' ? 'Còn Trống' : 'Đang Thuê' }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Middle Info -->
-            <div class="flex-1 space-y-2.5 text-left w-full">
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-500/20">
-                  {{ room.property_name }}
-                </span>
-                <span class="text-xs text-slate-400 font-medium">• Tầng {{ room.floor || 1 }}</span>
-              </div>
-
-              <h3 class="text-2xl font-black text-white group-hover:text-indigo-300 transition-colors">
-                Phòng {{ room.room_number }} <span class="text-sm font-normal text-slate-400">({{ room.room_type_label || 'Khép kín' }})</span>
-              </h3>
-
-              <div class="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-medium">
-                <span class="flex items-center gap-1 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800">
-                  📐 {{ room.area || 25 }} m²
-                </span>
-                <span class="flex items-center gap-1 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800">
-                  🛏️ {{ room.bedrooms_count || 1 }} PN
-                </span>
-                <span class="flex items-center gap-1 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800">
-                  🚿 {{ room.bathrooms_count || 1 }} WC
-                </span>
-              </div>
-
-              <!-- Amenities list inline -->
-              <div class="flex flex-wrap gap-1.5 pt-1">
-                <span v-for="(amenity, idx) in (room.amenities || []).slice(0, 4)" :key="idx" class="text-[11px] text-slate-400 bg-slate-800/60 px-2 py-0.5 rounded font-medium">
-                  ✓ {{ amenity }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Right Price & CTA -->
-            <div class="w-full md:w-56 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-6">
-              <div class="text-left md:text-right">
-                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Giá Thuê Niêm Yết</p>
-                <p class="text-xl font-black text-emerald-400 font-mono tracking-tight">{{ formatCurrency(room.price) }}</p>
-                <p class="text-[10px] text-slate-400 font-medium">/tháng</p>
-              </div>
-
-              <button
-                @click="openRoomDetail(room)"
-                class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2 whitespace-nowrap"
-              >
-                <span>Xem Chi Tiết</span>
-                <span>➔</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Load More / Collapse Button -->
-        <div v-if="filteredRooms.length > 6" class="flex justify-center pt-6">
-          <button
-            @click="showAllRooms = !showAllRooms"
-            class="px-8 py-3.5 bg-slate-900/90 hover:bg-slate-800 text-indigo-300 font-extrabold text-xs rounded-2xl border border-indigo-500/40 shadow-xl transition-all flex items-center gap-2 group hover:border-indigo-400 backdrop-blur-md"
-          >
-            <span v-if="!showAllRooms">✨ Xem Thêm {{ filteredRooms.length - 6 }} Phòng Khác Khắp Hà Nội <span class="group-hover:translate-x-1 transition-transform inline-block">➔</span></span>
-            <span v-else>▲ Thu Gọn Danh Sách Phòng</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Customer Testimonials & Tenant Reviews Section -->
-    <section id="reviews" class="px-6 py-16 bg-slate-950 border-b border-slate-800/80 relative">
-      <div class="max-w-7xl mx-auto space-y-10">
-        <!-- Header with Aggregate Score -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-8 rounded-3xl border border-slate-800">
-          <div class="space-y-2">
-            <span class="px-3.5 py-1 bg-amber-500/20 text-amber-300 font-black text-xs rounded-full border border-amber-500/40 uppercase tracking-widest">
-              💬 Trải Nghiệm Khách Thuê
-            </span>
-            <h2 class="text-3xl md:text-4xl font-black text-white">Bình Luận & Phản Hồi Từ Cư Dân</h2>
-            <p class="text-slate-400 text-xs max-w-xl font-medium">Hơn 98% khách thuê đánh giá 5 sao về chất lượng phòng trọ và dịch vụ quản lý hỗ trợ 24/7</p>
-          </div>
-
-          <div class="flex items-center gap-4 bg-slate-950/80 px-6 py-4 rounded-2xl border border-slate-800">
-            <div class="text-3xl font-black text-amber-400 font-mono">4.9/5.0</div>
-            <div class="text-left">
-              <div class="text-amber-400 text-sm">⭐⭐⭐⭐⭐</div>
-              <p class="text-[11px] text-slate-400 font-bold">150+ Đánh Giá Xác Thực</p>
-            </div>
-            <button
-              @click="showReviewModal = true"
-              class="ml-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition"
-            >
-              ✍️ Gửi Đánh Giá
-            </button>
-          </div>
-        </div>
-
-        <!-- Reviews Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div
-            v-for="review in tenantReviews"
-            :key="review.id"
-            class="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 space-y-4 hover:border-slate-700 transition"
-          >
-            <!-- Review Header -->
-            <div class="flex justify-between items-start">
+            <div class="absolute -left-4 bottom-8 hidden w-48 rounded-3xl bg-white p-4 shadow-[0_16px_50px_rgba(15,23,42,0.12)] ring-1 ring-slate-100 lg:block">
               <div class="flex items-center gap-3">
-                <div :class="['w-11 h-11 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md', review.avatarColor || 'bg-indigo-600']">
-                  {{ review.name.charAt(0) }}
-                </div>
+                <img :src="floorPlanImage" alt="Bản đồ phòng" class="h-12 w-12 rounded-2xl object-cover" />
                 <div>
-                  <h4 class="font-extrabold text-white text-sm flex items-center gap-2">
-                    {{ review.name }}
-                    <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] rounded-md font-bold border border-emerald-500/30">
-                      ✓ Đã Thuê
-                    </span>
-                  </h4>
-                  <p class="text-[11px] text-indigo-300 font-medium">{{ review.room }} • {{ review.property }}</p>
+                  <div class="text-xs font-bold text-slate-900">Tour 360°</div>
+                  <div class="text-[11px] text-slate-500">Xem phòng như đang ở thật</div>
                 </div>
               </div>
+            </div>
+            <div class="absolute right-4 top-4 rounded-2xl bg-white/90 px-4 py-3 shadow-[0_16px_50px_rgba(15,23,42,0.10)] ring-1 ring-slate-100">
+              <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-500">Dashboard preview</div>
+              <div class="mt-1 text-sm font-black text-slate-900">{{ dashboardStats.pending_maintenance_count }} sự cố chờ xử lý</div>
+            </div>
+          </div>
+        </div>
 
-              <div class="text-right">
-                <div class="text-amber-400 text-xs">⭐⭐⭐⭐⭐</div>
-                <span class="text-[10px] text-slate-500 font-bold">{{ review.stayDuration }}</span>
+        <div class="mx-auto -mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div class="grid gap-4 rounded-[2rem] border border-white/80 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[1.3fr_1fr_1fr_1fr_auto] lg:items-end lg:gap-5 lg:p-6">
+            <div v-for="field in searchFields" :key="field.label" class="space-y-2">
+              <label class="text-sm font-bold text-slate-700">{{ field.label }}</label>
+              <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-sm">
+                {{ field.placeholder }}
               </div>
             </div>
+            <button class="mt-1 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:scale-[1.01] lg:mt-0">
+              Tìm kiếm
+            </button>
+          </div>
+        </div>
+      </section>
 
-            <!-- Review Comment -->
-            <p class="text-xs text-slate-300 leading-relaxed font-medium bg-slate-950/60 p-4 rounded-xl border border-slate-800/60 italic">
-              "{{ review.comment }}"
+      <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="mb-6 overflow-hidden rounded-[2rem] bg-gradient-to-r from-slate-900 via-indigo-900 to-violet-700 p-6 text-white shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+          <div class="grid items-center gap-6 lg:grid-cols-[1.2fr_0.9fr]">
+            <div>
+              <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white/80">
+                <span>⚙</span> RentOps overview banner
+              </div>
+              <h2 class="mt-4 text-3xl font-black leading-tight sm:text-4xl">Tổng quan nhanh hệ thống: phòng, hợp đồng, hóa đơn và bảo trì</h2>
+              <p class="mt-3 max-w-2xl text-sm leading-7 text-white/80">Banner này phản ánh đúng mục tiêu của RentOps: quản lý vận hành trọn bộ cho chủ trọ và đội ngũ vận hành.</p>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div v-for="mini in miniBannerStats" :key="mini.label" class="rounded-2xl bg-white/10 p-4 text-center backdrop-blur-sm">
+                <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">{{ mini.icon }}</div>
+                <div class="text-lg font-black">{{ mini.value }}</div>
+                <div class="text-[11px] text-white/70">{{ mini.label }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div v-for="category in categories" :key="category.title" class="rounded-3xl bg-white p-3 shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <div class="overflow-hidden rounded-2xl">
+              <img :src="category.image" :alt="category.title" class="h-24 w-full object-cover" />
+            </div>
+            <div class="flex items-center gap-3 px-2 py-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-sm">{{ category.icon }}</div>
+              <div>
+                <div class="text-sm font-bold text-slate-900">{{ category.title }}</div>
+                <div class="text-xs text-slate-500">{{ category.price }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div class="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-black text-slate-900">Tài sản nổi bật trong hệ thống</h2>
+            <p class="mt-2 text-sm text-slate-500">Một số phòng và tòa nhà mẫu để giới thiệu năng lực vận hành RentOps</p>
+          </div>
+          <a href="/properties" class="text-sm font-semibold text-indigo-600">Đi tới quản lý tòa nhà →</a>
+        </div>
+
+        <div class="grid gap-6 lg:grid-cols-4">
+          <article v-for="room in featuredRooms" :key="room.title" class="overflow-hidden rounded-[1.75rem] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <div class="relative h-56">
+              <img :src="room.image" :alt="room.title" class="h-full w-full object-cover" />
+              <span v-if="room.badge" class="absolute left-4 top-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-white shadow-lg">{{ room.badge }}</span>
+              <button class="absolute right-4 top-4 rounded-full bg-white/85 p-2 text-slate-500 shadow-sm">♡</button>
+            </div>
+            <div class="space-y-3 p-5">
+              <h3 class="text-base font-bold text-slate-900">{{ room.title }}</h3>
+              <div class="text-sm text-slate-500">{{ room.location }}</div>
+              <div class="text-lg font-black text-indigo-600">{{ room.price }}</div>
+              <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+                <span v-for="tag in room.tags" :key="tag" class="rounded-full bg-slate-50 px-3 py-1 ring-1 ring-slate-200">{{ tag }}</span>
+              </div>
+              <div class="flex items-center justify-between text-xs text-slate-500">
+                <span>⭐ {{ room.rating }}</span>
+                <span>{{ room.reviews }} đánh giá</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div class="mb-6 flex items-end justify-between gap-4">
+            <h2 class="text-3xl font-black text-slate-900">Khu vực có dữ liệu trong hệ thống</h2>
+          <a href="/rooms" class="text-sm font-semibold text-indigo-600">Xem danh sách phòng →</a>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+          <article v-for="area in areas" :key="area.name" class="group overflow-hidden rounded-2xl bg-slate-900 shadow-lg">
+            <div class="relative h-44">
+              <img :src="area.image" :alt="area.name" class="h-full w-full object-cover opacity-85 transition duration-500 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+              <div class="absolute bottom-4 left-4 right-4 text-white">
+                <div class="text-sm font-bold">{{ area.name }}</div>
+                <div class="text-sm opacity-90">{{ area.rooms }} phòng</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="text-center">
+          <h2 class="text-3xl font-black text-slate-900">Vì sao chọn <span class="text-indigo-600">RentOps?</span></h2>
+        </div>
+        <div class="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div v-for="benefit in benefits" :key="benefit.title" class="rounded-[1.5rem] bg-white p-6 text-center shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">{{ benefit.icon }}</div>
+            <h3 class="text-base font-bold text-slate-900">{{ benefit.title }}</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ benefit.desc }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="text-center">
+          <h2 class="text-3xl font-black text-slate-900">Vận hành cho thuê chỉ với 3 bước đơn giản</h2>
+        </div>
+        <div class="mt-10 grid gap-6 lg:grid-cols-3">
+          <div v-for="step in steps" :key="step.title" class="rounded-[1.75rem] border border-slate-200 bg-white p-8 text-center shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
+            <div class="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border-2 border-indigo-200 text-xl font-black text-indigo-600">{{ step.num }}</div>
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">{{ step.icon }}</div>
+            <h3 class="text-lg font-bold text-slate-900">{{ step.title }}</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-500">{{ step.desc }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div class="grid gap-4 lg:grid-cols-3">
+          <div class="overflow-hidden rounded-[2rem] bg-white shadow-[0_16px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <img :src="collageImages[0]" alt="Collage 1" class="h-64 w-full object-cover" />
+          </div>
+          <div class="grid gap-4">
+            <div class="overflow-hidden rounded-[2rem] bg-white shadow-[0_16px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+              <img :src="collageImages[1]" alt="Collage 2" class="h-[124px] w-full object-cover" />
+            </div>
+            <div class="overflow-hidden rounded-[2rem] bg-white shadow-[0_16px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+              <img :src="collageImages[2]" alt="Collage 3" class="h-[124px] w-full object-cover" />
+            </div>
+          </div>
+          <div class="overflow-hidden rounded-[2rem] bg-white shadow-[0_16px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <img :src="collageImages[3]" alt="Collage 4" class="h-64 w-full object-cover" />
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <h2 class="text-center text-3xl font-black text-slate-900">Chủ nhà & cư dân nói gì về chúng tôi?</h2>
+        <div class="mt-10 grid gap-5 lg:grid-cols-3">
+          <article v-for="review in reviews" :key="review.name" class="rounded-[1.5rem] bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+            <div class="flex items-start gap-4">
+              <img :src="review.avatar" :alt="review.name" class="h-12 w-12 rounded-full object-cover" />
+              <div>
+                <div class="font-bold text-slate-900">{{ review.name }}</div>
+                <div class="text-sm text-slate-500">{{ review.role }}</div>
+                <div class="mt-1 text-amber-400">★★★★★</div>
+              </div>
+            </div>
+            <p class="mt-5 text-sm leading-7 text-slate-600">“{{ review.comment }}”</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div class="overflow-hidden rounded-[2rem] bg-gradient-to-r from-indigo-600 to-violet-500 px-8 py-10 text-white shadow-[0_24px_70px_rgba(79,70,229,0.28)] lg:flex lg:items-center lg:justify-between lg:px-12">
+          <div class="max-w-xl">
+            <h2 class="text-3xl font-black">Đăng ký RentOps để quản lý vận hành tập trung ngay hôm nay!</h2>
+            <p class="mt-3 text-white/85">Kết nối phòng trọ, hợp đồng, hóa đơn VietQR và bảo trì trên cùng một nền tảng.</p>
+            <button class="mt-6 rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 shadow-lg transition hover:translate-y-[-1px]">
+              Khám phá hệ thống →
+            </button>
+          </div>
+          <img :src="ctaImage" alt="CTA" class="mt-8 h-44 w-full max-w-md object-contain lg:mt-0" />
+        </div>
+      </section>
+    </main>
+
+    <footer class="mt-16 border-t border-slate-200 bg-white">
+      <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div class="grid gap-10 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+          <div>
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25">
+                <span class="text-lg font-black">R</span>
+              </div>
+              <div class="text-2xl font-black tracking-tight">Rentalio</div>
+            </div>
+            <p class="mt-4 max-w-sm text-sm leading-7 text-slate-500">
+              Nền tảng SaaS multi-tenant dành cho chủ trọ, quản lý tòa nhà và đội vận hành RentOps.
             </p>
-
-            <div class="flex justify-between items-center text-[10px] text-slate-500 font-bold pt-1">
-              <span>📅 Đăng ngày {{ review.date }}</span>
-              <span class="text-indigo-400">👍 Đã xác minh cư dân RentOps</span>
-            </div>
           </div>
+
+          <div v-for="column in footerColumns" :key="column.title">
+            <h3 class="text-sm font-bold text-slate-900">{{ column.title }}</h3>
+            <ul class="mt-4 space-y-3 text-sm text-slate-500">
+              <li v-for="item in column.items" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-10 border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
+          © 2026 RentOps. Tất cả quyền được bảo lưu.
         </div>
       </div>
-    </section>
-
-    <!-- Interactive Submit Review Modal -->
-    <div v-if="showReviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-lg w-full space-y-5 shadow-2xl relative">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-          <h3 class="text-xl font-black text-white flex items-center gap-2">
-            <span>✍️</span> Gửi Đánh Giá Căn Hộ
-          </h3>
-          <button @click="showReviewModal = false" class="text-slate-400 hover:text-white text-xl font-bold">✕</button>
-        </div>
-
-        <form @submit.prevent="submitReview" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">Họ và tên cư dân / Khách xem phòng</label>
-            <input
-              v-model="newReview.name"
-              required
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-              placeholder="VD: Nguyễn Văn Anh"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">Số phòng</label>
-              <input
-                v-model="newReview.room"
-                required
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                placeholder="VD: Phòng 302"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-300 mb-1">Đánh giá sao</label>
-              <select
-                v-model="newReview.rating"
-                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-bold text-amber-400 focus:outline-none focus:border-indigo-500"
-              >
-                <option :value="5">⭐⭐⭐⭐⭐ (5/5 Xuất sắc)</option>
-                <option :value="4">⭐⭐⭐⭐ (4/5 Rất tốt)</option>
-                <option :value="3">⭐⭐⭐ (3/5 Tốt)</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">Nội dung đánh giá & nhận xét</label>
-            <textarea
-              v-model="newReview.comment"
-              required
-              rows="3"
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-500"
-              placeholder="Chia sẻ trải nghiệm của bạn về không gian sống, an ninh, tiện ích..."
-            ></textarea>
-          </div>
-
-          <div class="flex gap-3 pt-2">
-            <button
-              type="button"
-              @click="showReviewModal = false"
-              class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              class="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg"
-            >
-              Gửi Đánh Giá Ngay
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Features Highlight Section -->
-    <section id="features" class="px-6 py-16 bg-slate-950 border-t border-slate-800/80">
-      <div class="max-w-7xl mx-auto space-y-12">
-        <div class="text-center space-y-3">
-          <h2 class="text-3xl font-black text-white flex items-center justify-center gap-2">
-            <span>⚡</span> Tính Năng SaaS Đột Phá Của RentOps
-          </h2>
-          <p class="text-slate-400 text-xs max-w-2xl mx-auto font-medium">Tối ưu toàn diện trải nghiệm quản lý nhà trọ từ quy mô nhỏ đến chuỗi bất động sản cho thuê lớn</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3">
-            <div class="text-3xl">💳</div>
-            <h3 class="text-lg font-extrabold text-white">VietQR Auto-Payment 24/7</h3>
-            <p class="text-xs text-slate-400 leading-relaxed font-normal">Tự động tạo mã VietQR động NAPAS chứa đúng số tiền và cú pháp chuyển khoản. Ngân hàng gửi Webhook gạch nợ hóa đơn ngay lập tức.</p>
-          </div>
-
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3">
-            <div class="text-3xl">✍️</div>
-            <h3 class="text-lg font-extrabold text-white">Chữ Ký Số Hợp Đồng Online</h3>
-            <p class="text-xs text-slate-400 leading-relaxed font-normal">Ký hợp đồng thuê nhà trực tiếp trên điện thoại/máy tính bằng bảng vẽ chữ ký điện tử. Trích xuất file hợp đồng đầy đủ chữ ký 2 bên.</p>
-          </div>
-
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3">
-            <div class="text-3xl">📱</div>
-            <h3 class="text-lg font-extrabold text-white">Cổng Khách Thuê Self-Service</h3>
-            <p class="text-xs text-slate-400 leading-relaxed font-normal">Khách thuê tự tra cứu hóa đơn, theo dõi lịch sử tiền điện nước, gửi phiếu báo hỏng sự cố cho ban quản lý bất kỳ lúc nào.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Detailed App Footer -->
-    <AppFooter />
+    </footer>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { ref, onMounted } from 'vue'
 import api from '../services/api'
-import AppFooter from '../components/AppFooter.vue'
 
-const router = useRouter()
-const authStore = useAuthStore()
+const navItems = ['Trang chủ', 'Tìm phòng', 'Khu vực', 'Loại phòng', 'Tiện ích', 'Blog', 'Về chúng tôi']
 
-const showReviewModal = ref(false)
-const newReview = ref({
-  name: '',
-  room: '',
-  rating: 5,
-  comment: ''
+const heroImage = '/images/rooms/main.png'
+const floorPlanImage = '/images/rooms/kitchen.png'
+const ctaImage = '/images/bedroom.png'
+const collageImages = ['/images/rooms/main.png', '/images/rooms/living.png', '/images/rooms/kitchen.png', '/images/rooms/bathroom.png']
+const dashboardStats = ref({
+  total_rooms: 0,
+  occupied_rooms: 0,
+  vacant_rooms: 0,
+  occupancy_rate: 0,
+  pending_maintenance_count: 0
 })
 
-const tenantReviews = ref([
+const topFeatures = [
+  { icon: '⌂', title: 'Dữ liệu phòng', desc: 'Đồng bộ từ dashboard' },
+  { icon: '✓', title: 'Hợp đồng', desc: 'Quản lý vòng đời thuê' },
+  { icon: '✦', title: 'Hóa đơn VietQR', desc: 'Thu tiền nhanh gọn' },
+  { icon: '◔', title: 'Bảo trì', desc: 'Nhắc việc và xử lý sự cố' }
+]
+
+const miniBannerStats = [
+  { icon: '⌂', value: '0', label: 'phòng' },
+  { icon: '★', value: '0', label: 'hợp đồng' },
+  { icon: '⚑', value: '0', label: 'sự cố' }
+]
+
+const searchFields = [
+  { label: 'Tìm kiếm', placeholder: 'Nhập khu vực, tên đường...' },
+  { label: 'Loại phòng', placeholder: 'Tất cả loại phòng' },
+  { label: 'Khoảng giá', placeholder: '0đ - Không giới hạn' },
+  { label: 'Tiện ích', placeholder: 'Chọn tiện ích' }
+]
+
+const categories = [
+  { title: 'Phòng trọ', price: 'Quản lý theo phòng', image: '/images/rooms/living.png', icon: '⌂' },
+  { title: 'Tòa nhà', price: 'Nhiều tầng, nhiều phòng', image: '/images/rooms/main.png', icon: '▣' },
+  { title: 'Căn hộ dịch vụ', price: 'Theo hợp đồng tháng', image: '/images/rooms/kitchen.png', icon: '◫' },
+  { title: 'Homestay', price: 'Theo đêm / theo kỳ', image: '/images/rooms/bathroom.png', icon: '⌾' },
+  { title: 'Tiện ích', price: 'Điện nước, bảo trì', image: '/images/rooms/living.png', icon: '☰' }
+]
+
+const featuredRooms = [
+  { title: 'Tòa A - Nam Từ Liêm', location: '6 phòng, 4 phòng đang ở', price: 'Từ 3.5 triệu/tháng', image: '/images/rooms/main.png', tags: ['Multi-tenant', 'Hợp đồng', 'VietQR'], rating: '4.8', reviews: 120, badge: 'Đang hoạt động' },
+  { title: 'Tòa B - Cầu Giấy', location: '8 phòng, 2 phòng trống', price: 'Từ 4.2 triệu/tháng', image: '/images/rooms/living.png', tags: ['Bảo trì', 'Nhắc nợ', 'Kiểm kê'], rating: '4.9', reviews: 98 },
+  { title: 'Căn hộ dịch vụ C', location: '4 hợp đồng đang hiệu lực', price: 'Từ 6.5 triệu/tháng', image: '/images/bedroom.png', tags: ['Tiện ích', 'Điện nước', 'Cư dân'], rating: '4.8', reviews: 76, badge: 'VIP' },
+  { title: 'Homestay Đà Lạt', location: 'Quản lý theo ngày/đêm', price: 'Từ 600k/đêm', image: '/images/rooms/kitchen.png', tags: ['Tour 360', 'Đặt lịch', 'Khách thuê'], rating: '4.9', reviews: 56 }
+]
+
+const areas = [
+  { name: 'Nam Từ Liêm', rooms: '6 phòng', image: '/images/rooms/main.png' },
+  { name: 'Cầu Giấy', rooms: '8 phòng', image: '/images/rooms/living.png' },
+  { name: 'Đống Đa', rooms: '4 phòng', image: '/images/rooms/kitchen.png' },
+  { name: 'TP. Hồ Chí Minh', rooms: '12 phòng', image: '/images/rooms/bathroom.png' },
+  { name: 'Đà Lạt', rooms: '3 phòng', image: '/images/bedroom.png' },
+  { name: 'Dữ liệu mẫu', rooms: 'Demo', image: '/images/rooms/main.png' }
+]
+
+const benefits = [
+  { icon: '⌕', title: 'Dữ liệu phòng', desc: 'Đồng bộ từ module Phòng Trọ và Khu Trọ.' },
+  { icon: '⌂', title: 'Dữ liệu hợp đồng', desc: 'Theo dõi hợp đồng hoạt động và sắp hết hạn.' },
+  { icon: '◌', title: 'Dữ liệu tài chính', desc: 'Gắn với hóa đơn, thu tiền và công nợ.' },
+  { icon: '◩', title: 'Dữ liệu vận hành', desc: 'Sự cố bảo trì, nhắc nợ và nhật ký thao tác.' },
+  { icon: '✦', title: 'Multi-tenant', desc: 'Phù hợp cho nhiều tòa nhà / chủ trọ trên cùng hệ thống.' }
+]
+
+const steps = [
+  { num: '1', icon: '⌕', title: 'Kết nối dữ liệu', desc: 'Nhập phòng, tòa nhà và khách thuê vào một nguồn dữ liệu chung.' },
+  { num: '2', icon: '✉', title: 'Quản lý vận hành', desc: 'Tạo hợp đồng, sinh hóa đơn VietQR và theo dõi bảo trì.' },
+  { num: '3', icon: '⌂', title: 'Theo dõi tập trung', desc: 'Xem dashboard, cảnh báo và công nợ ngay trên hệ thống.' }
+]
+
+const reviews = [
   {
-    id: 1,
-    name: "Trần Hoàng Nam",
-    room: "Phòng 301",
-    property: "Tòa RentOps B - Cầu Giấy",
-    rating: 5,
-    avatarColor: "bg-indigo-600",
-    stayDuration: "Đã ở 1 năm 4 tháng",
-    comment: "Phòng ốc rất mới và sạch sẽ, ban quản lý hỗ trợ cực kỳ nhiệt tình. Thích nhất là tính năng quét mã VietQR thanh toán tiền phòng tự động, chuyển xong là hệ thống báo đã gạch nợ ngay!",
-    date: "15/07/2026"
+    name: 'Nguyễn Minh Anh',
+    role: 'Sinh viên',
+    avatar: '/images/rooms/main.png',
+    comment: 'Mình quản lý được phòng, hợp đồng và hóa đơn trên cùng một hệ thống, đỡ phải thao tác rời rạc như trước.'
   },
   {
-    id: 2,
-    name: "Nguyễn Thị Phương Thảo",
-    room: "Phòng 401 (Studio)",
-    property: "Căn Hộ RentOps C - Đống Đa",
-    rating: 5,
-    avatarColor: "bg-emerald-600",
-    stayDuration: "Đã ở 8 tháng",
-    comment: "Căn hộ Studio full nội thất như khách sạn 4 sao! Wifi 200Mbps học tập làm việc từ xa mượt mà. Hợp đồng ký điện tử trực tiếp trên điện thoại rất tiện lợi.",
-    date: "20/07/2026"
+    name: 'Trần Hoàng Nam',
+    role: 'Nhân viên văn phòng',
+    avatar: '/images/rooms/living.png',
+    comment: 'Dashboard RentOps giúp mình nhìn ngay được phòng trống, phòng đang ở và các hợp đồng sắp hết hạn.'
   },
   {
-    id: 3,
-    name: "Lê Minh Tuấn",
-    room: "Phòng 202",
-    property: "Tòa RentOps A - Nam Từ Liêm",
-    rating: 5,
-    avatarColor: "bg-cyan-600",
-    stayDuration: "Đã ở 2 năm",
-    comment: "An ninh ở đây cực tốt, có camera 24/7 và cổng khóa vân tay. Mỗi khi phòng có sự cố bóng đèn hay điện nước chỉ cần gửi phản hồi trên web là kỹ thuật sang sửa ngay trong ngày.",
-    date: "22/07/2026"
-  },
-  {
-    id: 4,
-    name: "Phạm Hải Đăng",
-    room: "Phòng 101",
-    property: "Tòa RentOps A - Nam Từ Liêm",
-    rating: 5,
-    avatarColor: "bg-amber-600",
-    stayDuration: "Đã ở 6 tháng",
-    comment: "Giá phòng niêm yết minh bạch, chi phí điện nước tính đúng giá công tơ ghi trên hệ thống. Cổng tự phục vụ giúp mình xem lại lịch sử hóa đơn hàng tháng dễ dàng.",
-    date: "28/07/2026"
+    name: 'Lê Thu Trang',
+    role: 'Freelancer',
+    avatar: '/images/rooms/kitchen.png',
+    comment: 'Phần VietQR và nhắc nợ hóa đơn rất tiện. Đội vận hành của mình dùng hằng ngày.'
   }
-])
-
-const submitReview = () => {
-  tenantReviews.value.unshift({
-    id: Date.now(),
-    name: newReview.value.name,
-    room: newReview.value.room,
-    property: "Tòa RentOps A",
-    rating: newReview.value.rating,
-    avatarColor: "bg-indigo-600",
-    stayDuration: "Khách vừa đánh giá",
-    comment: newReview.value.comment,
-    date: new Date().toLocaleDateString('vi-VN')
-  })
-  showReviewModal.value = false
-  newReview.value = { name: '', room: '', rating: 5, comment: '' }
-  alert('Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được hiển thị công khai.')
-}
-
-const defaultRooms = [
-  { id: 101, room_number: "101", property_name: "Tòa Nhà RentOps A", price: 3500000, status: "vacant", floor: 1, area: 25, amenities: ["Điều hòa Inverter", "Tủ lạnh 2 cánh", "Wifi 200Mbps", "Ban công thoáng"] },
-  { id: 102, room_number: "102", property_name: "Tòa Nhà RentOps A", price: 3800000, status: "occupied", floor: 1, area: 28, amenities: ["Điều hòa", "Máy giặt", "Nóng lạnh", "Giường nệm cao su"] },
-  { id: 103, room_number: "103", property_name: "Tòa Nhà RentOps A", price: 3500000, status: "vacant", floor: 1, area: 25, amenities: ["Điều hòa Inverter", "Tủ quần áo 3 cánh", "Tủ lạnh", "Bếp điện"] },
-  { id: 201, room_number: "201", property_name: "Tòa Nhà RentOps A", price: 4200000, status: "occupied", floor: 2, area: 30, amenities: ["Điều hòa", "Tủ lạnh", "Sàn gỗ tự nhiên", "Ban công rộng"] },
-  { id: 202, room_number: "202", property_name: "Tòa Nhà RentOps A", price: 4500000, status: "occupied", floor: 2, area: 32, amenities: ["Điều hòa Inverter", "Máy giặt riêng", "Tủ lạnh Inverter", "Sofa cao cấp"] },
-  { id: 203, room_number: "203", property_name: "Tòa Nhà RentOps A", price: 4000000, status: "vacant", floor: 2, area: 28, amenities: ["Điều hòa", "Wifi tốc độ cao", "Bình nóng lạnh", "Giường nệm gỗ"] },
-  { id: 301, room_number: "301", property_name: "Tòa Nhà RentOps B", price: 5000000, status: "vacant", floor: 3, area: 35, amenities: ["Điều hòa Inverter", "Bếp từ đôi âm", "Máy hút mùi", "Tủ lạnh 250L"] },
-  { id: 302, room_number: "302", property_name: "Tòa Nhà RentOps B", price: 5200000, status: "occupied", floor: 3, area: 38, amenities: ["Điều hòa", "Tủ lạnh", "Ban công thoáng", "Bàn học/làm việc"] },
-  { id: 303, room_number: "303", property_name: "Tòa Nhà RentOps B", price: 4800000, status: "vacant", floor: 3, area: 32, amenities: ["Điều hòa Inverter", "Giường gỗ sồi", "Tủ 3 cánh", "Bình nóng lạnh"] },
-  { id: 401, room_number: "401 (Studio)", property_name: "Căn Hộ Dịch Vụ RentOps C", price: 6500000, status: "vacant", floor: 4, area: 42, amenities: ["Full nội thất cao cấp", "Smart TV 50 inch", "Tủ lạnh side-by-side", "Bếp từ đôi"] },
-  { id: 402, room_number: "402 (Studio)", property_name: "Căn Hộ Dịch Vụ RentOps C", price: 6800000, status: "occupied", floor: 4, area: 45, amenities: ["Full nội thất cao cấp", "Bồn tắm đứng", "Máy giặt sấy", "Ban công view phố"] }
 ]
 
-const rooms = ref(defaultRooms)
-const searchFilter = ref('')
-const statusFilter = ref('vacant')
-const selectedPropertyTab = ref('all')
-const showAllRooms = ref(false)
-const viewMode = ref('grid')
-
-const roomPhotosList = [
-  '/images/hero_banner.png',
-  '/images/studio.png',
-  '/images/suite.png',
-  '/images/bedroom.png'
+const footerColumns = [
+  { title: 'Về RentOps', items: ['Giới thiệu nền tảng', 'Kiến trúc multi-tenant', 'Quy trình vận hành', 'Tuyển dụng', 'Liên hệ'] },
+  { title: 'Module chính', items: ['Phòng trọ', 'Khu trọ / Tòa nhà', 'Hợp đồng thuê', 'Hóa đơn & VietQR', 'Bảo trì'] },
+  { title: 'Hỗ trợ', items: ['Trung tâm trợ giúp', 'Quy định sử dụng', 'Chính sách bảo mật', 'Điều khoản dịch vụ', 'Nhật ký thao tác'] },
+  { title: 'Liên hệ', items: ['1900 1234', 'support@rentops.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
 ]
 
-const getRoomPhoto = (room) => {
-  if (room.image) return room.image
-  const index = (room.id || 0) % roomPhotosList.length
-  return roomPhotosList[index]
-}
-
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
-
-const openRoomDetail = (room) => {
-  router.push(`/room-detail/${room.id || room.room_number}`)
-}
-
-const fetchPublicRooms = async () => {
+const loadDashboardStats = async () => {
   try {
-    const res = await api.get('/public/rooms')
-    if (res && res.data && res.data.length > 0) {
-      rooms.value = res.data
+    const res = await api.get('/dashboard/summary')
+    const counters = res?.counters || {}
+    dashboardStats.value = {
+      total_rooms: counters.total_rooms ?? 0,
+      occupied_rooms: counters.occupied_rooms ?? 0,
+      vacant_rooms: counters.vacant_rooms ?? 0,
+      occupancy_rate: counters.occupancy_rate ?? 0,
+      pending_maintenance_count: counters.pending_maintenance_count ?? 0
     }
-  } catch (err) {
-    console.log('Using default sample rooms list')
+    miniBannerStats.splice(
+      0,
+      miniBannerStats.length,
+      { icon: '⌂', value: String(dashboardStats.value.total_rooms), label: 'phòng' },
+      { icon: '★', value: String(counters.expiring_contracts_count ?? 0), label: 'hợp đồng sắp hết hạn' },
+      { icon: '⚑', value: String(dashboardStats.value.pending_maintenance_count), label: 'sự cố chờ xử lý' }
+    )
+  } catch {
+    // Keep the static fallback values when API is unavailable.
   }
-}
-
-const filteredRooms = computed(() => {
-  return rooms.value.filter(r => {
-    const num = (r.room_number || '').toString().toLowerCase()
-    const prop = (r.property_name || '').toString().toLowerCase()
-    const query = searchFilter.value.toLowerCase()
-
-    const matchSearch = searchFilter.value === '' || num.includes(query) || prop.includes(query)
-    const matchStatus = statusFilter.value === 'all' ||
-      (statusFilter.value === 'vacant' && (r.status === 0 || r.status === 'vacant'))
-
-    const matchProperty = selectedPropertyTab.value === 'all' || prop.includes(selectedPropertyTab.value.toLowerCase())
-
-    return matchSearch && matchStatus && matchProperty
-  })
-})
-
-const visibleRooms = computed(() => {
-  if (showAllRooms.value) return filteredRooms.value
-  return filteredRooms.value.slice(0, 6)
-})
-
-const demoAccess = async () => {
-  await authStore.login('demo@rentops.vn')
-  router.push('/')
 }
 
 onMounted(() => {
-  fetchPublicRooms()
+  loadDashboardStats()
 })
 </script>
-

@@ -1,242 +1,1176 @@
 <template>
-  <AppLayout>
-    <div class="max-w-5xl mx-auto space-y-6">
-      <!-- Header banner -->
-      <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-blue-900 p-6 rounded-2xl border border-indigo-700/50 shadow-xl text-white relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-full border border-indigo-400/30 uppercase tracking-wider">
-              Tenant Self-Service Portal
-            </span>
-            <h1 class="text-2xl font-bold text-white mt-2">Xin chào, {{ currentUser?.full_name || 'Khách Thuê (Cư Dân)' }} 👋</h1>
-            <p class="text-xs text-indigo-200 mt-1">SĐT: {{ currentUser?.phone || '0988777666' }} • Khách thuê trọ RentOps Platform</p>
-          </div>
-
-          <div class="text-right">
-            <p class="text-xs text-indigo-300">Trạng thái thuê</p>
-            <span class="px-3 py-1 bg-emerald-500 text-white font-bold text-xs rounded-full shadow-sm inline-block mt-1">
-              Hợp đồng đang hiệu lực
-            </span>
-          </div>
-        </div>
+  <div class="tenant-shell">
+    <aside class="tenant-sidebar">
+      <div class="brand">
+        <div class="brand-mark">⌂</div>
+        <div class="brand-name">Rentalio</div>
       </div>
 
-      <!-- Active Bill Alert Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm relative overflow-hidden">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="w-3 h-3 bg-amber-500 rounded-full animate-ping"></span>
-              <h3 class="text-lg font-bold text-slate-900">Hóa Đơn Tháng 07/2026 Cần Thanh Toán</h3>
-            </div>
-            <p class="text-xs text-slate-500 mt-1">Mã hóa đơn: <span class="text-indigo-600 font-mono font-bold">HD2026-07-102</span> • Hạn thanh toán: 05/08/2026</p>
-            <p class="text-3xl font-black text-slate-900 mt-2 font-mono">3.850.000 ₫</p>
-          </div>
+      <nav class="side-nav">
+        <button v-for="item in navItems" :key="item.name" class="nav-item" :class="{ active: item.active }">
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span>{{ item.name }}</span>
+        </button>
+      </nav>
 
-          <button
-            @click="showPayQr = true"
-            class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 font-bold text-white text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center space-x-2"
-          >
-            <span>📱 Quét VietQR Thanh Toán Ngay</span>
-          </button>
+      <div class="reward-card">
+        <div class="reward-title">Giới thiệu &amp; nhận thưởng</div>
+        <p>Giới thiệu bạn bè và nhận ngay 500.000đ vào tài khoản</p>
+        <div class="reward-bottom">
+          <button>Giới thiệu ngay</button>
+          <span>🎁</span>
         </div>
       </div>
+    </aside>
 
-      <!-- Service Tabs -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h4 class="font-bold text-slate-900 text-sm">📋 Chi Tiết Tiền Điện / Nước</h4>
-          <div class="space-y-2 text-xs text-slate-600">
-            <div class="flex justify-between border-b border-slate-100 pb-1">
-              <span>Điện (Cũ: 120, Mới: 185):</span>
-              <span class="font-mono text-indigo-600 font-bold">65 kWh x 3.500₫</span>
-            </div>
-            <div class="flex justify-between border-b border-slate-100 pb-1">
-              <span>Nước (Cũ: 45, Mới: 52):</span>
-              <span class="font-mono text-indigo-600 font-bold">7 m³ x 12.000₫</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Dịch vụ (Vệ sinh, Wifi):</span>
-              <span class="font-mono text-indigo-600 font-bold">150.000 ₫</span>
-            </div>
+    <div class="tenant-main">
+      <header class="topbar">
+        <div class="search-box">
+          <span>⌕</span>
+          <input v-model="searchQuery" placeholder="Bạn muốn tìm phòng ở đâu?" />
+          <span>⌕</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="top-link"><span>♡</span> Yêu thích</button>
+          <button class="top-link has-badge"><span>▣</span> Tin nhắn <b>2</b></button>
+          <button class="bell">♧<b>3</b></button>
+          <div class="profile">
+            <img :src="avatar" alt="avatar" />
+            <strong>{{ tenantName }}</strong>
+            <span>⌄</span>
           </div>
         </div>
+      </header>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h4 class="font-bold text-slate-900 text-sm">✍️ Hợp Đồng & Chữ Ký Số</h4>
-          <p class="text-xs text-slate-500">Thời hạn: 01/01/2026 - 31/12/2026</p>
-          <p class="text-xs text-slate-500">Tiền cọc giữ chỗ: <span class="text-emerald-600 font-bold font-mono">3.500.000 ₫</span></p>
+      <div class="content-grid">
+        <main class="center-column">
+          <section class="hero-panel">
+            <img :src="heroImage" alt="Không gian phòng" />
+            <div class="hero-overlay"></div>
+            <h1>Tìm không gian sống lý tưởng<br />cho cuộc sống của bạn</h1>
 
-          <button @click="showSignModal = true" class="w-full py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200 transition">
-            ✍️ Ký Tên Điện Tử
-          </button>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h4 class="font-bold text-slate-900 text-sm">🛠️ Gửi Yêu Cầu Báo Hỏng</h4>
-          <p class="text-xs text-slate-500">Gửi ticket sự cố thiết bị (điều hòa, đường nước) cho Ban quản lý.</p>
-          <button @click="showTicketModal = true" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition">
-            🚨 Báo Hỏng Sự Cố
-          </button>
-        </div>
-      </div>
-
-      <!-- 6-Month Utility Consumption History Chart Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span>📊</span> Lịch Sử Tiêu Thụ Điện & Nước 6 Tháng Gần Nhất
-            </h3>
-            <p class="text-xs text-slate-500 mt-0.5">Theo dõi chỉ số kWh điện và m³ nước theo từng tháng</p>
-          </div>
-          <span class="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200">
-            Phòng 102
-          </span>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 pt-2">
-          <div v-for="(h, idx) in utilityHistory" :key="idx" class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-center space-y-2">
-            <span class="text-xs font-bold text-slate-500 block">{{ h.month }}</span>
-
-            <!-- Electric usage bar -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>⚡</span> <span>{{ h.electric }} kWh</span>
+            <div class="hero-search">
+              <div class="search-tabs">
+                <button class="selected">Tìm kiếm</button>
+                <button>Tìm theo bản đồ</button>
               </div>
-              <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div class="bg-amber-500 h-full rounded-full transition-all" :style="{ width: `${(h.electric / 200) * 100}%` }"></div>
+              <div class="search-fields">
+                <div v-for="field in searchFields" :key="field.label" class="search-field">
+                  <strong>{{ field.label }}</strong>
+                  <span>{{ field.placeholder }}</span>
+                </div>
+                <button class="search-submit">⌕ Tìm kiếm</button>
               </div>
             </div>
+          </section>
 
-            <!-- Water usage bar -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>💧</span> <span>{{ h.water }} m³</span>
+          <section class="section-block">
+            <h2>Khám phá theo nhu cầu</h2>
+            <div class="category-row">
+              <article v-for="item in categories" :key="item.title" class="category-card">
+                <div class="category-icon" :class="item.color">{{ item.icon }}</div>
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.price }}</span>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="section-block">
+            <div class="section-head">
+              <h2>Phòng nổi bật dành cho bạn</h2>
+              <a href="#">Xem tất cả</a>
+            </div>
+            <div class="room-grid">
+              <article v-for="room in featuredRooms" :key="room.title" class="room-card">
+                <div class="room-photo">
+                  <img :src="room.image" :alt="room.title" />
+                  <span v-if="room.badge" class="vip">VIP</span>
+                  <button>♡</button>
+                  <small>▣ {{ room.photos }}</small>
+                </div>
+                <div class="room-body">
+                  <h3>{{ room.title }}</h3>
+                  <p>⌾ {{ room.location }}</p>
+                  <strong>{{ room.price }}</strong>
+                  <div class="room-tags">
+                    <span v-for="tag in room.tags" :key="tag">{{ tag }}</span>
+                  </div>
+                  <div class="rating">★ <span>{{ room.rating }}</span></div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="bottom-grid">
+            <div class="section-block">
+              <div class="section-head">
+                <h2>Khu vực phổ biến</h2>
+                <a href="#">Xem tất cả</a>
               </div>
-              <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div class="bg-blue-500 h-full rounded-full transition-all" :style="{ width: `${(h.water / 15) * 100}%` }"></div>
+              <div class="area-grid">
+                <article v-for="area in areas" :key="area.name" class="area-card">
+                  <img :src="area.image" :alt="area.name" />
+                  <div>
+                    <strong>{{ area.name }}</strong>
+                    <span>{{ area.rooms }} phòng</span>
+                  </div>
+                </article>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Modals -->
-      <PaymentQrModal
-        :show="showPayQr"
-        :bill="demoBill"
-        @close="showPayQr = false"
-        @payment-success="handleSuccess"
-      />
-
-      <ESignatureModal
-        :show="showSignModal"
-        @close="showSignModal = false"
-        @save="handleSignSave"
-      />
-
-      <!-- Tenant Ticket Modal -->
-      <div v-if="showTicketModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="text-lg font-bold text-slate-900">🚨 Gửi Báo Hỏng Sự Cố</h3>
-            <button @click="showTicketModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
-          </div>
-
-          <form @submit.prevent="submitTicket" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tiêu đề sự cố</label>
-              <input v-model="ticketForm.title" required type="text" placeholder="Ví dụ: Rò rỉ nước bồn rửa mặt, Hỏng máy lạnh..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-rose-500" />
+            <div class="section-block">
+              <div class="section-head">
+                <h2>Bạn có thể quan tâm</h2>
+                <a href="#">Xem tất cả</a>
+              </div>
+              <div class="interest-row">
+                <article v-for="item in interestItems" :key="item.title" class="interest-card">
+                  <img :src="item.image" :alt="item.title" />
+                  <div>
+                    <strong>{{ item.title }}</strong>
+                    <span>{{ item.subtitle }}</span>
+                    <b>{{ item.price }}</b>
+                  </div>
+                </article>
+              </div>
             </div>
+          </section>
+        </main>
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mức độ ưu tiên</label>
-              <select v-model="ticketForm.priority" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white">
-                <option value="medium">Bình thường</option>
-                <option value="high">Báo gấp</option>
-                <option value="urgent">Khẩn cấp (Cần xử lý ngay)</option>
-              </select>
+        <aside class="right-panel">
+          <section class="user-card">
+            <div class="user-row">
+              <img :src="avatar" alt="avatar" />
+              <div>
+                <span>Chào buổi sáng! 👋</span>
+                <strong>{{ tenantName }}</strong>
+              </div>
             </div>
+            <div class="member-progress">
+              <div>
+                <span>◇ Thành viên Bạc</span>
+                <strong>2.350 điểm</strong>
+              </div>
+              <div class="progress-track"><i></i></div>
+              <small>Còn 650 điểm để lên hạng Vàng</small>
+            </div>
+          </section>
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mô tả sự cố</label>
-              <textarea v-model="ticketForm.description" rows="3" placeholder="Mô tả cụ thể để ban quản lý nắm tình hình..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"></textarea>
+          <section class="wallet-card">
+            <h2>Ví của tôi</h2>
+            <div class="wallet-balance">
+              <div>
+                <span>Số dư hiện tại</span>
+                <strong>2.350.000 đ</strong>
+              </div>
+              <button>Nạp tiền</button>
             </div>
+            <button class="wallet-link">▤ Lịch sử giao dịch <span>›</span></button>
+            <button class="wallet-link">▭ Phương thức thanh toán <span>›</span></button>
+          </section>
 
-            <div class="flex justify-end gap-3 pt-2">
-              <button type="button" @click="showTicketModal = false" class="px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-xl text-sm">Hủy</button>
-              <button type="submit" :disabled="submittingTicket" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm shadow-md shadow-rose-600/30">
-                {{ submittingTicket ? 'Đang gửi...' : 'Gửi Yêu Cầu' }}
-              </button>
-            </div>
-          </form>
-        </div>
+          <section class="offer-card">
+            <h2>Ưu đãi dành riêng cho bạn</h2>
+            <article v-for="offer in offers" :key="offer.title">
+              <div>
+                <strong>{{ offer.title }}</strong>
+                <p>{{ offer.desc }}</p>
+                <span>HSD: {{ offer.expiry }}</span>
+              </div>
+              <button>Lưu mã</button>
+            </article>
+            <a href="#">Xem tất cả ưu đãi ›</a>
+          </section>
+        </aside>
       </div>
     </div>
-  </AppLayout>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import AppLayout from '../components/AppLayout.vue'
-import PaymentQrModal from '../components/PaymentQrModal.vue'
-import ESignatureModal from '../components/ESignatureModal.vue'
-import api from '../services/api'
+import { computed, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
-const currentUser = computed(() => authStore.currentUser)
+const searchQuery = ref('')
 
-const showPayQr = ref(false)
-const showSignModal = ref(false)
-const showTicketModal = ref(false)
-const submittingTicket = ref(false)
+const currentUser = computed(() => authStore.currentUser || {})
+const tenantName = computed(() => currentUser.value.full_name || 'Nguyễn Văn A')
+const avatar = '/images/rooms/main.png'
+const heroImage = '/images/hero_banner.png'
 
-const utilityHistory = ref([
-  { month: 'T02/26', electric: 110, water: 6 },
-  { month: 'T03/26', electric: 125, water: 7 },
-  { month: 'T04/26', electric: 140, water: 8 },
-  { month: 'T05/26', electric: 175, water: 10 },
-  { month: 'T06/26', electric: 190, water: 11 },
-  { month: 'T07/26', electric: 165, water: 9 }
-])
+const navItems = [
+  { name: 'Trang chủ', icon: '⌂', active: true },
+  { name: 'Tìm phòng', icon: '⌕' },
+  { name: 'Phòng yêu thích', icon: '♡' },
+  { name: 'Lịch sử tìm kiếm', icon: '◷' },
+  { name: 'Đặt phòng của tôi', icon: '▣' },
+  { name: 'Hợp đồng của tôi', icon: '▤' },
+  { name: 'Thanh toán', icon: '▭' },
+  { name: 'Thông báo', icon: '♧' },
+  { name: 'Tin nhắn', icon: '▣' },
+  { name: 'Đánh giá của tôi', icon: '☆' },
+  { name: 'Hỗ trợ', icon: '?' }
+]
 
-const ticketForm = ref({
-  title: '',
-  priority: 'medium',
-  description: ''
-})
+const searchFields = [
+  { label: 'Địa điểm', placeholder: 'Nhập khu vực, quận, phường' },
+  { label: 'Ngày nhận phòng', placeholder: 'Chọn ngày' },
+  { label: 'Ngày trả phòng', placeholder: 'Chọn ngày' },
+  { label: 'Ngân sách', placeholder: 'Chọn khoảng giá' },
+  { label: 'Bộ lọc', placeholder: 'Tiện nghi, loại phòng...' }
+]
 
-const demoBill = ref({
-  bill_code: 'HD2026-07-102',
-  total_amount: 3850000,
-  bank_code: 'MB',
-  bank_account: '0901234567',
-  bank_account_name: 'RENTOPS DEMO',
-  status: 'issued'
-})
+const categories = [
+  { title: 'Phòng trọ', price: 'Giá từ 1 triệu', icon: '▥', color: 'orange' },
+  { title: 'Căn hộ mini', price: 'Giá từ 3 triệu', icon: '▣', color: 'violet' },
+  { title: 'Căn hộ dịch vụ', price: 'Giá từ 5 triệu', icon: '▤', color: 'pink' },
+  { title: 'Homestay', price: 'Giá từ 500k/đêm', icon: '⌂', color: 'blue' },
+  { title: 'Ở ghép', price: 'Giá từ 800k/người', icon: '●●', color: 'red' }
+]
 
-const handleSuccess = (bill) => {
-  alert(`Cảm ơn bạn! Hóa đơn ${bill.bill_code} đã được gạch nợ thanh toán tự động.`)
-  showPayQr.value = false
+const featuredRooms = [
+  { title: 'Căn hộ dịch vụ cao cấp full nội thất', location: 'Quận 1, TP. Hồ Chí Minh', price: '8.5 triệu/tháng', image: '/images/suite.png', tags: ['40m²', '1 PN', '1 WC', 'Ban công'], badge: true, photos: '1/12', rating: '4.8 (76)' },
+  { title: 'Studio ban công thoáng mát gần trung tâm', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '6.2 triệu/tháng', image: '/images/studio.png', tags: ['30m²', 'Studio', '1 WC', 'Ban công'], badge: true, photos: '1/10', rating: '4.7 (58)' },
+  { title: 'Homestay xinh xắn view vườn', location: 'Đà Lạt, Lâm Đồng', price: '600k/đêm', image: '/images/bedroom.png', tags: ['20m²', '1 PN', '1 WC', 'Bếp chung'], badge: false, photos: '1/15', rating: '4.9 (102)' },
+  { title: 'Phòng trọ duplex hiện đại ngay trung tâm', location: 'Thủ Đức, TP. Hồ Chí Minh', price: '4.5 triệu/tháng', image: '/images/rooms/living.png', tags: ['25m²', '1 PN', '1 WC', 'Gác lửng'], badge: false, photos: '1/15', rating: '4.6 (34)' }
+]
+
+const areas = [
+  { name: 'Quận 1', rooms: '1.234', image: '/images/rooms/main.png' },
+  { name: 'Bình Thạnh', rooms: '2.345', image: '/images/rooms/living.png' },
+  { name: 'Thủ Đức', rooms: '2.125', image: '/images/rooms/kitchen.png' },
+  { name: 'Đà Lạt', rooms: '987', image: '/images/bedroom.png' },
+  { name: 'Hà Nội', rooms: '3.456', image: '/images/hero_banner.png' }
+]
+
+const interestItems = [
+  { title: 'Căn hộ mini', subtitle: 'đầy đủ tiện nghi', price: '5.8 triệu/tháng', image: '/images/studio.png' },
+  { title: 'Phòng trọ', subtitle: 'sạch sẽ, thoáng mát', price: '3.2 triệu/tháng', image: '/images/rooms/bathroom.png' }
+]
+
+const offers = [
+  { title: 'Giảm 10%', desc: 'Tối đa 200k cho đơn từ 2 triệu', expiry: '30/06/2024' },
+  { title: 'Miễn phí dọn phòng', desc: 'Cho đơn đặt từ 7 ngày trở lên', expiry: '30/06/2024' }
+]
+</script>
+
+<style scoped>
+.tenant-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  background: #f7f8fc;
 }
 
-const handleSignSave = (signatureUrl) => {
-  alert('Đã lưu chữ ký điện tử của bạn vào hợp đồng thành công!')
+.tenant-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e6eaf2;
+  background: #fff;
+  padding: 0 18px 18px;
 }
 
-const submitTicket = async () => {
-  submittingTicket.value = true
-  try {
-    await api.post('/maintenance_requests', { maintenance_request: ticketForm.value })
-    alert('Tạo ticket báo sự cố thành công! Ban quản lý sẽ tiếp nhận và liên hệ hỗ trợ.')
-    showTicketModal.value = false
-    ticketForm.value = { title: '', priority: 'medium', description: '' }
-  } catch (err) {
-    alert(err?.message || 'Không thể gửi ticket sự cố')
-  } finally {
-    submittingTicket.value = false
+.brand {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #8175ff, #563ee7);
+}
+
+.brand-name {
+  color: #121936;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.side-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #263255;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 14px;
+  text-align: left;
+}
+
+.nav-item.active {
+  color: #fff;
+  background: #5a42e8;
+  box-shadow: 0 12px 24px rgba(90, 66, 232, 0.22);
+}
+
+.nav-icon {
+  width: 22px;
+  text-align: center;
+  font-size: 17px;
+}
+
+.reward-card {
+  border-radius: 8px;
+  background: linear-gradient(135deg, #5a42e8, #6e58f4);
+  color: #fff;
+  padding: 18px;
+}
+
+.reward-title {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.reward-card p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.reward-bottom {
+  margin-top: 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.reward-bottom button {
+  border: 0;
+  border-radius: 7px;
+  background: #fff;
+  color: #5a42e8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+.reward-bottom span {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.tenant-main {
+  min-width: 0;
+}
+
+.topbar {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #e6eaf2;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.search-box {
+  width: min(486px, 100%);
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e1e5ef;
+  border-radius: 8px;
+  background: #fff;
+  color: #263255;
+  padding: 0 16px;
+}
+
+.search-box input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: #263255;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.search-box input::placeholder {
+  color: #7d879d;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  white-space: nowrap;
+}
+
+.top-link,
+.bell {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: #121936;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.top-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-link span,
+.bell {
+  font-size: 18px;
+}
+
+.top-actions b {
+  position: absolute;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  padding: 0 5px;
+  right: -13px;
+  top: -12px;
+  background: #6a55ee;
+}
+
+.bell b {
+  background: #ff405b;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.profile img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile strong {
+  color: #121936;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 294px;
+  gap: 18px;
+  padding: 18px 22px 24px;
+}
+
+.center-column {
+  min-width: 0;
+}
+
+.hero-panel {
+  position: relative;
+  height: 266px;
+  overflow: visible;
+  border-radius: 8px;
+  background: #121936;
+  box-shadow: 0 18px 40px rgba(18, 25, 54, 0.15);
+}
+
+.hero-panel > img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(10, 14, 28, 0.78), rgba(10, 14, 28, 0.3), rgba(10, 14, 28, 0.02));
+}
+
+.hero-panel h1 {
+  position: absolute;
+  left: 38px;
+  top: 32px;
+  margin: 0;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.34;
+}
+
+.hero-search {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 18px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(18, 25, 54, 0.18);
+}
+
+.search-tabs {
+  display: flex;
+  border-bottom: 1px solid #eef1f7;
+}
+
+.search-tabs button {
+  height: 46px;
+  border: 0;
+  background: transparent;
+  color: #7b849d;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 26px;
+}
+
+.search-tabs .selected {
+  color: #5942e9;
+  box-shadow: inset 0 -2px #5942e9;
+}
+
+.search-fields {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(4, 1fr) 128px;
+  align-items: center;
+}
+
+.search-field {
+  min-width: 0;
+  border-right: 1px solid #eef1f7;
+  padding: 15px 22px;
+}
+
+.search-field strong {
+  display: block;
+  color: #303a5f;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.search-field span {
+  display: block;
+  overflow: hidden;
+  margin-top: 8px;
+  color: #7b849d;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-submit {
+  width: 106px;
+  height: 42px;
+  justify-self: center;
+  border: 0;
+  border-radius: 8px;
+  background: #5942e9;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.section-block {
+  margin-top: 22px;
+}
+
+.section-block h2,
+.section-head h2 {
+  margin: 0;
+  color: #121936;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-head a,
+.offer-card > a {
+  color: #5942e9;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.category-card {
+  min-width: 0;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #eef1f7;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 14px;
+  box-shadow: 0 8px 24px rgba(18, 25, 54, 0.04);
+}
+
+.category-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid #eef1f7;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 20px;
+  box-shadow: 0 8px 18px rgba(18, 25, 54, 0.08);
+}
+
+.category-icon.orange { color: #ff9416; }
+.category-icon.violet { color: #5942e9; }
+.category-icon.pink { color: #ff4f9a; }
+.category-icon.blue { color: #2188ff; }
+.category-icon.red { color: #ff5d5d; }
+
+.category-card strong,
+.interest-card strong {
+  display: block;
+  overflow: hidden;
+  color: #121936;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-card span,
+.interest-card span {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.room-card,
+.right-panel section,
+.interest-card {
+  border: 1px solid #e6eaf2;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(18, 25, 54, 0.04);
+}
+
+.room-card {
+  overflow: hidden;
+}
+
+.room-photo {
+  position: relative;
+  height: 152px;
+}
+
+.room-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.room-photo .vip {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  border-radius: 5px;
+  background: #ff9f1c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 7px;
+}
+
+.room-photo button {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  text-shadow: 0 1px 2px rgba(18, 25, 54, 0.35);
+}
+
+.room-photo small {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 7px;
+}
+
+.room-body {
+  padding: 16px;
+}
+
+.room-body h3 {
+  min-height: 44px;
+  margin: 0;
+  color: #121936;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.room-body p {
+  overflow: hidden;
+  margin: 10px 0 0;
+  color: #6d7694;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-body > strong {
+  display: block;
+  margin-top: 10px;
+  color: #5942e9;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.room-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.room-tags span {
+  color: #6d7694;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rating {
+  margin-top: 14px;
+  color: #ffb21a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.rating span {
+  color: #303a5f;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 26px;
+}
+
+.area-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.area-card {
+  position: relative;
+  height: 108px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #121936;
+}
+
+.area-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.area-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.08));
+}
+
+.area-card div {
+  position: absolute;
+  left: 12px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  color: #fff;
+}
+
+.area-card strong,
+.area-card span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.area-card strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.area-card span {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.interest-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.interest-card {
+  height: 100px;
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+}
+
+.interest-card img {
+  width: 72px;
+  height: 100%;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.interest-card b {
+  display: block;
+  margin-top: 12px;
+  color: #5942e9;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.right-panel section {
+  padding: 18px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-row img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-row span,
+.wallet-balance span,
+.member-progress small {
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.user-row strong {
+  display: block;
+  margin-top: 4px;
+  color: #121936;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.member-progress {
+  margin-top: 22px;
+}
+
+.member-progress > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.member-progress strong {
+  color: #303a5f;
+  font-weight: 900;
+}
+
+.progress-track {
+  height: 8px;
+  margin: 12px 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eaf4;
+}
+
+.progress-track i {
+  display: block;
+  width: 68%;
+  height: 100%;
+  border-radius: 999px;
+  background: #5942e9;
+}
+
+.wallet-card h2,
+.offer-card h2 {
+  margin: 0;
+  color: #121936;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.wallet-balance {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.wallet-balance strong {
+  display: block;
+  margin-top: 5px;
+  color: #121936;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.wallet-balance button,
+.offer-card article button {
+  border: 0;
+  border-radius: 8px;
+  background: #5942e9;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 11px 14px;
+}
+
+.wallet-link {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  border-top: 1px solid #eef1f7;
+  background: #fff;
+  color: #303a5f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 16px 0;
+  text-align: left;
+}
+
+.wallet-link:first-of-type {
+  margin-top: 18px;
+}
+
+.offer-card article {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  border: 1px solid #c7c2ff;
+  border-radius: 8px;
+  background: #fbfaff;
+  padding: 14px;
+}
+
+.offer-card article strong {
+  color: #5942e9;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.offer-card article p {
+  margin: 8px 0 12px;
+  color: #303a5f;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.offer-card article span {
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.offer-card article button {
+  flex: 0 0 auto;
+  border: 1px solid #c7c2ff;
+  background: #fff;
+  color: #5942e9;
+  padding: 8px 12px;
+}
+
+.offer-card > a {
+  display: block;
+  margin-top: 16px;
+  text-align: right;
+}
+
+@media (max-width: 1279px) {
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .right-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-</script>
+
+@media (max-width: 1100px) {
+  .tenant-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-sidebar {
+    display: none;
+  }
+
+  .top-actions {
+    display: none;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .room-grid,
+  .category-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bottom-grid,
+  .right-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .content-grid {
+    padding: 14px;
+  }
+
+  .hero-panel {
+    height: auto;
+    min-height: 440px;
+    overflow: hidden;
+  }
+
+  .hero-panel h1 {
+    left: 22px;
+    right: 22px;
+    top: 26px;
+    font-size: 27px;
+  }
+
+  .hero-search {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .search-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .search-field {
+    border-right: 0;
+    border-bottom: 1px solid #eef1f7;
+  }
+
+  .search-submit {
+    width: calc(100% - 28px);
+    margin: 14px;
+  }
+
+  .room-grid,
+  .category-row,
+  .area-grid,
+  .interest-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

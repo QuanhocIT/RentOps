@@ -1,233 +1,127 @@
 <template>
-  <div class="min-h-screen bg-slate-950 flex flex-col md:flex-row font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
-    <!-- Sidebar for Desktop -->
-    <aside class="w-full md:w-64 bg-slate-950 text-slate-200 flex-shrink-0 flex flex-col justify-between shadow-2xl z-20 border-r border-slate-800/80">
-      <div>
-        <!-- Logo & App Header -->
-        <div class="p-5 border-b border-slate-800/70 flex items-center justify-between bg-slate-900/50">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center text-white font-black text-xl shadow-md">
-              R
-            </div>
-            <div>
-              <h1 class="font-black text-lg text-white tracking-wide leading-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">RentOps</h1>
-              <p class="text-[10px] text-indigo-400 font-bold tracking-widest uppercase">SaaS Quản Lý Phòng Trọ</p>
-            </div>
-          </div>
-          <span class="flex h-2.5 w-2.5 relative">
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-        </div>
-
-        <!-- Tenant info banner -->
-        <div class="px-4 py-3 mx-3 my-3 bg-slate-900/80 rounded-xl border border-slate-800/90 shadow-inner group">
-          <div class="text-[10px] uppercase tracking-widest text-slate-400 font-bold flex items-center justify-between">
-            <span class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full" :class="isSuperAdmin ? 'bg-amber-400' : (isRenter ? 'bg-emerald-400' : 'bg-indigo-400')"></span>
-              {{ isSuperAdmin ? 'Hệ thống SaaS' : (isRenter ? 'Khách Thuê / Cư Dân' : 'Tòa nhà / Tenant') }}
-            </span>
-            <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold border" :class="isSuperAdmin ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : (isRenter ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')">
-              {{ isSuperAdmin ? 'SUPER ADMIN' : (isRenter ? 'CƯ DÂN' : 'CHỦ TRỌ') }}
-            </span>
-          </div>
-          <div class="text-xs font-bold text-white truncate mt-1">
-            {{ isSuperAdmin ? 'Platform Control Center' : (isRenter ? (authStore.currentUser?.full_name || 'Khách thuê trọ') : (authStore.currentTenant?.name || 'Tòa Nhà Demo RentOps')) }}
+  <div class="min-h-screen bg-[#f6f7fb] text-slate-900 overflow-hidden">
+    <aside class="hidden lg:flex fixed inset-y-0 left-0 w-[300px] shrink-0 border-r border-slate-200 bg-white/95 backdrop-blur-xl flex-col z-40 overflow-hidden">
+      <div class="shrink-0">
+        <div class="p-5 border-b border-slate-100 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl gradient-brand flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/20">R</div>
+          <div>
+            <div class="font-black text-xl tracking-tight text-slate-900">RentOps</div>
+            <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-600">SaaS Quản lý Phòng trọ</div>
           </div>
         </div>
+      </div>
 
-        <!-- Navigation items -->
-        <nav class="px-3 space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
+      <nav class="flex-1 min-h-0 px-3 py-4 space-y-1.5 overflow-y-auto">
           <RouterLink
             v-for="item in navItems"
             :key="item.path"
             :to="item.path"
-            :class="[
-              'group relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold',
-              route.path === item.path
-                ? 'bg-indigo-600 text-white shadow-md font-bold'
-                : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
-            ]"
+            class="group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition"
+            :class="route.path === item.path ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
           >
-            <!-- Active Indicator Pill -->
-            <div
-              v-if="route.path === item.path"
-              class="absolute left-0 top-2 bottom-2 w-1 bg-white rounded-r-full shadow-sm"
-            ></div>
-            
-            <span class="text-base">{{ item.icon }}</span>
+            <span class="text-lg">{{ item.icon }}</span>
             <span class="truncate">{{ item.name }}</span>
-
-            <span
-              v-if="item.badge"
-              class="ml-auto px-1.5 py-0.5 text-[10px] font-extrabold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30"
-            >
-              {{ item.badge }}
-            </span>
+            <span v-if="item.badge" class="ml-auto rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">{{ item.badge }}</span>
           </RouterLink>
         </nav>
-      </div>
 
-      <!-- User footer -->
-      <div class="p-3.5 border-t border-slate-800/80 bg-slate-950 flex items-center justify-between">
-        <div class="flex items-center gap-2.5 overflow-hidden">
-          <div class="w-9 h-9 rounded-xl gradient-brand flex items-center justify-center text-white font-black text-sm border border-indigo-400/30 shadow-inner">
-            {{ authStore.currentUser?.full_name?.charAt(0) || 'A' }}
-          </div>
-          <div class="overflow-hidden">
-            <div class="text-xs font-bold text-slate-100 truncate leading-snug">{{ authStore.currentUser?.full_name || 'Quản trị viên' }}</div>
-            <div class="text-[10px] text-slate-400 truncate">{{ authStore.currentUser?.email || 'superadmin@rentops.vn' }}</div>
-          </div>
+      <div class="shrink-0 p-4 border-t border-slate-200 space-y-4 bg-white/95">
+        <div class="rounded-[1.5rem] bg-gradient-to-br from-[#4f46e5] to-[#6d5efc] p-4 text-white shadow-[0_18px_40px_rgba(79,70,229,0.28)]">
+          <div class="text-sm font-black">Nâng cấp gói dịch vụ</div>
+          <div class="mt-1 text-xs text-white/80">Mở rộng tính năng và tăng hiệu quả quản lý doanh nghiệp</div>
+          <button class="mt-4 rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-indigo-600 shadow-sm">Nâng cấp ngay</button>
         </div>
         <button
+          class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
           @click="logout"
-          title="Đăng xuất"
-          class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent rounded-xl"
         >
-          🚪
+          Đăng xuất
         </button>
+        <div class="text-xs text-slate-400">© 2024 Rentalio</div>
       </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0 bg-slate-100 min-h-screen">
-      <!-- Top header bar -->
-      <header class="glass-header border-b border-slate-200/80 px-6 py-3.5 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold shadow-xs">
-            {{ currentNavIcon }}
+    <div class="min-h-screen lg:pl-[300px] flex flex-col">
+      <header class="fixed top-0 right-0 left-0 lg:left-[300px] z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+        <div class="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div class="flex items-center gap-3">
+            <button class="lg:hidden flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">☰</button>
+            <div>
+              <div class="text-lg font-black text-slate-900">{{ currentRouteName }}</div>
+              <div class="text-xs text-slate-500">{{ subtitle }}</div>
+            </div>
           </div>
-          <div>
-            <h2 class="text-lg font-extrabold text-slate-900 tracking-tight leading-none">
-              {{ currentRouteName }}
-            </h2>
-            <p class="text-[11px] text-slate-500 font-medium mt-1 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              {{ isSuperAdmin ? 'RentOps SaaS Engine • Platform Administrator' : 'RentOps Workspace • Synchronized Real-time' }}
-            </p>
+
+          <div class="flex items-center gap-3">
+            <button class="hidden sm:flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-500 shadow-sm">
+              <span>🔔</span>
+              <span class="relative inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white">3</span>
+            </button>
+            <button class="hidden sm:flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-500 shadow-sm">
+              <span>💬</span>
+            </button>
+            <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
+              <img :src="propertyImage" alt="Property" class="h-10 w-10 rounded-xl object-cover" />
+              <div class="min-w-0">
+                <div class="truncate text-sm font-bold text-slate-900">{{ propertyLabel }}</div>
+                <div class="text-[11px] text-slate-500">{{ roleLabel }}</div>
+              </div>
+              <span class="text-slate-400">⌄</span>
+            </div>
           </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <!-- Global Search Preview / Shortcut Button -->
-          <button
-            @click="isPaletteOpen = true"
-            class="hidden sm:flex items-center bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500 shadow-2xs transition cursor-pointer"
-          >
-            <span class="mr-2">🔍</span>
-            <span class="font-medium">Tìm nhanh...</span>
-            <kbd class="ml-3 px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-500 font-semibold">Ctrl K</kbd>
-          </button>
-
-          <!-- Theme Mode Switcher -->
-          <button
-            @click="toggleTheme"
-            class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-200 transition text-sm"
-            :title="isDark ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'"
-          >
-            {{ isDark ? '🌙' : '☀️' }}
-          </button>
-
-          <!-- Multi-Tenant Status Badge -->
-          <span
-            class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold shadow-2xs"
-            :class="isSuperAdmin ? 'bg-amber-50 text-amber-800 border border-amber-200/90' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/90'"
-          >
-            <span class="w-2 h-2 rounded-full mr-2" :class="isSuperAdmin ? 'bg-amber-500' : 'bg-emerald-500'"></span>
-            {{ isSuperAdmin ? 'Super Admin Mode' : 'Multi-Tenant Active' }}
-          </span>
         </div>
       </header>
 
-      <!-- Main View Slot -->
-      <main class="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      <main class="flex-1 px-4 pt-[88px] pb-5 sm:px-6 lg:px-8 overflow-y-auto overflow-x-hidden">
         <slot />
       </main>
     </div>
-
-    <!-- Toast Notifications Container -->
-    <ToastContainer />
-
-    <!-- Command Palette (Ctrl + K) -->
-    <CommandPalette
-      :is-open="isPaletteOpen"
-      @close="isPaletteOpen = false"
-      @open="isPaletteOpen = true"
-    />
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import ToastContainer from './ToastContainer.vue'
-import CommandPalette from './CommandPalette.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const isPaletteOpen = ref(false)
-const isDark = ref(localStorage.getItem('rentops_theme') === 'dark')
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  const theme = isDark.value ? 'dark' : 'light'
-  localStorage.setItem('rentops_theme', theme)
-  if (isDark.value) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
-}
-
-onMounted(() => {
-  if (isDark.value) {
-    document.documentElement.classList.add('dark')
-  }
-})
-
-const isSuperAdmin = computed(() => {
-  const u = authStore.currentUser
-  return u?.role === 'super_admin' || u?.email?.toLowerCase().includes('superadmin')
-})
-
-const isRenter = computed(() => {
-  const u = authStore.currentUser
-  return u?.role === 'renter'
-})
+const isSuperAdmin = computed(() => authStore.currentUser?.role === 'super_admin' || authStore.currentUser?.email?.toLowerCase().includes('superadmin'))
+const isRenter = computed(() => authStore.currentUser?.role === 'renter')
 
 const landlordNavItems = [
-  { name: 'Sơ đồ phòng', path: '/', icon: '🏢' },
+  { name: 'Tổng quan', path: '/', icon: '⌂' },
+  { name: 'Phòng & Bất động sản', path: '/properties', icon: '🏢' },
   { name: 'Trợ lý AI & Phân tích', path: '/ai-advisor', icon: '🤖', badge: 'AI' },
-  { name: 'Phòng trọ', path: '/rooms', icon: '🔑' },
-  { name: 'Khu trọ / Tòa nhà', path: '/properties', icon: '🏛️' },
-  { name: 'Khách thuê (Cư dân)', path: '/renters', icon: '👥' },
-  { name: 'Hợp đồng thuê', path: '/contracts', icon: '📄' },
-  { name: 'Chỉ số Điện Nước', path: '/utility-readings', icon: '⚡' },
-  { name: 'Bảng giá dịch vụ', path: '/services', icon: '💡' },
-  { name: 'Hóa đơn & VietQR', path: '/bills', icon: '💳' },
-  { name: 'Nhắc nợ ZNS / SMS', path: '/notifications', icon: '📩' },
-  { name: 'Sự cố & Bảo trì', path: '/maintenance', icon: '🔧' },
+  { name: 'Đặt phòng', path: '/contracts', icon: '📄' },
+  { name: 'Lịch', path: '/rooms', icon: '📅' },
+  { name: 'Khách hàng', path: '/renters', icon: '👥' },
+  { name: 'Đánh giá', path: '/maintenance', icon: '♡' },
+  { name: 'Doanh thu', path: '/reports', icon: '📈' },
+  { name: 'Chi phí', path: '/expenses', icon: '🪙' },
+  { name: 'Chỉ số điện nước', path: '/utility-readings', icon: '⚡' },
+  { name: 'Dịch vụ & Tiện ích', path: '/services', icon: '💡' },
   { name: 'Tiện ích phòng', path: '/amenities', icon: '🛋️' },
-  { name: 'Quản lý Tài sản', path: '/assets', icon: '📦' },
-  { name: 'Cổng Khách Thuê', path: '/tenant-portal', icon: '📱' },
-  { name: 'Chi phí vận hành', path: '/expenses', icon: '📊' },
-  { name: 'Báo cáo tài chính', path: '/reports', icon: '📈' },
-  { name: 'Cấu hình VietQR', path: '/settings', icon: '⚙️' },
-  { name: 'Khôi phục Dữ liệu', path: '/trash', icon: '♻️' },
-  { name: 'Nhật ký thao tác', path: '/audit-logs', icon: '📜' }
+  { name: 'Tài sản', path: '/assets', icon: '📦' },
+  { name: 'Thông báo', path: '/notifications', icon: '🔔' },
+  { name: 'Tin nhắn', path: '/tenant-portal', icon: '💬' },
+  { name: 'Báo cáo', path: '/bills', icon: '🧾' },
+  { name: 'Cổng cư dân', path: '/tenant-portal', icon: '📱' },
+  { name: 'Cài đặt', path: '/settings', icon: '⚙' },
+  { name: 'Nhật ký thao tác', path: '/audit-logs', icon: '📝' },
+  { name: 'Thùng rác', path: '/trash', icon: '♻️' }
 ]
 
 const renterNavItems = [
-  { name: 'Cổng Khách Thuê & Hóa Đơn', path: '/tenant-portal', icon: '📱', badge: 'Me' },
-  { name: 'Khám Phá & Tìm Phòng Trọ', path: '/landing', icon: '🔍' }
+  { name: 'Cổng cư dân', path: '/tenant-portal', icon: '📱', badge: 'Me' },
+  { name: 'Khám phá phòng', path: '/landing', icon: '⌕' }
 ]
 
 const superAdminNavItems = [
-  { name: 'Quản trị SaaS (MRR)', path: '/super-admin', icon: '👑', badge: 'System' },
-  { name: 'Nhật ký hệ thống', path: '/audit-logs', icon: '📜' },
-  { name: 'Thùng rác hệ thống', path: '/trash', icon: '♻️' }
+  { name: 'Quản trị SaaS', path: '/super-admin', icon: '👑' },
+  { name: 'Nhật ký hệ thống', path: '/audit-logs', icon: '📝' }
 ]
 
 const navItems = computed(() => {
@@ -236,19 +130,18 @@ const navItems = computed(() => {
   return landlordNavItems
 })
 
-const currentRouteName = computed(() => {
-  const item = navItems.value.find((i) => i.path === route.path)
-  return item ? item.name : 'RentOps Console'
+const roleLabel = computed(() => {
+  if (isSuperAdmin.value) return 'Super Admin'
+  if (isRenter.value) return 'Khách thuê'
+  return 'Chủ doanh nghiệp'
 })
-
-const currentNavIcon = computed(() => {
-  const item = navItems.value.find((i) => i.path === route.path)
-  return item ? item.icon : '⚡'
-})
+const propertyLabel = computed(() => authStore.currentTenant?.name || 'Minh House')
+const propertyImage = '/images/rooms/living.png'
+const currentRouteName = computed(() => navItems.value.find((i) => i.path === route.path)?.name || 'Tổng quan')
+const subtitle = computed(() => 'Cập nhật tình hình kinh doanh hôm nay')
 
 const logout = () => {
   authStore.logout()
   router.push('/login')
 }
 </script>
-
