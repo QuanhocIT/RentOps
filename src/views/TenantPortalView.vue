@@ -1339,7 +1339,8 @@ onMounted(async () => {
   height: 42px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 12px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -1363,8 +1364,10 @@ onMounted(async () => {
   width: 22px;
   text-align: center;
   font-size: 16px;
+  flex: 0 0 auto;
 }
 .side-badge {
+  margin-left: auto;
   background: #ff405b;
   color: #fff;
   font-size: 10px;
