@@ -227,49 +227,44 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toastStore = useToastStore()
-
-const defaultSampleExpenses = [
-  { id: 1, title: 'Bảo trì sửa chữa máy bơm nước P.202', property_name: 'Minh House Q1', category: 'sửa chữa', expense_date: '2026-07-28', amount: 1250000, note: 'Hóa đơn bảo trì cửa hàng điện cơ' },
-  { id: 2, title: 'Tiền mạng cáp quang Viettel 200Mbps', property_name: 'Minh House Bình Thạnh', category: 'internet', expense_date: '2026-07-25', amount: 880000, note: 'Đóng tiền mạng định kỳ 6 tháng' },
-  { id: 3, title: 'Thay bóng đèn LED hành lang tầng 2 & 3', property_name: 'Minh House Q1', category: 'sửa chữa', expense_date: '2026-07-20', amount: 450000, note: 'Mua 6 bóng Philips 18W' },
-  { id: 4, title: 'Chi phí dọn vệ sinh khu vực dùng chung', property_name: 'Tất cả tòa nhà', category: 'vệ sinh', expense_date: '2026-07-15', amount: 1500000, note: 'Trả lương nhân viên dọn dẹp hàng tuần' }
-]
 
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
-const expenses = ref([])
-const properties = ref([])
-const totalAmount = ref(0)
 const categoryFilter = ref('all')
 
 const form = ref({
   property_id: '',
   title: '',
-  category: 'sửa chữa',
+  category: 'Sửa chữa',
   amount: 0,
   expense_date: new Date().toISOString().slice(0, 10),
   note: ''
 })
 
+const properties = computed(() => dataStore.properties)
+
 const displayExpenses = computed(() => {
-  return expenses.value && expenses.value.length > 0 ? expenses.value : defaultSampleExpenses
+  return dataStore.expenses.map(e => ({
+    ...e,
+    expense_date: e.date,
+    property_name: e.propertyName
+  }))
 })
 
 const filteredExpenses = computed(() => {
   if (categoryFilter.value === 'all') return displayExpenses.value
-  return displayExpenses.value.filter(e => e.category === categoryFilter.value)
+  return displayExpenses.value.filter(e => e.category.toLowerCase().includes(categoryFilter.value.toLowerCase()))
 })
 
-const totalDisplayAmount = computed(() => {
-  return displayExpenses.value.reduce((sum, e) => sum + Number(e.amount || 0), 0)
-})
+const totalDisplayAmount = computed(() => dataStore.totalExpensesAmount)
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
@@ -279,7 +274,7 @@ const topCategory = computed(() => {
   displayExpenses.value.forEach(e => {
     map[e.category] = (map[e.category] || 0) + Number(e.amount)
   })
-  let top = 'sửa chữa'
+  let top = 'Sửa chữa'
   let max = -1
   Object.keys(map).forEach(k => {
     if (map[k] > max) {
@@ -290,58 +285,37 @@ const topCategory = computed(() => {
   return top
 })
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const [resExp, resProp] = await Promise.all([
-      api.get('/operating_expenses'),
-      api.get('/properties')
-    ])
-    if (resExp?.data && Array.isArray(resExp.data) && resExp.data.length > 0) {
-      expenses.value = resExp.data
-      totalAmount.value = resExp?.meta?.total_amount || 0
-    } else {
-      expenses.value = defaultSampleExpenses
-    }
-    properties.value = resProp?.data || []
-  } catch (err) {
-    expenses.value = defaultSampleExpenses
-  } finally {
-    loading.value = false
+const submitForm = () => {
+  if (!form.value.title.trim() || form.value.amount <= 0) {
+    toastStore.warning('Vui lòng nhập tên khoản chi và số tiền lớn hơn 0.')
+    return
   }
-}
 
-onMounted(fetchData)
-
-const submitForm = async () => {
   submitting.value = true
   try {
-    await api.post('/operating_expenses', { operating_expense: form.value })
+    dataStore.addExpense({
+      title: form.value.title,
+      category: form.value.category,
+      amount: Number(form.value.amount),
+      propertyId: Number(form.value.property_id || dataStore.properties[0]?.id || 1),
+      date: form.value.expense_date,
+      receiptImage: '',
+      paidTo: 'Đơn vị dịch vụ',
+      notes: form.value.note
+    })
     toastStore.success('Đã lưu khoản chi phí thành công!')
     showModal.value = false
     form.value.title = ''
     form.value.amount = 0
-    await fetchData()
-  } catch (err) {
-    expenses.value.unshift({ ...form.value, id: Date.now(), property_name: 'Minh House Q1' })
-    showModal.value = false
-    form.value.title = ''
-    form.value.amount = 0
-    toastStore.success('Đã ghi nhận chi phí vào hệ thống!')
   } finally {
     submitting.value = false
   }
 }
 
-const deleteExpense = async (id) => {
+const deleteExpense = (id) => {
   if (!confirm('Bạn có chắc muốn xóa chi phí này?')) return
-  try {
-    await api.delete(`/operating_expenses/${id}`)
-    toastStore.success('Đã xóa khoản chi phí thành công!')
-    await fetchData()
-  } catch (err) {
-    expenses.value = expenses.value.filter(e => e.id !== id)
-    toastStore.success('Đã xóa chi phí!')
-  }
+  dataStore.expenses = dataStore.expenses.filter(e => e.id !== id)
+  dataStore.saveToStorage()
+  toastStore.success('Đã xóa khoản chi phí thành công!')
 }
 </script>

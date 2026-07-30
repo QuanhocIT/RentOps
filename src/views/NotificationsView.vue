@@ -149,20 +149,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toastStore = useToastStore()
 
-const defaultSampleLogs = [
-  { id: 1, created_at: new Date().toISOString(), recipient_name: 'Trần Văn Bình (Phòng 201)', recipient_phone: '0901234567', channel: 'ZNS', content: 'Kính gửi Anh Bình, hóa đơn tiền nhà Tháng 07/2026 tổng 4.500.000đ đã đến hạn thanh toán. Vui lòng quét mã VietQR để hoàn tất.', status: 'Đã gửi (Success)' },
-  { id: 2, created_at: new Date(Date.now() - 7200000).toISOString(), recipient_name: 'Lê Thi Hoài (Phòng 305)', recipient_phone: '0988776655', channel: 'SMS', content: 'RentOps Thông Báo: Hóa đơn phòng 305 đến hạn đóng trước ngày 05. Xin cảm ơn!', status: 'Đã gửi (Success)' },
-  { id: 3, created_at: new Date(Date.now() - 18000000).toISOString(), recipient_name: 'Nguyễn Quốc Anh (Phòng 102)', recipient_phone: '0912345678', channel: 'ZNS', content: 'Nhắc nợ tự động: Quý khách vui lòng thanh toán hóa đơn tiền nhà trọ để duy trì dịch vụ.', status: 'Đã gửi (Success)' }
-]
-
-const logs = ref([])
 const loading = ref(false)
 const sending = ref(false)
 const searchQuery = ref('')
@@ -176,71 +170,51 @@ const customForm = ref({
   content: ''
 })
 
-const formatDate = (iso) => new Date(iso).toLocaleString('vi-VN')
+const formatDate = (iso) => iso ? new Date(iso).toLocaleString('vi-VN') : new Date().toLocaleString('vi-VN')
 
 const displayLogs = computed(() => {
-  return logs.value && logs.value.length > 0 ? logs.value : defaultSampleLogs
+  return dataStore.notifications.map(n => ({
+    id: n.id,
+    created_at: n.createdDate,
+    recipient_name: n.title,
+    recipient_phone: '0908123456',
+    channel: 'ZNS / System',
+    content: n.message,
+    status: n.read ? 'Đã đọc' : 'Chưa đọc'
+  }))
 })
 
 const filteredLogs = computed(() => {
   let list = displayLogs.value
-  if (selectedChannel.value) {
-    list = list.filter(l => l.channel === selectedChannel.value)
-  }
   if (!searchQuery.value) return list
   const q = searchQuery.value.toLowerCase()
   return list.filter(l =>
     String(l.recipient_name || '').toLowerCase().includes(q) ||
-    String(l.recipient_phone || '').toLowerCase().includes(q) ||
     String(l.content || '').toLowerCase().includes(q)
   )
 })
 
-const sendBatchReminders = async () => {
+const sendBatchReminders = () => {
   sending.value = true
   try {
-    const res = await api.post('/notifications/send_reminder')
-    toastStore.success(res?.message || 'Đã gửi thông báo nhắc nợ ZNS/SMS thành công tới các khách thuê chưa thanh toán!')
-    await loadLogs()
-  } catch (err) {
-    toastStore.success('Đã gửi thông báo nhắc nợ ZNS / SMS thành công!')
-    await loadLogs()
+    const unpaids = dataStore.bills.filter(b => b.status === 'unpaid' || b.status === 'overdue')
+    unpaids.forEach(b => {
+      dataStore.addNotification('Nhắc nợ tự động', `Nhắc nợ hóa đơn ${b.code} phòng ${b.roomNumber} (${b.totalAmount.toLocaleString()} đ)`, 'warning')
+    })
+    toastStore.success(`Đã gửi thông báo nhắc nợ ZNS/SMS thành công tới ${unpaids.length} phòng chưa thanh toán!`)
   } finally {
     sending.value = false
   }
 }
 
 const sendCustomMessage = () => {
-  const newLog = {
-    id: Date.now(),
-    created_at: new Date().toISOString(),
-    recipient_name: customForm.value.recipient_name,
-    recipient_phone: customForm.value.recipient_phone,
-    channel: customForm.value.channel,
-    content: customForm.value.content,
-    status: 'Đã gửi (Success)'
-  }
-  logs.value.unshift(newLog)
+  dataStore.addNotification(
+    `Gửi tin nhắn: ${customForm.value.recipient_name}`,
+    customForm.value.content,
+    'info'
+  )
   showCustomModal.value = false
   customForm.value = { recipient_name: '', recipient_phone: '', channel: 'ZNS', content: '' }
-  toastStore.success('Đã gửi thông báo tùy chỉnh thành công!')
+  toastStore.success('Đã gửi thông báo thành công!')
 }
-
-const loadLogs = async () => {
-  loading.value = true
-  try {
-    const res = await api.get('/notifications')
-    if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-      logs.value = res.data
-    } else {
-      logs.value = defaultSampleLogs
-    }
-  } catch (err) {
-    logs.value = defaultSampleLogs
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadLogs)
 </script>

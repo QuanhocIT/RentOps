@@ -857,13 +857,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const dataStore = useDataStore()
 
 // ACTIVE STATES & TABS
 const currentTab = ref('home')
@@ -881,8 +882,6 @@ const sortBy = ref('default')
 const currentUser = computed(() => authStore.currentUser || {})
 const tenantName = computed(() => currentUser.value.full_name || 'Khách Thuê (Cư Dân)')
 const userAvatar = '/images/rooms/main.png'
-const heroImage = '/images/hero_banner.png'
-const phoneImage = '/images/rooms/main.png'
 const walletBalance = ref(2350000)
 
 // TOAST NOTIFICATION STATE
@@ -892,18 +891,63 @@ function showToast(message, type = 'success') {
   setTimeout(() => { toast.value.show = false }, 3000)
 }
 
-// REAL DATA STATES
-const rooms = ref([])
-const loadingRooms = ref(false)
-const contracts = ref([])
-const loadingContracts = ref(false)
-const bills = ref([])
-const loadingBills = ref(false)
-const maintenanceRequests = ref([])
-const notifications = ref([
-  { id: 1, content: 'Hóa đơn tháng này đã được cập nhật. Vui lòng kiểm tra mục Thanh toán.', read: false, created_at: 'Hôm nay' },
-  { id: 2, content: 'Ban quản lý đã ghi nhận số điện nước kỳ mới nhất.', read: true, created_at: '2 ngày trước' }
-])
+// REAL DATA STORES
+const rooms = computed(() => {
+  const imgList = ['/images/suite.png', '/images/studio.png', '/images/bedroom.png', '/images/rooms/living.png', '/images/rooms/main.png']
+  return dataStore.rooms.map((r, i) => ({
+    ...r,
+    title: `Phòng ${r.roomNumber} - ${r.propertyName}`,
+    location: r.propertyName,
+    image: (r.images && r.images[0]) || imgList[i % imgList.length],
+    tags: [`${r.area || 28}m²`, `Tầng ${r.floor}`, r.status === 'vacant' ? 'Phòng trống' : 'Đã có người'],
+    price: r.price,
+    badge: r.status === 'vacant'
+  }))
+})
+
+const contracts = computed(() => {
+  return dataStore.contracts.map(c => ({
+    ...c,
+    contract_code: c.contractNumber,
+    room_number: c.roomNumber,
+    property_name: c.propertyName,
+    start_date: c.startDate,
+    end_date: c.endDate,
+    monthly_rent: c.price,
+    deposit_amount: c.deposit
+  }))
+})
+
+const bills = computed(() => {
+  return dataStore.bills.map(b => ({
+    ...b,
+    bill_code: b.code,
+    room_number: b.roomNumber,
+    property_name: b.propertyName,
+    billing_month: b.month,
+    room_fee: b.roomPrice,
+    utility_fee: (b.electricCost || 0) + (b.waterCost || 0),
+    service_fee: b.serviceFee || 150000,
+    total_amount: b.totalAmount
+  }))
+})
+
+const maintenanceRequests = computed(() => {
+  return dataStore.maintenance.map(m => ({
+    ...m,
+    room_number: m.roomNumber
+  }))
+})
+
+const notifications = computed(() => {
+  return dataStore.notifications.map(n => ({
+    id: n.id,
+    content: n.message,
+    read: n.read,
+    created_at: n.createdDate
+  }))
+})
+
 const savedRooms = ref([])
 const recentRooms = ref([])
 const selectedRoomDetail = ref(null)
@@ -939,38 +983,6 @@ const categories = [
   { title: 'Ở ghép', price: 'Giá từ 800k/người', icon: '●●', color: 'red' }
 ]
 
-const areas = [
-  { name: 'Quận 1', rooms: '1.234', image: '/images/rooms/main.png' },
-  { name: 'Bình Thạnh', rooms: '2.345', image: '/images/rooms/living.png' },
-  { name: 'Thủ Đức', rooms: '2.125', image: '/images/rooms/kitchen.png' },
-  { name: 'Cầu Giấy', rooms: '987', image: '/images/bedroom.png' },
-  { name: 'Nam Từ Liêm', rooms: '3.456', image: '/images/hero_banner.png' }
-]
-
-const interestItems = [
-  { title: 'Căn hộ mini ban công', subtitle: 'Đầy đủ tiện nghi cao cấp', price: '5.8 triệu/tháng', image: '/images/studio.png' },
-  { title: 'Phòng trọ khép kín', subtitle: 'Sạch sẽ, an ninh 24/7', price: '3.2 triệu/tháng', image: '/images/rooms/bathroom.png' }
-]
-
-const offers = [
-  { title: 'Giảm 10%', desc: 'Tối đa 200k cho đơn từ 2 triệu', expiry: '30/12/2026', code: 'RENTOPS10' },
-  { title: 'Miễn phí dọn phòng', desc: 'Cho hợp đồng từ 6 tháng trở lên', expiry: '30/12/2026', code: 'FREECLEAN' }
-]
-
-const wideOffers = [
-  { title: 'Giảm 10%', desc: 'Tối đa 200k cho phòng trọ mới', expiry: '30/12/2026', image: '/images/rooms/kitchen.png', tone: 'violet', code: 'NEWROOM' },
-  { title: 'Miễn phí dọn phòng', desc: 'Dịch vụ dọn vệ sinh 1 lần/tuần', expiry: '30/12/2026', image: '/images/rooms/bathroom.png', tone: 'blue', code: 'CLEANVIP' },
-  { title: 'Hoàn tiền 5%', desc: 'Khi thanh toán tiền phòng qua VietQR', expiry: '30/12/2026', image: '/images/rooms/main.png', tone: 'pink', code: 'CASHBACK' }
-]
-
-const reasons = [
-  { title: 'Đa dạng lựa chọn', desc: 'Hàng ngàn phòng trọ, căn hộ minh bạch', icon: '⌂' },
-  { title: 'Giá cả công khai', desc: 'Không phí ẩn, điện nước tính đúng khung giá', icon: '▤' },
-  { title: 'Tìm kiếm dễ dàng', desc: 'Bộ lọc thông minh theo khu vực và ngân sách', icon: '⌕' },
-  { title: 'Thanh toán an toàn', desc: 'Tự động gạch nợ qua quét mã VietQR', icon: '▭' },
-  { title: 'Hỗ trợ kỹ thuật 24/7', desc: 'Sửa chữa sự cố nhanh chóng tận phòng', icon: '🔧' }
-]
-
 const footerGroups = [
   { title: 'Về chúng tôi', links: ['Giới thiệu RentOps', 'Tuyển dụng', 'Tin tức', 'Điều khoản dịch vụ', 'Chính sách bảo mật'] },
   { title: 'Hỗ trợ khách thuê', links: ['Trung tâm trợ giúp', 'Hướng dẫn thanh toán VietQR', 'Câu hỏi thường gặp', 'Liên hệ hotline'] },
@@ -980,7 +992,7 @@ const footerGroups = [
 
 // COMPUTED BADGES & COUNTS
 const unreadMessagesCount = computed(() => chatMessages.value.length)
-const unreadNotificationsCount = computed(() => notifications.value.filter(n => !n.read).length)
+const unreadNotificationsCount = computed(() => dataStore.unreadNotificationsCount)
 
 // ROOM COMPUTED FILTERS
 const displayRooms = computed(() => {
@@ -991,32 +1003,13 @@ const displayRooms = computed(() => {
     result = result.filter(r =>
       (r.title && r.title.toLowerCase().includes(q)) ||
       (r.location && r.location.toLowerCase().includes(q)) ||
-      (r.property_name && r.property_name.toLowerCase().includes(q))
+      (r.propertyName && r.propertyName.toLowerCase().includes(q))
     )
   }
 
   if (filterLocation.value.trim()) {
     const loc = filterLocation.value.toLowerCase()
-    result = result.filter(r => (r.location || '').toLowerCase().includes(loc) || (r.property_name || '').toLowerCase().includes(loc))
-  }
-
-  if (filterCategory.value) {
-    result = result.filter(r => r.property_type_label === filterCategory.value || r.title.includes(filterCategory.value))
-  }
-
-  if (filterPriceRange.value) {
-    if (filterPriceRange.value === 'under_3m') result = result.filter(r => r.price < 3000000)
-    else if (filterPriceRange.value === '3m_5m') result = result.filter(r => r.price >= 3000000 && r.price <= 5000000)
-    else if (filterPriceRange.value === '5m_8m') result = result.filter(r => r.price > 5000000 && r.price <= 8000000)
-    else if (filterPriceRange.value === 'above_8m') result = result.filter(r => r.price > 8000000)
-  }
-
-  if (sortBy.value === 'price_asc') {
-    result.sort((a, b) => a.price - b.price)
-  } else if (sortBy.value === 'price_desc') {
-    result.sort((a, b) => b.price - a.price)
-  } else if (sortBy.value === 'area_desc') {
-    result.sort((a, b) => (b.area || 0) - (a.area || 0))
+    result = result.filter(r => (r.location || '').toLowerCase().includes(loc) || (r.propertyName || '').toLowerCase().includes(loc))
   }
 
   return result
@@ -1026,15 +1019,11 @@ const featuredRoomsDisplay = computed(() => {
   return displayRooms.value.slice(0, 8)
 })
 
-// METHODS & API CALLS
+// METHODS
 function setActiveTab(tabId) {
   currentTab.value = tabId
   showProfileDropdown.value = false
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function toggleProfileMenu() {
-  showProfileDropdown.value = !showProfileDropdown.value
 }
 
 function handleLogout() {
@@ -1048,40 +1037,6 @@ function formatCurrency(val) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '--/--/----'
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('vi-VN')
-}
-
-function selectCategoryFilter(catTitle) {
-  if (filterCategory.value === catTitle) {
-    filterCategory.value = ''
-  } else {
-    filterCategory.value = catTitle
-  }
-}
-
-function filterByArea(areaName) {
-  filterLocation.value = areaName
-  setActiveTab('search')
-}
-
-function handleSearchSubmit() {
-  setActiveTab('search')
-}
-
-function openRoomDetail(room) {
-  if (!recentRooms.value.some(r => r.id === room.id)) {
-    recentRooms.value.unshift(room)
-  }
-  router.push(`/room-detail/${room.id || 101}`)
-}
-
-function isSaved(roomId) {
-  return savedRooms.value.some(r => r.id === roomId)
-}
-
 function toggleSaveRoom(room) {
   const index = savedRooms.value.findIndex(r => r.id === room.id)
   if (index > -1) {
@@ -1093,13 +1048,17 @@ function toggleSaveRoom(room) {
   }
 }
 
+function isSaved(roomId) {
+  return savedRooms.value.some(r => r.id === roomId)
+}
+
 function claimOffer(offer) {
   navigator.clipboard.writeText(offer.code || 'RENTOPS').catch(() => {})
   showToast(`Đã lưu mã ${offer.code} vào ví ưu đãi của bạn!`)
 }
 
 function openTopUpModal() {
-  showToast('Tính năng nạp tiền: Vui lòng chuyển khoản tới tài khoản ví RentOps số TK: 0901234567 (MB Bank)')
+  showToast('Tính năng nạp tiền: Vui lòng chuyển khoản tới tài khoản ví RentOps số TK: 0908123456 (MB Bank)')
 }
 
 function openVietQRModal(bill) {
@@ -1107,62 +1066,34 @@ function openVietQRModal(bill) {
 }
 
 function getVietQRUrl(bill) {
-  const bank = bill.bank_code || 'MB'
-  const acc = bill.bank_account || '0901234567'
+  const bank = 'MB'
+  const acc = dataStore.settings.accountNumber || '0908123456'
   const amount = bill.total_amount || 0
   const memo = encodeURIComponent(bill.bill_code || 'BILL-RENT')
-  const name = encodeURIComponent(bill.bank_account_name || 'RENTOPS DEMO')
+  const name = encodeURIComponent(dataStore.settings.accountHost || 'RENTOPS DEMO')
   return `https://img.vietqr.io/image/${bank}-${acc}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=${name}`
 }
 
-async function confirmPayment(bill) {
-  try {
-    const res = await api.post(`/monthly_bills/${bill.id}/mark_as_paid`, {
-      payment_method: 'vietqr',
-      note: 'Thanh toán trực tiếp qua cổng VietQR Cư dân'
-    })
-    if (res.success) {
-      bill.status = 'paid'
-      showToast('Xác nhận thanh toán thành công! Hóa đơn đã được ghi nhận.')
-    } else {
-      bill.status = 'paid'
-      showToast('Đã ghi nhận yêu cầu thanh toán hóa đơn!')
-    }
-  } catch (err) {
-    bill.status = 'paid'
-    showToast('Xác nhận chuyển khoản hóa đơn thành công!')
-  } finally {
-    activeVietQRBill.value = null
-  }
+function confirmPayment(bill) {
+  dataStore.payBill(bill.id, 'VietQR Cư Dân')
+  showToast('Xác nhận thanh toán thành công! Hóa đơn đã được chuyển sang trạng thái Đã Thanh Toán.')
+  activeVietQRBill.value = null
 }
 
-async function submitBookingRequest(room) {
-  showToast(`Đã gửi yêu cầu thuê phòng ${room.title}. Ban quản lý sẽ liên hệ với bạn trong 15 phút!`)
+function submitBookingRequest(room) {
+  showToast(`Đã gửi yêu cầu giữ chỗ cho phòng ${room.title}. Ban quản lý sẽ liên hệ với bạn trong 15 phút!`)
   selectedRoomDetail.value = null
 }
 
-async function submitMaintenanceRequest() {
+function submitMaintenanceRequest() {
   if (!newTicket.value.title.trim()) return
-  try {
-    await api.post('/maintenance_requests', {
-      maintenance_request: {
-        title: newTicket.value.title,
-        priority: newTicket.value.priority,
-        description: newTicket.value.description
-      }
-    })
-  } catch (e) {
-    // fallback local push
-  }
-  maintenanceRequests.value.unshift({
-    id: Date.now(),
+  dataStore.addMaintenanceRequest({
     title: newTicket.value.title,
-    priority: newTicket.value.priority,
+    priority: newTicket.value.priority === 'high' ? 'Khẩn cấp' : newTicket.value.priority === 'medium' ? 'Trung bình' : 'Thấp',
     description: newTicket.value.description,
-    status: 'pending',
-    room_number: '102'
+    roomId: dataStore.rooms[0]?.id || 101
   })
-  showToast('Đã gửi yêu cầu sửa chữa kỹ thuật!')
+  showToast('Đã gửi yêu cầu sửa chữa kỹ thuật tới ban quản lý tòa nhà!')
   newTicket.value = { title: '', priority: 'medium', description: '' }
   showNewMaintenanceModal.value = false
 }

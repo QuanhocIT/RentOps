@@ -208,63 +208,92 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toastStore = useToastStore()
 
-const defaultFinancials = {
-  monthly_revenue_estimate: 145000000,
-  total_billed: 135000000,
-  paid_billed: 128500000,
-  pending_billed: 6500000,
-  total_expenses: 18200000,
-  net_profit_estimate: 110300000
-}
-
-const defaultCounters = {
-  total_rooms: 24,
-  occupied_rooms: 19,
-  occupancy_rate: 79.2
-}
-
-const defaultByProperty = [
-  { id: 1, name: 'Minh House Q1', total_rooms: 12, occupied_rooms: 10, occupancy_rate: 83.3, revenue_estimate: 75000000, paid_billed: 68000000, expenses: 9500000, net_profit: 58500000 },
-  { id: 2, name: 'Minh House Bình Thạnh', total_rooms: 12, occupied_rooms: 9, occupancy_rate: 75.0, revenue_estimate: 70000000, paid_billed: 60500000, expenses: 8700000, net_profit: 51800000 }
-]
-
-const defaultExpenseCategories = [
-  { category: 'Sửa chữa & Bảo trì', amount: 8500000, percentage: 46.7 },
-  { category: 'Điện nước dùng chung', amount: 5200000, percentage: 28.5 },
-  { category: 'Internet cáp quang', amount: 2800000, percentage: 15.4 },
-  { category: 'Vệ sinh & Rác thải', amount: 1700000, percentage: 9.4 }
-]
-
-const defaultFinancialTrends = [
-  { month_name: 'Tháng 02', paid_billed: 112000000, expenses: 15400000, net_profit: 96600000 },
-  { month_name: 'Tháng 03', paid_billed: 118500000, expenses: 16200000, net_profit: 102300000 },
-  { month_name: 'Tháng 04', paid_billed: 121000000, expenses: 17000000, net_profit: 104000000 },
-  { month_name: 'Tháng 05', paid_billed: 125000000, expenses: 17500000, net_profit: 107500000 },
-  { month_name: 'Tháng 06', paid_billed: 127000000, expenses: 18000000, net_profit: 109000000 },
-  { month_name: 'Tháng 07', paid_billed: 128500000, expenses: 18200000, net_profit: 110300000 }
-]
-
 const loading = ref(false)
-const financials = ref({})
-const counters = ref({})
-const byProperty = ref([])
-const expenseCategories = ref([])
-const financialTrends = ref([])
-
-const displayFinancials = computed(() => financials.value?.monthly_revenue_estimate ? financials.value : defaultFinancials)
-const displayCounters = computed(() => counters.value?.total_rooms ? counters.value : defaultCounters)
-const displayByProperty = computed(() => byProperty.value && byProperty.value.length > 0 ? byProperty.value : defaultByProperty)
-const displayExpenseCategories = computed(() => expenseCategories.value && expenseCategories.value.length > 0 ? expenseCategories.value : defaultExpenseCategories)
-const displayFinancialTrends = computed(() => financialTrends.value && financialTrends.value.length > 0 ? financialTrends.value : defaultFinancialTrends)
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+
+const displayFinancials = computed(() => {
+  const rentedRooms = dataStore.rooms.filter(r => r.status === 'rented')
+  const revenueEstimate = rentedRooms.reduce((sum, r) => sum + r.price, 0)
+  const totalBilled = dataStore.bills.reduce((sum, b) => sum + b.totalAmount, 0)
+  const paidBilled = dataStore.totalMonthlyRevenue
+  const pendingBilled = dataStore.unpaidRevenue
+  const totalExpenses = dataStore.totalExpensesAmount
+  const netProfit = paidBilled - totalExpenses
+
+  return {
+    monthly_revenue_estimate: revenueEstimate,
+    total_billed: totalBilled,
+    paid_billed: paidBilled,
+    pending_billed: pendingBilled,
+    total_expenses: totalExpenses,
+    net_profit_estimate: netProfit
+  }
+})
+
+const displayCounters = computed(() => ({
+  total_rooms: dataStore.totalRoomsCount,
+  occupied_rooms: dataStore.rentedRoomsCount,
+  occupancy_rate: dataStore.occupancyRate
+}))
+
+const displayByProperty = computed(() => {
+  return dataStore.properties.map(p => {
+    const pRooms = dataStore.rooms.filter(r => r.propertyId === p.id)
+    const rented = pRooms.filter(r => r.status === 'rented').length
+    const pBills = dataStore.bills.filter(b => b.propertyId === p.id)
+    const paidBills = pBills.filter(b => b.status === 'paid')
+    const pExpenses = dataStore.expenses.filter(e => e.propertyId === p.id)
+
+    const revenueEst = pRooms.reduce((sum, r) => sum + r.price, 0)
+    const paid = paidBills.reduce((sum, b) => sum + b.totalAmount, 0)
+    const exp = pExpenses.reduce((sum, e) => sum + e.amount, 0)
+    const occ = pRooms.length ? Math.round((rented / pRooms.length) * 100) : 0
+
+    return {
+      id: p.id,
+      name: p.name,
+      total_rooms: pRooms.length,
+      occupied_rooms: rented,
+      occupancy_rate: occ,
+      revenue_estimate: revenueEst,
+      paid_billed: paid,
+      expenses: exp,
+      net_profit: paid - exp
+    }
+  })
+})
+
+const displayExpenseCategories = computed(() => {
+  const map = {}
+  const total = dataStore.totalExpensesAmount || 1
+  dataStore.expenses.forEach(e => {
+    const cat = e.category || 'Khác'
+    map[cat] = (map[cat] || 0) + Number(e.amount)
+  })
+
+  return Object.keys(map).map(cat => ({
+    category: cat,
+    amount: map[cat],
+    percentage: Math.round((map[cat] / total) * 100)
+  }))
+})
+
+const displayFinancialTrends = computed(() => [
+  { month_name: 'Tháng 03', paid_billed: 85000000, expenses: 12000000, net_profit: 73000000 },
+  { month_name: 'Tháng 04', paid_billed: 92000000, expenses: 14000000, net_profit: 78000000 },
+  { month_name: 'Tháng 05', paid_billed: 105000000, expenses: 15000000, net_profit: 90000000 },
+  { month_name: 'Tháng 06', paid_billed: 118000000, expenses: 16500000, net_profit: 101500000 },
+  { month_name: 'Tháng 07', paid_billed: dataStore.totalMonthlyRevenue, expenses: dataStore.totalExpensesAmount, net_profit: dataStore.netProfit }
+])
 
 const getTrendPercentage = (val) => {
   const max = Math.max(...displayFinancialTrends.value.map(t => Math.max(t.paid_billed || 0, t.expenses || 0)), 1)
@@ -298,28 +327,4 @@ const exportCSV = () => {
   document.body.removeChild(link)
   toastStore.success('Đã xuất báo cáo tài chính CSV thành công!')
 }
-
-const loadData = async () => {
-  loading.value = true
-  try {
-    const res = await api.get('/dashboard/summary')
-    if (res?.data) {
-      financials.value = res.data.financials || defaultFinancials
-      counters.value = res.data.counters || defaultCounters
-      byProperty.value = res.data.by_property || defaultByProperty
-      expenseCategories.value = res.data.expense_categories || defaultExpenseCategories
-      financialTrends.value = res.data.financial_trends || defaultFinancialTrends
-    }
-  } catch (err) {
-    financials.value = defaultFinancials
-    counters.value = defaultCounters
-    byProperty.value = defaultByProperty
-    expenseCategories.value = defaultExpenseCategories
-    financialTrends.value = defaultFinancialTrends
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadData)
 </script>

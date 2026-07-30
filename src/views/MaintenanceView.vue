@@ -272,14 +272,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toastStore = useToastStore()
-const requests = ref([])
-const rooms = ref([])
+
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
@@ -297,7 +297,7 @@ const openDetailModal = (req) => {
 const form = ref({
   title: '',
   room_id: '',
-  priority: 'medium',
+  priority: 'Trung bình',
   description: '',
   cost_bearer: 'owner',
   handyman_name: ''
@@ -305,95 +305,76 @@ const form = ref({
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
-const pendingCount = computed(() => {
-  return requests.value.filter(r => r.status === 'pending' || r.status === 'in_progress' || r.status === 0 || r.status === 1).length
+const rooms = computed(() => dataStore.rooms)
+
+const requests = computed(() => {
+  return dataStore.maintenance.map(m => ({
+    ...m,
+    room_number: m.roomNumber,
+    cost_bearer: 'owner',
+    handyman_name: m.assignedTo
+  }))
 })
+
+const pendingCount = computed(() => dataStore.pendingMaintenanceCount)
 
 const ownerCost = computed(() => {
-  return requests.value.filter(r => r.cost_bearer === 'owner' || !r.cost_bearer).reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
+  return requests.value.reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
 })
 
-const renterCost = computed(() => {
-  return requests.value.filter(r => r.cost_bearer === 'renter').reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
-})
+const renterCost = computed(() => 0)
 
 const getPriorityBadge = (p) => {
-  if (p === 'urgent' || p === 3) return 'bg-rose-100 text-rose-800'
-  if (p === 'high' || p === 2) return 'bg-amber-100 text-amber-800'
+  if (p === 'Khẩn cấp' || p === 'Cao' || p === 'high' || p === 'urgent') return 'bg-rose-100 text-rose-800'
+  if (p === 'Trung bình' || p === 'medium') return 'bg-amber-100 text-amber-800'
   return 'bg-slate-100 text-slate-700'
 }
 
 const getStatusBadge = (s) => {
-  if (s === 'resolved' || s === 2) return 'bg-emerald-100 text-emerald-800'
-  if (s === 'in_progress' || s === 1) return 'bg-blue-100 text-blue-800'
+  if (s === 'Hoàn thành' || s === 'resolved' || s === 2) return 'bg-emerald-100 text-emerald-800'
+  if (s === 'Đang xử lý' || s === 'in_progress' || s === 1) return 'bg-blue-100 text-blue-800'
   return 'bg-rose-100 text-rose-800'
 }
 
 const getStatusLabel = (s) => {
-  if (s === 'resolved' || s === 2) return 'Đã Hoàn Thành'
-  if (s === 'in_progress' || s === 1) return 'Đang Sửa'
+  if (s === 'Hoàn thành' || s === 'resolved' || s === 2) return 'Đã Hoàn Thành'
+  if (s === 'Đang xử lý' || s === 'in_progress' || s === 1) return 'Đang Sửa'
   return 'Chờ Xử Lý'
 }
 
-const loadData = async () => {
-  loading.value = true
-  try {
-    const params = {}
-    if (filterStatus.value) params.status = filterStatus.value
-    if (filterPriority.value) params.priority = filterPriority.value
-
-    const [resReqs, resRooms] = await Promise.all([
-      api.get('/maintenance_requests', { params }),
-      api.get('/rooms')
-    ])
-    requests.value = resReqs?.data || []
-    rooms.value = resRooms?.data || []
-  } catch (err) {
-    console.warn('Error loading maintenance data:', err)
-  } finally {
-    loading.value = false
+const createRequest = () => {
+  if (!form.value.title.trim()) {
+    toastStore.warning('Vui lòng nhập tiêu đề sự cố.')
+    return
   }
-}
-
-onMounted(loadData)
-
-const createRequest = async () => {
   submitting.value = true
   try {
-    await api.post('/maintenance_requests', { maintenance_request: form.value })
+    dataStore.addMaintenanceRequest({
+      title: form.value.title,
+      roomId: form.value.room_id || (dataStore.rooms[0]?.id || 101),
+      priority: form.value.priority || 'Trung bình',
+      description: form.value.description
+    })
     toastStore.success('Gửi yêu cầu bảo trì thành công!')
     showModal.value = false
-    form.value = { title: '', room_id: '', priority: 'medium', description: '', cost_bearer: 'owner', handyman_name: '' }
-    loadData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Có lỗi xảy ra')
+    form.value = { title: '', room_id: '', priority: 'Trung bình', description: '', cost_bearer: 'owner', handyman_name: '' }
   } finally {
     submitting.value = false
   }
 }
 
-const openResolveModal = async (req) => {
-  const cost = prompt('Nhập chi phí sửa chữa vật tư (VNĐ):', req.cost || '150000')
-  if (cost === null) return
-  try {
-    await api.put(`/maintenance_requests/${req.id}`, {
-      maintenance_request: { status: 'resolved', cost: Number(cost) }
-    })
-    toastStore.success('Đã cập nhật trạng thái sự cố thành công!')
-    loadData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Không thể cập nhật sự cố')
-  }
+const openResolveModal = (req) => {
+  const costStr = prompt('Nhập chi phí sửa chữa hoàn thành (VNĐ):', req.cost || '150000')
+  if (costStr === null) return
+  const cost = Number(costStr) || 0
+  dataStore.updateMaintenanceStatus(req.id, 'Hoàn thành', cost)
+  toastStore.success('Đã cập nhật sự cố thành "Hoàn thành" và ghi nhận chi phí vào sổ thu chi!')
 }
 
-const deleteRequest = async (id) => {
+const deleteRequest = (id) => {
   if (!confirm('Bạn có chắc muốn xóa yêu cầu sự cố này?')) return
-  try {
-    await api.delete(`/maintenance_requests/${id}`)
-    toastStore.success('Đã xóa sự cố thành công!')
-    loadData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Lỗi xóa sự cố')
-  }
+  dataStore.maintenance = dataStore.maintenance.filter(m => m.id !== id)
+  dataStore.saveToStorage()
+  toastStore.success('Đã xóa sự cố thành công!')
 }
 </script>

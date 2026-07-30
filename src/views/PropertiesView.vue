@@ -333,11 +333,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 
-const properties = ref([])
+const dataStore = useDataStore()
+
 const loading = ref(false)
 const selectedTypeFilter = ref('')
 const viewMode = ref('grid')
@@ -359,12 +360,24 @@ const message = ref('')
 const messageType = ref('success')
 const searchQuery = ref('')
 
-const defaultProperties = [
-  { id: 1, name: 'Tòa A - Nam Từ Liêm', address: 'Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội', property_type: 'phong_tro', property_type_label: 'Phòng trọ / Dãy trọ', total_rooms: 6, vacant_rooms: 2, occupied_rooms: 4 },
-  { id: 2, name: 'Tòa B - Cầu Giấy', address: 'Số 88 Trần Thái Tông, Cầu Giấy, Hà Nội', property_type: 'chung_cu_mini', property_type_label: 'Chung cư mini', total_rooms: 12, vacant_rooms: 3, occupied_rooms: 9 },
-  { id: 3, name: 'Tòa C - Bình Thạnh', address: 'Số 120 Điện Biên Phủ, P. 17, Bình Thạnh, TP.HCM', property_type: 'can_ho_cao_cap', property_type_label: 'Căn hộ cao cấp', total_rooms: 8, vacant_rooms: 1, occupied_rooms: 7 },
-  { id: 4, name: 'Tòa D - Thanh Xuân', address: 'Số 45 Nguyễn Trãi, Thanh Xuân, Hà Nội', property_type: 'nha_nguyen_can', property_type_label: 'Nhà nguyên căn', total_rooms: 4, vacant_rooms: 0, occupied_rooms: 4 }
-]
+const properties = computed(() => {
+  return dataStore.properties.map(p => {
+    const rooms = dataStore.rooms.filter(r => r.propertyId === p.id)
+    const occupied = rooms.filter(r => r.status === 'rented' || r.status === 'occupied').length
+    const vacant = rooms.filter(r => r.status === 'vacant').length
+    return {
+      id: p.id,
+      name: p.name,
+      address: p.address,
+      property_type: p.property_type || 'chung_cu_mini',
+      property_type_label: getPropertyTypeLabel(p.property_type || 'chung_cu_mini'),
+      total_rooms: rooms.length,
+      vacant_rooms: vacant,
+      occupied_rooms: occupied,
+      description: p.description
+    }
+  })
+})
 
 const filteredProperties = computed(() =>
   properties.value.filter((item) => {
@@ -377,20 +390,7 @@ const filteredProperties = computed(() =>
   })
 )
 
-const loadProperties = async () => {
-  try {
-    const res = await api.get('/properties')
-    if (Array.isArray(res?.data) && res.data.length > 0) {
-      properties.value = res.data
-    } else {
-      properties.value = defaultProperties
-    }
-  } catch (error) {
-    properties.value = defaultProperties
-  }
-}
-
-const createProperty = async () => {
+const createProperty = () => {
   if (!form.value.name.trim()) {
     messageType.value = 'error'
     message.value = 'Vui lòng nhập tên tòa nhà / bất động sản.'
@@ -400,9 +400,13 @@ const createProperty = async () => {
   loading.value = true
   message.value = ''
   try {
-    await api.post('/properties', { property: form.value })
+    dataStore.addProperty({
+      name: form.value.name,
+      address: form.value.address,
+      property_type: form.value.property_type,
+      description: form.value.description
+    })
     form.value = { name: '', address: '', property_type: 'chung_cu_mini', description: '' }
-    await loadProperties()
     messageType.value = 'success'
     message.value = 'Tạo bất động sản mới thành công.'
   } catch (error) {
@@ -413,18 +417,13 @@ const createProperty = async () => {
   }
 }
 
-const deleteProperty = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa tòa nhà này? Tất cả dữ liệu phòng liên quan có thể bị ảnh hưởng.')) return
-  try {
-    await api.delete(`/properties/${id}`)
-    await loadProperties()
-  } catch (error) {
-    properties.value = properties.value.filter(p => p.id !== id)
-  }
+const deleteProperty = (id) => {
+  if (!confirm('Bạn có chắc muốn xóa tòa nhà này? Bất động sản sẽ chuyển vào thùng rác.')) return
+  dataStore.deleteProperty(id)
 }
 
 const calculateOccupancy = (item) => {
-  if (!item.total_rooms || item.total_rooms === 0) return 0
+  if (!item || !item.total_rooms || item.total_rooms === 0) return 0
   const rate = (item.occupied_rooms / item.total_rooms) * 100
   return Math.round(rate)
 }
@@ -458,6 +457,4 @@ const getBadgeColor = (type) => {
     default: return 'bg-slate-100 text-slate-800 border border-slate-200'
   }
 }
-
-onMounted(loadProperties)
 </script>
