@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="space-y-6 max-w-4xl mx-auto animate-slide-up">
+    <div class="owner-page space-y-6 max-w-4xl mx-auto animate-slide-up">
       <div class="flex items-center justify-between">
         <div>
           <div class="flex items-center gap-2">

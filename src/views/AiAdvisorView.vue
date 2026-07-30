@@ -1,28 +1,25 @@
 <template>
   <AppLayout>
-    <div class="space-y-6">
-      <div class="rounded-[2rem] bg-gradient-to-r from-violet-600 via-indigo-600 to-slate-900 p-6 text-white shadow-[0_24px_70px_rgba(79,70,229,0.24)]">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-3xl">
-            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white/85">
-              <span>⚡</span> Python Core
-            </div>
-            <h1 class="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Trợ lý AI & Phân tích dữ liệu</h1>
-            <p class="mt-3 max-w-2xl text-sm leading-7 text-white/80">
-              Đánh giá sức khỏe vận hành, tối ưu giá thuê và dự báo rủi ro thất thoát dựa trên dữ liệu RentOps.
-            </p>
+    <div class="owner-page space-y-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-lg bg-indigo-100 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-indigo-800">Phân tích vận hành</span>
+            <span class="text-xs font-medium text-slate-400">• RentOps AI Workspace</span>
           </div>
-
-          <div class="flex items-center gap-3">
-            <button
-              @click="fetchInsights"
-              :disabled="loading"
-              class="rounded-2xl bg-white px-5 py-3 font-bold text-indigo-600 shadow-lg shadow-black/10 transition hover:translate-y-[-1px] disabled:opacity-60"
-            >
-              {{ loading ? 'Đang phân tích...' : 'Cập nhật phân tích' }}
-            </button>
-          </div>
+          <h1 class="mt-1 text-2xl font-black tracking-tight text-slate-900">Trợ lý AI & Phân tích dữ liệu</h1>
+          <p class="mt-0.5 max-w-3xl text-sm text-slate-500">Theo dõi sức khỏe vận hành, tỷ lệ lấp đầy, công nợ và các cơ hội tối ưu lợi nhuận cho toàn bộ hệ thống.</p>
         </div>
+
+        <button
+          type="button"
+          @click="fetchInsights"
+          :disabled="loading"
+          class="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60"
+        >
+          <span>✦</span>
+          <span>{{ loading ? 'Đang phân tích...' : 'Cập nhật phân tích' }}</span>
+        </button>
       </div>
 
       <div v-if="loading && !insightsData" class="grid gap-4 md:grid-cols-4">
