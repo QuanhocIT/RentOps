@@ -57,8 +57,16 @@ export const useAuthStore = defineStore('auth', {
         this.setAuthData({ user, tenant, token })
         return { success: true, user, tenant, token }
       } catch (err) {
-        this.setAuthData({ user: defaultUser, tenant: defaultTenant, token: defaultToken })
-        return { success: true, user: defaultUser, tenant: defaultTenant, token: defaultToken }
+        const isDemoExplicit = import.meta.env.VITE_DEMO_MODE === 'true'
+        if (isDemoExplicit) {
+          console.warn('[AuthStore] API Login failed, VITE_DEMO_MODE active. Using fallback demo user.')
+          this.setAuthData({ user: defaultUser, tenant: defaultTenant, token: defaultToken })
+          return { success: true, user: defaultUser, tenant: defaultTenant, token: defaultToken }
+        }
+        return {
+          success: false,
+          message: err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.'
+        }
       }
     },
 

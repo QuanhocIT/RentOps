@@ -905,8 +905,14 @@ const rooms = computed(() => {
   }))
 })
 
+const currentRenterId = computed(() => currentUser.value.renterId || currentUser.value.id)
+
 const contracts = computed(() => {
-  return dataStore.contracts.map(c => ({
+  const isRenterRole = currentUser.value.role === 'renter'
+  const list = isRenterRole
+    ? dataStore.contracts.filter(c => Number(c.renterId) === Number(currentRenterId.value) || (c.renterName && currentUser.value.full_name && c.renterName.includes(currentUser.value.full_name)))
+    : dataStore.contracts
+  return list.map(c => ({
     ...c,
     contract_code: c.contractNumber,
     room_number: c.roomNumber,
@@ -919,7 +925,11 @@ const contracts = computed(() => {
 })
 
 const bills = computed(() => {
-  return dataStore.bills.map(b => ({
+  const isRenterRole = currentUser.value.role === 'renter'
+  const list = isRenterRole
+    ? dataStore.bills.filter(b => Number(b.renterId) === Number(currentRenterId.value) || (b.renterName && currentUser.value.full_name && b.renterName.includes(currentUser.value.full_name)))
+    : dataStore.bills
+  return list.map(b => ({
     ...b,
     bill_code: b.code,
     room_number: b.roomNumber,
@@ -933,14 +943,24 @@ const bills = computed(() => {
 })
 
 const maintenanceRequests = computed(() => {
-  return dataStore.maintenance.map(m => ({
+  const isRenterRole = currentUser.value.role === 'renter'
+  const renterRoomNumbers = contracts.value.map(c => c.room_number)
+  const list = isRenterRole
+    ? dataStore.maintenance.filter(m => renterRoomNumbers.includes(m.roomNumber) || (m.reporterName && currentUser.value.full_name && m.reporterName.includes(currentUser.value.full_name)))
+    : dataStore.maintenance
+  return list.map(m => ({
     ...m,
     room_number: m.roomNumber
   }))
 })
 
 const notifications = computed(() => {
-  return dataStore.notifications.map(n => ({
+  const isRenterRole = currentUser.value.role === 'renter'
+  const renterRoomNumbers = contracts.value.map(c => c.room_number)
+  const list = isRenterRole
+    ? dataStore.notifications.filter(n => renterRoomNumbers.some(rn => n.message && n.message.includes(rn)))
+    : dataStore.notifications
+  return list.map(n => ({
     id: n.id,
     content: n.message,
     read: n.read,
