@@ -1,50 +1,49 @@
 <template>
   <div class="detail-page">
-    <header class="detail-header">
-      <div class="header-inner">
-        <button class="brand" type="button" @click="goBack">
-          <span class="brand-mark">R</span>
-          <span class="brand-name">RentOps</span>
+    <header class="home-header">
+      <div class="home-container home-header-inner">
+        <button class="home-brand" type="button" @click="goBack">
+          <span class="home-brand-mark">R</span>
+          <span>RentOps</span>
         </button>
 
-        <nav class="detail-nav" aria-label="Điều hướng chính">
+        <nav class="home-nav" aria-label="Điều hướng chính">
           <RouterLink to="/landing">Trang chủ</RouterLink>
-          <RouterLink to="/landing#rooms">Tìm phòng</RouterLink>
+          <RouterLink to="/landing#search">Tìm phòng</RouterLink>
           <RouterLink to="/landing#areas">Khu vực</RouterLink>
           <RouterLink to="/landing#categories">Loại phòng</RouterLink>
           <RouterLink to="/landing#amenities">Tiện ích</RouterLink>
-          <RouterLink to="/landing#blog">Blog</RouterLink>
           <RouterLink to="/landing#about">Về chúng tôi</RouterLink>
-          <button class="favorite-link" type="button" @click="toggleFavorite">
+          <button class="favorite-action" type="button" @click="toggleFavorite">
             <UiIcon name="heart" :size="15" :fill="isFavorite ? 'currentColor' : 'none'" /> Yêu thích
           </button>
         </nav>
 
-        <div class="header-actions">
-          <RouterLink class="login-button" to="/login">Đăng nhập</RouterLink>
-          <button class="list-room-button" type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin phòng +</button>
+        <div class="home-actions">
+          <RouterLink class="home-login" to="/login">Đăng nhập</RouterLink>
+          <button class="home-listing" type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin phòng +</button>
         </div>
       </div>
     </header>
 
-    <main class="content-shell">
+    <main class="home-container content-shell">
       <div class="breadcrumbs">
         <button type="button" @click="goBack">Khám phá</button>
         <span>/</span>
-        <button type="button" @click="goBack">Căn hộ dịch vụ</button>
+        <button type="button" @click="goBack">{{ currentRoom.category }}</button>
         <span>/</span>
-        <span class="muted">Chi tiết căn hộ</span>
+        <span class="muted">Chi tiết {{ currentRoom.category }}</span>
       </div>
 
       <section class="title-row">
         <div>
-          <div class="eyebrow"><span class="verified-dot"><UiIcon name="check" :size="11" /></span> Được yêu thích</div>
-          <h1>Căn hộ dịch vụ cao cấp view thành phố</h1>
+          <div class="eyebrow"><span class="verified-dot"><UiIcon name="check" :size="11" /></span> {{ currentRoom.badge || 'Được yêu thích' }}</div>
+          <h1>{{ currentRoom.title }}</h1>
           <div class="property-meta">
-            <span class="location"><UiIcon name="pin" :size="16" /> Đa Kao, Quận 1, TP. Hồ Chí Minh</span>
+            <span class="location"><UiIcon name="pin" :size="16" /> {{ currentRoom.address || currentRoom.location }}</span>
             <span class="dot">·</span>
-            <span class="rating"><UiIcon name="star" :size="15" fill="currentColor" /> 4.8</span>
-            <button class="review-link" type="button" @click="activeTab = 'reviews'">76 đánh giá</button>
+            <span class="rating"><UiIcon name="star" :size="15" fill="currentColor" /> {{ currentRoom.rating }}</span>
+            <button class="review-link" type="button" @click="activeTab = 'reviews'">{{ currentRoom.reviewsCount }} đánh giá</button>
           </div>
         </div>
         <div class="title-actions">
@@ -102,7 +101,7 @@
             <template v-if="activeTab === 'overview'">
               <section class="intro-section">
                 <h2>Giới thiệu về nơi ở</h2>
-                <p>Căn hộ dịch vụ cao cấp nằm ngay trung tâm Quận 1, view thành phố cực đẹp, đầy đủ nội thất hiện đại. Không gian thoáng mát, yên tĩnh, phù hợp cho cả lưu trú ngắn và dài hạn.</p>
+                <p>{{ currentRoom.description }}</p>
                 <button class="read-more" type="button" @click="activeTab = 'rules'">Xem thêm <span>→</span></button>
               </section>
 
@@ -132,7 +131,7 @@
             </section>
 
             <section v-else-if="activeTab === 'reviews'" class="tab-panel">
-              <div class="review-summary"><span class="big-rating">4.8</span><span><span class="stars">★★★★★</span><small>76 đánh giá từ khách thuê</small></span></div>
+              <div class="review-summary"><span class="big-rating">{{ currentRoom.rating }}</span><span><span class="stars">★★★★★</span><small>{{ currentRoom.reviewsCount }} đánh giá từ khách thuê</small></span></div>
               <div class="review-list">
                 <article v-for="review in reviews" :key="review.name" class="review-card"><div class="review-top"><strong>{{ review.name }}</strong><span>★★★★★</span></div><p>{{ review.text }}</p><small>{{ review.date }}</small></article>
               </div>
@@ -147,7 +146,7 @@
 
         <aside class="booking-column">
           <div class="booking-card">
-            <div class="price-row"><div><strong>2.350.000 đ</strong><span>/ đêm</span></div><span class="instant-label"><UiIcon name="bolt" :size="13" /> Đặt nhanh</span></div>
+            <div class="price-row"><div><strong>{{ currentRoom.price }}</strong><span>{{ currentRoom.pricePeriod || '/ tháng' }}</span></div><span class="instant-label"><UiIcon name="bolt" :size="13" /> Đặt nhanh</span></div>
             <p class="small-note">Đã bao gồm dịch vụ và thuế</p>
 
             <div class="booking-fields">
@@ -261,10 +260,370 @@
 </template>
 
 <script setup>
-import { computed, h, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, h, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
+onMounted(() => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+})
+
+const route = useRoute()
 const router = useRouter()
+
+const roomDatabase = {
+  '1': {
+    id: 1,
+    title: 'Phòng trọ cao cấp Full nội thất',
+    category: 'Phòng trọ',
+    location: 'Quận 1, TP. Hồ Chí Minh',
+    address: '15 Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1',
+    price: '4.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 120,
+    area: '25m²',
+    badge: 'Được yêu thích',
+    description: 'Phòng trọ cao cấp nằm ngay trung tâm Quận 1, trang bị đầy đủ máy lạnh, tủ lạnh, giường nệm gối và ban công siêu thoáng.',
+    images: [
+      { src: '/images/suite.png', alt: 'Phòng trọ cao cấp 1' },
+      { src: '/images/rooms/living.png', alt: 'Phòng khách' },
+      { src: '/images/rooms/kitchen.png', alt: 'Bếp tiện nghi' },
+      { src: '/images/rooms/bathroom.png', alt: 'Phòng tắm hiện đại' },
+      { src: '/images/bedroom.png', alt: 'Không gian phòng ngủ' }
+    ]
+  },
+  '2': {
+    id: 2,
+    title: 'Căn hộ mini ban công thoáng mát',
+    category: 'Căn hộ mini',
+    location: 'Bình Thạnh, TP. Hồ Chí Minh',
+    address: '225 Điện Biên Phủ, Phường 15, Bình Thạnh',
+    price: '5.800.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.9',
+    reviewsCount: 98,
+    area: '32m²',
+    badge: 'MỚI PHÁT HÀNH',
+    description: 'Căn hộ mini thiết kế dạng Duplex gác xếp hiện đại, ban công rộng ngập ánh sáng tự nhiên. Giờ giấc tự do, không chung chủ.',
+    images: [
+      { src: '/images/studio.png', alt: 'Căn hộ mini ban công' },
+      { src: '/images/rooms/main.png', alt: 'Góc phòng khách' },
+      { src: '/images/bedroom.png', alt: 'Gác xếp giường ngủ' },
+      { src: '/images/rooms/kitchen.png', alt: 'Khu vực bếp' },
+      { src: '/images/rooms/bathroom.png', alt: 'Phòng tắm' }
+    ]
+  },
+  '3': {
+    id: 3,
+    title: 'Căn hộ dịch vụ cao cấp view thành phố',
+    category: 'Căn hộ dịch vụ',
+    location: 'Phú Nhuận, TP. Hồ Chí Minh',
+    address: '88 Nguyễn Văn Trỗi, Phường 8, Phú Nhuận',
+    price: '8.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 76,
+    area: '45m²',
+    badge: 'VIP',
+    description: 'Căn hộ dịch vụ tiêu chuẩn 4 sao view sông Sài Gòn, miễn phí dịch vụ dọn phòng 2 lần/tuần, sử dụng hồ bơi & phòng gym free.',
+    images: [
+      { src: '/images/rooms/main.png', alt: 'Phòng khách sang trọng' },
+      { src: '/images/bedroom.png', alt: 'Phòng ngủ ấm cúng' },
+      { src: '/images/rooms/kitchen.png', alt: 'Bếp Âu hiện đại' },
+      { src: '/images/rooms/bathroom.png', alt: 'Phòng tắm bồn nằm' },
+      { src: '/images/suite.png', alt: 'Khu vực tiếp khách' }
+    ]
+  },
+  '4': {
+    id: 4,
+    title: 'Homestay xinh xắn không gian xanh',
+    category: 'Homestay',
+    location: 'Đà Lạt, Lâm Đồng',
+    address: '12 Khởi Nghĩa Bắc Sơn, Phường 10, Đà Lạt',
+    price: '600.000 đ',
+    pricePeriod: '/ đêm',
+    rating: '4.9',
+    reviewsCount: 56,
+    area: '20m²',
+    badge: 'HOMESTAY',
+    description: 'Homestay mang phong cách mộc mạc ngập tràn ánh nắng và sắc hoa Đà Lạt. Phù hợp cho cặp đôi nghỉ dưỡng cuối tuần.',
+    images: [
+      { src: '/images/rooms/kitchen.png', alt: 'Góc homestay dễ thương' },
+      { src: '/images/rooms/main.png', alt: 'View núi mộng mơ' },
+      { src: '/images/bedroom.png', alt: 'Phòng ngủ đệm êm' },
+      { src: '/images/studio.png', alt: 'Khu vực đọc sách' }
+    ]
+  },
+  '101': {
+    id: 101,
+    title: 'Phòng trọ cao cấp Full nội thất ban công',
+    category: 'Phòng trọ',
+    location: 'Quận 1, TP. Hồ Chí Minh',
+    address: '42 Lê Duẩn, Phường Bến Nghé, Quận 1',
+    price: '4.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 120,
+    area: '25m²',
+    badge: 'VIP',
+    description: 'Phòng trọ mới xây 100%, nội thất nhập khẩu, khu vực an ninh yên tĩnh ngay trung tâm Quận 1.',
+    images: [
+      { src: '/images/suite.png', alt: 'Phòng trọ cao cấp' },
+      { src: '/images/rooms/living.png', alt: 'Không gian sống' },
+      { src: '/images/bedroom.png', alt: 'Giường ngủ' }
+    ]
+  },
+  '102': {
+    id: 102,
+    title: 'Căn hộ mini ban công thoáng mát view phố',
+    category: 'Căn hộ mini',
+    location: 'Bình Thạnh, TP. Hồ Chí Minh',
+    address: '56 D5, Phường 25, Bình Thạnh',
+    price: '5.800.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.9',
+    reviewsCount: 98,
+    area: '32m²',
+    badge: 'HOT',
+    description: 'Căn hộ mini ban công hướng Đông Nam lộng gió, trang bị máy giặt riêng, cửa cuốn bảo vệ 2 lớp.',
+    images: [
+      { src: '/images/studio.png', alt: 'Căn hộ mini' },
+      { src: '/images/rooms/main.png', alt: 'Nội thất phòng' }
+    ]
+  },
+  '103': {
+    id: 103,
+    title: 'Căn hộ dịch vụ cao cấp view sông hồ bơi',
+    category: 'Căn hộ dịch vụ',
+    location: 'Phú Nhuận, TP. Hồ Chí Minh',
+    address: '120 Phan Xích Long, Phường 2, Phú Nhuận',
+    price: '8.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 76,
+    area: '45m²',
+    badge: 'CHỦ NHÀ UY TÍN',
+    description: 'Căn hộ dịch vụ thiết kế phong cách Scandinavian ấm cúng, miễn phí giữ xe máy và dịch vụ giặt ủi.',
+    images: [
+      { src: '/images/bedroom.png', alt: 'Căn hộ dịch vụ' },
+      { src: '/images/rooms/kitchen.png', alt: 'Phòng bếp' }
+    ]
+  },
+  '104': {
+    id: 104,
+    title: 'Homestay xinh xắn ngập ánh nắng thiên nhiên',
+    category: 'Homestay',
+    location: 'Đà Lạt, Lâm Đồng',
+    address: '55 Hoàng Hoa Thám, Phường 10, Đà Lạt',
+    price: '600.000 đ',
+    pricePeriod: '/ đêm',
+    rating: '4.9',
+    reviewsCount: 56,
+    area: '20m²',
+    badge: 'SIÊU HOT',
+    description: 'Căn homestay gỗ ấm áp nhìn ra thung lũng thông xanh ngát, sẵn sàng nướng BBQ ngoài trời.',
+    images: [
+      { src: '/images/rooms/kitchen.png', alt: 'Homestay Đà Lạt' },
+      { src: '/images/rooms/main.png', alt: 'Góc chill' }
+    ]
+  },
+  '201': {
+    id: 201,
+    title: 'Phòng trọ cao cấp Full nội thất ban công',
+    category: 'Phòng trọ',
+    location: 'Quận 1, TP. Hồ Chí Minh',
+    address: '10 Nguyễn Trãi, Phường Bến Thành, Quận 1',
+    price: '4.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 120,
+    area: '25m²',
+    badge: 'VIP',
+    description: 'Phòng trọ khép kín, có ban công trồng cây xanh, nội thất cao cấp full option.',
+    images: [
+      { src: '/images/suite.png', alt: 'Phòng trọ 201' },
+      { src: '/images/rooms/living.png', alt: 'Nội thất' }
+    ]
+  },
+  '202': {
+    id: 202,
+    title: 'Phòng trọ sinh viên đỗ xe máy miễn phí',
+    category: 'Phòng trọ',
+    location: 'Thủ Đức, TP. Hồ Chí Minh',
+    address: '18 Võ Văn Nâng, Linh Trung, Thủ Đức',
+    price: '2.200.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.7',
+    reviewsCount: 45,
+    area: '18m²',
+    badge: 'HOT',
+    description: 'Phòng trọ sạch đẹp cho sinh viên gần Làng Đại Học, khu sinh hoạt chung văn minh, giá điện nước bình ổn.',
+    images: [
+      { src: '/images/rooms/living.png', alt: 'Phòng trọ sinh viên' },
+      { src: '/images/rooms/bathroom.png', alt: 'WC riêng' }
+    ]
+  },
+  '203': {
+    id: 203,
+    title: 'Căn hộ mini ban công thoáng mát view phố',
+    category: 'Căn hộ mini',
+    location: 'Bình Thạnh, TP. Hồ Chí Minh',
+    address: '142 Bùi Đình Túy, Phường 12, Bình Thạnh',
+    price: '5.800.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.9',
+    reviewsCount: 98,
+    area: '32m²',
+    badge: 'GIÁ TỐT',
+    description: 'Căn hộ mini có gác lửng thông thoáng, cửa sổ kính tràn ngắm view thành phố về đêm.',
+    images: [
+      { src: '/images/studio.png', alt: 'Căn hộ mini 203' },
+      { src: '/images/rooms/main.png', alt: 'Bên trong phòng' }
+    ]
+  },
+  '204': {
+    id: 204,
+    title: 'Căn hộ mini duplex gác xếp hiện đại',
+    category: 'Căn hộ mini',
+    location: 'Quận 7, TP. Hồ Chí Minh',
+    address: '79 Lâm Văn Bền, Phường Tân Quy, Quận 7',
+    price: '6.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.9',
+    reviewsCount: 88,
+    badge: 'VIP',
+    description: 'Căn hộ Duplex gác cao đứng không đụng đầu, bảo vệ trực ban 24/7, thang máy thẻ từ cao cấp.',
+    images: [
+      { src: '/images/rooms/main.png', alt: 'Duplex gác xếp' },
+      { src: '/images/bedroom.png', alt: 'Giường gác' }
+    ]
+  },
+  '205': {
+    id: 205,
+    title: 'Căn hộ dịch vụ cao cấp view sông hồ bơi',
+    category: 'Căn hộ dịch vụ',
+    location: 'Phú Nhuận, TP. Hồ Chí Minh',
+    address: '202 Hoàng Văn Thụ, Phường 9, Phú Nhuận',
+    price: '8.500.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.8',
+    reviewsCount: 76,
+    badge: 'VIP',
+    description: 'Căn hộ dịch vụ trọn gói dịch vụ, thích hợp khách nước ngoài và gia đình trẻ lưu trú.',
+    images: [
+      { src: '/images/bedroom.png', alt: 'Căn hộ dịch vụ 205' },
+      { src: '/images/suite.png', alt: 'Phòng khách' }
+    ]
+  },
+  '206': {
+    id: 206,
+    title: 'Homestay xinh xắn ngập ánh nắng thiên nhiên',
+    category: 'Homestay',
+    location: 'Đà Lạt, Lâm Đồng',
+    address: '15 Yersin, Phường 9, Đà Lạt',
+    price: '600.000 đ',
+    pricePeriod: '/ đêm',
+    rating: '4.9',
+    reviewsCount: 56,
+    area: '20m²',
+    badge: 'HOMESTAY',
+    description: 'Không gian ấm cúng, thiết kế tinh tế với khu vườn nhỏ xinh để thưởng trà mỗi sáng.',
+    images: [
+      { src: '/images/rooms/kitchen.png', alt: 'Homestay 206' },
+      { src: '/images/rooms/living.png', alt: 'Khu sảnh' }
+    ]
+  },
+  '207': {
+    id: 207,
+    title: 'Ở ghép giường tầng căn hộ cao cấp bảo vệ 24/7',
+    category: 'Ở ghép',
+    location: 'Quận 2, TP. Hồ Chí Minh',
+    address: 'Thảo Điền Pearl, 12 Quốc Hương, Quận 2',
+    price: '1.200.000 đ',
+    pricePeriod: '/ người / tháng',
+    rating: '4.6',
+    reviewsCount: 34,
+    area: '15m²',
+    badge: 'Ở GHÉP',
+    description: 'Tìm bạn ở ghép chung cư cao cấp Thảo Điền, đầy đủ tiện ích hồ bơi, gym, môi trường lịch sự văn minh.',
+    images: [
+      { src: '/images/rooms/bathroom.png', alt: 'Phòng ở ghép' },
+      { src: '/images/suite.png', alt: 'Khu vực sinh hoạt chung' }
+    ]
+  },
+  '208': {
+    id: 208,
+    title: 'Phòng trọ yên tĩnh giờ giấc tự do',
+    category: 'Phòng trọ',
+    location: 'Gò Vấp, TP. Hồ Chí Minh',
+    address: '350 Phạm Văn Đồng, Phường 1, Gò Vấp',
+    price: '3.000.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.7',
+    reviewsCount: 52,
+    area: '22m²',
+    badge: 'GIỜ TỰ DO',
+    description: 'Phòng trọ ngõ rộng ô tô vào tận cửa, giờ giấc đi lại tự do ra vào vân tay bảo mật.',
+    images: [
+      { src: '/images/hero_banner.png', alt: 'Phòng trọ Gò Vấp' },
+      { src: '/images/rooms/living.png', alt: 'Góc phòng' }
+    ]
+  },
+  '301': {
+    id: 301,
+    title: 'Căn hộ Studio thiết kế sang trọng',
+    category: 'Căn hộ mini',
+    location: 'Đa Kao, Quận 1, TP. Hồ Chí Minh',
+    address: '12 Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1',
+    price: '6.200.000 đ',
+    pricePeriod: '/ tháng',
+    rating: '4.9',
+    reviewsCount: 84,
+    area: '30m²',
+    badge: 'ĐƯỢC YÊU THÍCH',
+    description: 'Căn hộ Studio khép kín ngay Phường Đa Kao Quận 1, nội thất cao cấp hiện đại ngập tràn ánh nắng.',
+    images: [
+      { src: '/images/rooms/main.png', alt: 'Studio Đa Kao' },
+      { src: '/images/rooms/living.png', alt: 'Phòng khách' },
+      { src: '/images/rooms/kitchen.png', alt: 'Bếp mini' }
+    ]
+  }
+}
+
+const fallbackRoom = (id) => {
+  const numId = Number(id) || 101
+  const categoriesList = ['Phòng trọ', 'Căn hộ mini', 'Căn hộ dịch vụ', 'Homestay', 'Ở ghép']
+  const cat = categoriesList[numId % categoriesList.length]
+  const imagesPool = [
+    { src: '/images/rooms/main.png', alt: 'Phòng chính' },
+    { src: '/images/suite.png', alt: 'Căn hộ sang trọng' },
+    { src: '/images/rooms/living.png', alt: 'Phòng khách' },
+    { src: '/images/bedroom.png', alt: 'Phòng ngủ' },
+    { src: '/images/studio.png', alt: 'Góc làm việc' },
+    { src: '/images/rooms/kitchen.png', alt: 'Phòng bếp' }
+  ]
+  return {
+    id: numId,
+    title: `${cat} cao cấp thiết kế hiện đại #${numId}`,
+    category: cat,
+    location: 'Quận 1, TP. Hồ Chí Minh',
+    address: `Số ${numId} Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh`,
+    price: `${(3.2 + (numId % 5) * 0.9).toFixed(1)}00.000 đ`,
+    pricePeriod: cat === 'Homestay' ? '/ đêm' : '/ tháng',
+    rating: (4.5 + (numId % 5) * 0.1).toFixed(1),
+    reviewsCount: 30 + (numId % 70),
+    area: `${20 + (numId % 25)}m²`,
+    badge: 'XÁC THỰC 100%',
+    description: `Căn hộ khép kín đầy đủ tiện nghi mã số #${numId}, không gian thoáng mát, yên tĩnh, ban công hướng nắng cực đẹp.`,
+    images: imagesPool
+  }
+}
+
+const currentRoom = computed(() => {
+  const idStr = String(route.params.id || '101')
+  return roomDatabase[idStr] || fallbackRoom(idStr)
+})
+
 const activeImageIndex = ref(0)
 const activeTab = ref('overview')
 const isFavorite = ref(false)
@@ -274,30 +633,28 @@ const showGallery = ref(false)
 const toastMessage = ref('')
 let toastTimer
 
-const galleryImages = [
-  { src: '/images/rooms/main.png', alt: 'Phòng khách và phòng ngủ' },
-  { src: '/images/rooms/living.png', alt: 'Phòng khách' },
-  { src: '/images/rooms/kitchen.png', alt: 'Bếp đầy đủ tiện nghi' },
-  { src: '/images/rooms/bathroom.png', alt: 'Phòng tắm' },
-  { src: '/images/suite.png', alt: 'Không gian căn hộ' },
-  { src: '/images/studio.png', alt: 'Góc làm việc' },
-  { src: '/images/bedroom.png', alt: 'Phòng ngủ' }
-]
+watch(() => route.params.id, () => {
+  activeImageIndex.value = 0
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
 
-const tabs = [
-  { key: 'overview', label: 'Tổng quan' },
-  { key: 'amenities', label: 'Tiện nghi' },
-  { key: 'reviews', label: 'Đánh giá (76)' },
-  { key: 'rules', label: 'Quy định' },
-  { key: 'overview', label: 'Chủ nhà' }
-]
+const galleryImages = computed(() => currentRoom.value.images || [])
+const activeImage = computed(() => galleryImages.value[activeImageIndex.value] || galleryImages.value[0] || { src: '/images/rooms/main.png', alt: 'Căn hộ' })
 
-const quickFeatures = [
-  { icon: 'home', value: '40m²', label: 'Diện tích' },
+const quickFeatures = computed(() => [
+  { icon: 'home', value: currentRoom.value.area || '25m²', label: 'Diện tích' },
   { icon: 'bed', value: '1', label: 'Phòng ngủ' },
   { icon: 'bath', value: '1', label: 'Phòng tắm' },
   { icon: 'sofa', value: '1', label: 'Phòng khách' },
   { icon: 'wifi', value: 'Miễn phí', label: 'Wi-Fi' }
+])
+
+const tabs = [
+  { key: 'overview', label: 'Tổng quan' },
+  { key: 'amenities', label: 'Tiện nghi' },
+  { key: 'reviews', label: 'Đánh giá' },
+  { key: 'rules', label: 'Quy định' },
+  { key: 'overview', label: 'Chủ nhà' }
 ]
 
 const amenities = [
@@ -332,10 +689,10 @@ const detailedAmenities = [
   { icon: 'check', label: 'Không hút thuốc' }
 ]
 const descriptionPoints = [
-  'Tọa lạc tại vị trí đắc địa ngay trung tâm thành phố, chỉ vài phút đi bộ đến phố đi bộ Nguyễn Huệ.',
+  'Tọa lạc tại vị trí đắc địa ngay trung tâm thành phố, chỉ vài phút đi bộ đến các tuyến đường lớn.',
   'Căn hộ được thiết kế hiện đại, nội thất cao cấp, đầy đủ tiện nghi.',
-  'Không gian làm việc riêng, Wi-Fi tốc độ cao, phù hợp cho khách công tác.',
-  'Khu vực an ninh, yên tĩnh, có bảo vệ 24/7.'
+  'Không gian làm việc riêng, Wi-Fi tốc độ cao, phù hợp cho người đi làm và học tập.',
+  'Khu vực an ninh, yên tĩnh, bảo mật khóa thẻ từ / vân tay.'
 ]
 const ratingBreakdown = [
   { stars: 5, percent: 86, count: 68 },
@@ -347,19 +704,18 @@ const ratingBreakdown = [
 const detailedReviews = [
   { name: 'Trần Minh Tuấn', date: '2 tuần trước', avatar: '/images/rooms/main.png', text: 'Căn hộ đẹp, sạch sẽ, view thành phố tuyệt vời. Chủ nhà thân thiện và hỗ trợ nhanh chóng.' },
   { name: 'Nguyễn Thảo Vy', date: '1 tháng trước', avatar: '/images/rooms/living.png', text: 'Vị trí quá tiện lợi, gần trung tâm và nhiều quán ăn ngon. Sẽ quay lại lần sau!' },
-  { name: 'Lê Hoàng Nam', date: '2 tháng trước', avatar: '/images/rooms/kitchen.png', text: 'Không gian thoải mái, đầy đủ tiện nghi. Chỉ có điều wifi đôi lúc hơi yếu.' }
+  { name: 'Lê Hoàng Nam', date: '2 tháng trước', avatar: '/images/rooms/kitchen.png', text: 'Không gian thoải mái, đầy đủ tiện nghi.' }
 ]
 const nearbyPlaces = [
-  { name: 'Phố đi bộ Nguyễn Huệ', time: '5 phút đi bộ' },
-  { name: 'Chợ Bến Thành', time: '7 phút đi bộ' },
-  { name: 'Nhà thờ Đức Bà', time: '10 phút đi bộ' },
-  { name: 'Bitexco Financial Tower', time: '12 phút đi bộ' }
+  { name: 'Trung tâm thương mại', time: '5 phút đi bộ' },
+  { name: 'Siêu thị tiện lợi 24/7', time: '2 phút đi bộ' },
+  { name: 'Công viên cây xanh', time: '10 phút đi bộ' }
 ]
 const similarRooms = [
-  { title: 'Studio ban công view sông', location: 'Quận 1, TP. Hồ Chí Minh', price: '1.950.000 đ / đêm', rating: '4.7', reviews: 58, image: '/images/suite.png' },
-  { title: 'Căn hộ 1PN hiện đại', location: 'Quận 1, TP. Hồ Chí Minh', price: '2.100.000 đ / đêm', rating: '4.8', reviews: 42, image: '/images/studio.png' },
-  { title: 'Duplex sang trọng trung tâm', location: 'Quận 1, TP. Hồ Chí Minh', price: '2.800.000 đ / đêm', rating: '4.9', reviews: 36, image: '/images/bedroom.png' },
-  { title: 'Căn hộ cao cấp view Landmark 81', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '2.450.000 đ / đêm', rating: '4.8', reviews: 64, image: '/images/rooms/main.png' }
+  { id: 201, title: 'Phòng trọ cao cấp Full nội thất', location: 'Quận 1, TP. Hồ Chí Minh', price: '4.500.000 đ / tháng', rating: '4.8', reviews: 120, image: '/images/suite.png' },
+  { id: 203, title: 'Căn hộ mini ban công thoáng mát', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '5.800.000 đ / tháng', rating: '4.9', reviews: 98, image: '/images/studio.png' },
+  { id: 205, title: 'Căn hộ dịch vụ cao cấp view sông', location: 'Phú Nhuận, TP. Hồ Chí Minh', price: '8.500.000 đ / tháng', rating: '4.8', reviews: 76, image: '/images/bedroom.png' },
+  { id: 204, title: 'Căn hộ Duplex gác xếp hiện đại', location: 'Quận 7, TP. Hồ Chí Minh', price: '6.500.000 đ / tháng', rating: '4.9', reviews: 88, image: '/images/rooms/main.png' }
 ]
 const footerColumns = [
   { title: 'Về chúng tôi', items: ['Giới thiệu', 'Tuyển dụng', 'Tin tức', 'Điều khoản dịch vụ', 'Chính sách bảo mật'] },
@@ -373,16 +729,14 @@ const trustItems = [
   { icon: 'lock', title: 'Thanh toán an toàn', description: 'Bảo mật thông tin và giao dịch của bạn' }
 ]
 
-const activeImage = computed(() => galleryImages[activeImageIndex.value])
-
 const notify = (message) => {
   toastMessage.value = message
   window.clearTimeout(toastTimer)
   toastTimer = window.setTimeout(() => { toastMessage.value = '' }, 2800)
 }
 
-const previousImage = () => { activeImageIndex.value = (activeImageIndex.value - 1 + galleryImages.length) % galleryImages.length }
-const nextImage = () => { activeImageIndex.value = (activeImageIndex.value + 1) % galleryImages.length }
+const previousImage = () => { activeImageIndex.value = (activeImageIndex.value - 1 + galleryImages.value.length) % galleryImages.value.length }
+const nextImage = () => { activeImageIndex.value = (activeImageIndex.value + 1) % galleryImages.value.length }
 const toggleFavorite = () => { isFavorite.value = !isFavorite.value; notify(isFavorite.value ? 'Đã lưu căn hộ vào danh sách yêu thích' : 'Đã bỏ lưu căn hộ') }
 const shareRoom = async () => {
   try {
@@ -393,9 +747,12 @@ const shareRoom = async () => {
   }
 }
 const bookNow = () => notify('Yêu cầu đặt phòng đã được ghi nhận')
-const sendMessage = () => notify('Đã mở cuộc trò chuyện với Minh House')
+const sendMessage = () => notify('Đã mở cuộc trò chuyện với chủ nhà')
 const goBack = () => router.push('/landing')
-const openSimilarRoom = (room) => notify(`Đang mở ${room.title}`)
+const openSimilarRoom = (targetRoom) => {
+  activeImageIndex.value = 0
+  router.push(`/room-detail/${targetRoom.id || 101}`)
+}
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
 const iconPaths = {
@@ -420,27 +777,22 @@ const UiIcon = (props) => h('svg', { width: props.size || 18, height: props.size
 :global(*) { box-sizing: border-box; }
 :global(body) { background: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button { font: inherit; }
-.detail-page { min-height: 100vh; padding-top: 76px; color: #172033; background: #fff; font-size: 15px; }
-.detail-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 76px; background: rgba(255,255,255,.98); border-bottom: 1px solid #eef0f5; box-shadow: 0 4px 18px rgba(28,38,67,.06); font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; backdrop-filter: blur(14px); }
-.header-inner { max-width: 1280px; height: 100%; margin: auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; }
-.brand, .header-link, .avatar-button, .round-action, .gallery-arrow, .photo-count, .thumbnail, .detail-tabs button, .read-more, .section-heading button, .host-card button, .modal-header button { border: 0; background: transparent; cursor: pointer; }
-.brand { display: flex; align-items: center; gap: 9px; color: #101828; }
-.brand-mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 16px; color: #fff; font-weight: 800; font-size: 18px; background: linear-gradient(135deg,#5e87f5,#5545e8); box-shadow: 0 8px 16px rgba(79,70,229,.22); }
-.brand-name { font-weight: 800; font-size: 20px; letter-spacing: -.03em; }
-.detail-nav { display: flex; align-items: center; gap: 32px; margin-left: auto; margin-right: 32px; white-space: nowrap; }
-.detail-nav a, .favorite-link { color: #4e5a70; font-size: 14px; font-weight: 700; text-decoration: none; }
-.detail-nav a:hover, .favorite-link:hover { color: #4f46e5; }
-.favorite-link { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: transparent; cursor: pointer; }
-.header-actions { display: flex; align-items: center; gap: 32px; flex-shrink: 0; }
-.login-button, .list-room-button { display: inline-flex; align-items: center; justify-content: center; height: 45px; padding: 0 20px; border-radius: 16px; font-size: 14px; font-weight: 700; text-decoration: none; white-space: nowrap; cursor: pointer; }
-.login-button { width: 122px; color: #5549e8; border: 1px solid #c9c9fb; background: #fff; box-shadow: 0 3px 9px rgba(95,87,224,.05); }
-.login-button:hover { background: #f8f7ff; }
-.list-room-button { width: 164px; color: #fff; border: 0; background: linear-gradient(100deg,#4e43de,#873be7); box-shadow: 0 9px 17px rgba(94,63,224,.23); }
-.list-room-button:hover { filter: brightness(.96); }
-.header-link { display: flex; align-items: center; gap: 7px; color: #596579; font-size: 14px; font-weight: 600; }
-.header-link:hover, .review-link:hover, .section-heading button:hover { color: #4f46e5; }
-.avatar-button { width: 32px; height: 32px; border-radius: 50%; background: #eee9e1; color: #72543a; font-size: 11px; font-weight: 800; }
-.content-shell { max-width: 1280px; margin: auto; padding: 20px 32px 80px; }
+.detail-page { min-height: 100vh; padding-top: 76px; color: #172033; background: #fff; font-size: 15px; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+.home-container { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
+.home-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 76px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); box-shadow: 0 4px 18px rgba(28,38,67,.06); backdrop-filter: blur(14px); }
+.home-header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; }
+.home-brand { display: flex; align-items: center; gap: 10px; color: #172033; border: 0; background: transparent; cursor: pointer; font-size: 22px; font-weight: 800; white-space: nowrap; }
+.home-brand-mark { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border-radius: 16px; background: linear-gradient(135deg,#5e87f5,#5545e8); box-shadow: 0 8px 16px rgba(79,70,229,.22); font-size: 20px; }
+.home-nav { display: flex; align-items: center; gap: 30px; margin-left: auto; margin-right: 28px; white-space: nowrap; }
+.home-nav a, .favorite-action { color: #4f5b70; border: 0; background: transparent; cursor: pointer; font-size: 15px; font-weight: 700; text-decoration: none; }
+.home-nav a:hover, .favorite-action:hover { color: #5147db; }
+.home-actions { display: flex; align-items: center; gap: 13px; white-space: nowrap; }
+.favorite-action { display: inline-flex; align-items: center; gap: 4px; }
+.home-login, .home-listing { display: inline-flex; align-items: center; justify-content: center; height: 45px; border-radius: 16px; cursor: pointer; font-size: 15px; font-weight: 700; text-decoration: none; }
+.home-login { width: 128px; color: #5549e8; border: 1px solid #c9c9fb; background: #fff; }.home-login:hover { background: #f8f7ff; }
+.home-listing { width: 175px; color: #fff; border: 0; background: linear-gradient(100deg,#4e43de,#873be7); box-shadow: 0 9px 17px rgba(94,63,224,.23); }.home-listing:hover { filter: brightness(.96); }
+.header-link, .avatar-button, .round-action, .gallery-arrow, .photo-count, .thumbnail, .detail-tabs button, .read-more, .section-heading button, .host-card button, .modal-header button { border: 0; background: transparent; cursor: pointer; }
+.content-shell { padding: 24px 0 80px; }
 .breadcrumbs { display: flex; gap: 8px; align-items: center; color: #4f46e5; font-size: 14px; margin-bottom: 14px; }
 .breadcrumbs button { border: 0; background: none; padding: 0; color: inherit; cursor: pointer; }
 .breadcrumbs .muted { color: #929bad; }
