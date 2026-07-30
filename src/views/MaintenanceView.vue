@@ -175,7 +175,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="req in requests" :key="req.id" class="hover:bg-indigo-50/30 transition">
+              <tr v-for="req in filteredRequests" :key="req.id" class="hover:bg-indigo-50/30 transition">
                 <td class="px-5 py-3.5 font-black text-slate-900 text-sm whitespace-nowrap">
                   🔧 {{ req.title }}
                 </td>
@@ -387,9 +387,26 @@ const requests = computed(() => {
   return dataStore.maintenance.map(m => ({
     ...m,
     room_number: m.roomNumber,
-    cost_bearer: 'owner',
-    handyman_name: m.assignedTo
+    cost_bearer: m.cost_bearer || 'owner',
+    handyman_name: m.handyman_name || m.assignedTo
   }))
+})
+
+const filteredRequests = computed(() => {
+  return requests.value.filter(r => {
+    const matchStatus = !filterStatus.value ||
+      r.status === filterStatus.value ||
+      (filterStatus.value === 'pending' && (r.status === 'Chờ xử lý' || r.status === 'pending')) ||
+      (filterStatus.value === 'in_progress' && (r.status === 'Đang xử lý' || r.status === 'in_progress')) ||
+      (filterStatus.value === 'resolved' && (r.status === 'Hoàn thành' || r.status === 'resolved'))
+    const matchPriority = !filterPriority.value ||
+      r.priority === filterPriority.value ||
+      (filterPriority.value === 'urgent' && (r.priority === 'Khẩn cấp' || r.priority === 'urgent')) ||
+      (filterPriority.value === 'high' && (r.priority === 'Cao' || r.priority === 'high')) ||
+      (filterPriority.value === 'medium' && (r.priority === 'Trung bình' || r.priority === 'medium')) ||
+      (filterPriority.value === 'low' && (r.priority === 'Thấp' || r.priority === 'low'))
+    return matchStatus && matchPriority
+  })
 })
 
 const kanbanPending = computed(() => requests.value.filter(r => r.status === 'Chờ xử lý' || r.status === 'pending'))

@@ -161,7 +161,7 @@ const toastStore = useToastStore()
 
 const activeTab = ref('rooms')
 
-const defaultSampleTrash = {
+const defaultSampleTrash = ref({
   rooms: [
     { id: 101, room_number: '502', property_name: 'Minh House Q1', price: 5200000, discarded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
     { id: 102, room_number: '104', property_name: 'Minh House Bình Thạnh', price: 4500000, discarded_at: new Date(Date.now() - 86400000 * 5).toISOString() }
@@ -172,7 +172,7 @@ const defaultSampleTrash = {
   bills: [
     { id: 301, bill_name: 'Hóa đơn Tháng 06/2026 - P.301', total_amount: 5120000, period: 'Tháng 06/2026', discarded_at: new Date(Date.now() - 86400000 * 4).toISOString() }
   ]
-}
+})
 
 const displayTrash = computed(() => {
   const storeTrash = dataStore.trash || []
@@ -201,9 +201,9 @@ const displayTrash = computed(() => {
   }))
 
   return {
-    rooms: roomsTrash.length > 0 ? roomsTrash : defaultSampleTrash.rooms,
-    contracts: contractsTrash.length > 0 ? contractsTrash : defaultSampleTrash.contracts,
-    bills: billsTrash.length > 0 ? billsTrash : defaultSampleTrash.bills
+    rooms: roomsTrash.length > 0 ? roomsTrash : defaultSampleTrash.value.rooms,
+    contracts: contractsTrash.length > 0 ? contractsTrash : defaultSampleTrash.value.contracts,
+    bills: billsTrash.length > 0 ? billsTrash : defaultSampleTrash.value.bills
   }
 })
 
@@ -215,14 +215,15 @@ const fetchTrash = () => {
 }
 
 const restoreItem = (type, id) => {
-  const restored = dataStore.restoreTrashItem(id)
-  if (restored) {
+  const prevLength = dataStore.trash.length
+  dataStore.restoreTrashItem(id)
+  if (dataStore.trash.length < prevLength) {
     toastStore.success('Đã khôi phục dữ liệu thành công về danh sách chính!')
   } else {
-    // fallback clean up
-    defaultSampleTrash.rooms = defaultSampleTrash.rooms.filter(r => r.id !== id)
-    defaultSampleTrash.contracts = defaultSampleTrash.contracts.filter(c => c.id !== id)
-    defaultSampleTrash.bills = defaultSampleTrash.bills.filter(b => b.id !== id)
+    // Item was from sample data, remove from local ref
+    defaultSampleTrash.value.rooms = defaultSampleTrash.value.rooms.filter(r => r.id !== id)
+    defaultSampleTrash.value.contracts = defaultSampleTrash.value.contracts.filter(c => c.id !== id)
+    defaultSampleTrash.value.bills = defaultSampleTrash.value.bills.filter(b => b.id !== id)
     toastStore.success('Đã khôi phục dữ liệu về hệ thống!')
   }
 }

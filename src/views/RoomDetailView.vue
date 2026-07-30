@@ -1,30 +1,10 @@
 <template>
   <div class="detail-page">
-    <header class="home-header">
-      <div class="home-container home-header-inner">
-        <button class="home-brand" type="button" @click="goBack">
-          <span class="home-brand-mark">R</span>
-          <span>RentOps</span>
-        </button>
-
-        <nav class="home-nav" aria-label="Điều hướng chính">
-          <RouterLink to="/landing">Trang chủ</RouterLink>
-          <RouterLink to="/landing#search">Tìm phòng</RouterLink>
-          <RouterLink to="/landing#areas">Khu vực</RouterLink>
-          <RouterLink to="/landing#categories">Loại phòng</RouterLink>
-          <RouterLink to="/landing#amenities">Tiện ích</RouterLink>
-          <RouterLink to="/landing#about">Về chúng tôi</RouterLink>
-          <button class="favorite-action" type="button" @click="toggleFavorite">
-            <UiIcon name="heart" :size="15" :fill="isFavorite ? 'currentColor' : 'none'" /> Yêu thích
-          </button>
-        </nav>
-
-        <div class="home-actions">
-          <RouterLink class="home-login" to="/login">Đăng nhập</RouterLink>
-          <button class="home-listing" type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin phòng +</button>
-        </div>
-      </div>
-    </header>
+    <PublicHeader
+      listing-action
+      @notify="notify('Bạn chưa có thông báo mới')"
+      @post-room="openPostListingModal"
+    />
 
     <main class="home-container content-shell">
       <div class="breadcrumbs">
@@ -69,7 +49,7 @@
               <UiIcon name="arrow-right" :size="18" />
             </button>
             <button class="photo-count" type="button" @click="showGallery = true">
-              <UiIcon name="grid" :size="15" /> 1 / {{ galleryImages.length }} ảnh
+              <UiIcon name="grid" :size="15" /> {{ activeImageIndex + 1 }} / {{ galleryImages.length }} ảnh
             </button>
           </div>
 
@@ -83,7 +63,7 @@
               @click="activeImageIndex = index"
             >
               <img :src="image.src" :alt="image.alt" />
-              <span v-if="index === 4" class="more-photos">+{{ galleryImages.length - 5 }} ảnh</span>
+              <span v-if="index === 4 && galleryImages.length > 5" class="more-photos">+{{ galleryImages.length - 5 }} ảnh</span>
             </button>
           </div>
 
@@ -131,15 +111,45 @@
             </section>
 
             <section v-else-if="activeTab === 'reviews'" class="tab-panel">
-              <div class="review-summary"><span class="big-rating">{{ currentRoom.rating }}</span><span><span class="stars">★★★★★</span><small>{{ currentRoom.reviewsCount }} đánh giá từ khách thuê</small></span></div>
+              <div class="review-summary">
+                <span class="big-rating">{{ currentRoom.rating }}</span>
+                <span>
+                  <span class="stars">★★★★★</span>
+                  <small>{{ reviews.length }} đánh giá từ khách thuê</small>
+                </span>
+                <button type="button" class="write-review-btn" @click="openReviewModal">✍️ Viết đánh giá mới</button>
+              </div>
               <div class="review-list">
-                <article v-for="review in reviews" :key="review.name" class="review-card"><div class="review-top"><strong>{{ review.name }}</strong><span>★★★★★</span></div><p>{{ review.text }}</p><small>{{ review.date }}</small></article>
+                <article v-for="review in reviews" :key="review.name + review.date" class="review-card">
+                  <div class="review-top"><strong>{{ review.name }}</strong><span>★★★★★</span></div>
+                  <p>{{ review.text }}</p>
+                  <small>{{ review.date }}</small>
+                </article>
               </div>
             </section>
 
             <section v-else-if="activeTab === 'rules'" class="tab-panel">
               <h2>Quy định và lưu ý</h2>
               <div class="rules-list"><p v-for="rule in rules" :key="rule"><UiIcon name="check" :size="15" /> {{ rule }}</p></div>
+            </section>
+
+            <section v-else-if="activeTab === 'host'" class="tab-panel">
+              <h2>Thông tin chủ nhà</h2>
+              <div class="host-tab-info">
+                <div class="flex-host">
+                  <img src="/images/rooms/living.png" alt="Minh House" class="host-avatar-lg" />
+                  <div>
+                    <h3>Chủ nhà: Minh House</h3>
+                    <p class="host-sub">🏆 Superhost · Đã xác minh thông tin · Đăng nhập thường xuyên</p>
+                    <p class="host-bio">Kinh doanh chuỗi căn hộ cho thuê uy tín tại Quận 1 & Bình Thạnh. Luôn sẵn sàng hỗ trợ cư dân 24/7.</p>
+                  </div>
+                </div>
+                <div class="host-actions-row">
+                  <button type="button" class="host-btn primary" @click="openChatModal">💬 Trò chuyện ngay</button>
+                  <button type="button" class="host-btn secondary" @click="openHostProfileModal">👤 Xem hồ sơ đầy đủ</button>
+                  <a href="tel:0908123456" class="host-btn outline">📞 Gọi 0908.123.456</a>
+                </div>
+              </div>
             </section>
           </div>
         </div>
@@ -160,8 +170,8 @@
               <div class="guest-counter"><button type="button" :disabled="guestCount <= 1" @click="guestCount--">−</button><strong>{{ guestCount }}</strong><button type="button" @click="guestCount++">+</button></div>
             </div>
 
-            <button class="primary-button" type="button" @click="bookNow">Đặt phòng ngay</button>
-            <button class="secondary-button" type="button" @click="sendMessage"><UiIcon name="message" :size="15" /> Nhắn tin cho chủ nhà</button>
+            <button class="primary-button" type="button" @click="openBookingModal">Đặt phòng ngay</button>
+            <button class="secondary-button" type="button" @click="openChatModal"><UiIcon name="message" :size="15" /> Nhắn tin cho chủ nhà</button>
             <p class="booking-disclaimer">Bạn chưa bị trừ tiền. Bạn có thể huỷ miễn phí trước 24 giờ.</p>
 
             <div class="trust-list">
@@ -170,10 +180,21 @@
           </div>
 
           <div class="host-card">
-            <div class="host-header"><img src="/images/rooms/living.png" alt="Minh House" /><div><span>Chủ nhà: Minh House</span><small><span class="host-stars">★</span> Superhost · 1.248 đánh giá</small></div><UiIcon name="chevron-right" :size="17" /></div>
+            <div class="host-header" @click="openHostProfileModal" style="cursor: pointer;">
+              <img src="/images/rooms/living.png" alt="Minh House" />
+              <div>
+                <span>Chủ nhà: Minh House</span>
+                <small><span class="host-stars">★</span> Superhost · 1.248 đánh giá</small>
+              </div>
+              <UiIcon name="chevron-right" :size="17" />
+            </div>
             <p>Tham gia từ 05/2021</p>
-            <div class="host-stats"><span><strong>128</strong><small>Bất động sản</small></span><span><strong>98%</strong><small>Tỷ lệ phản hồi</small></span><span><strong>&lt; 1 giờ</strong><small>Thời gian phản hồi</small></span></div>
-            <button type="button" @click="sendMessage">Xem trang cá nhân</button>
+            <div class="host-stats">
+              <span><strong>128</strong><small>Bất động sản</small></span>
+              <span><strong>98%</strong><small>Tỷ lệ phản hồi</small></span>
+              <span><strong>&lt; 1 giờ</strong><small>Thời gian phản hồi</small></span>
+            </div>
+            <button type="button" @click="openHostProfileModal">Xem trang cá nhân</button>
           </div>
         </aside>
       </section>
@@ -200,15 +221,15 @@
               <h2>Đánh giá từ khách hàng</h2>
               <div class="reviews-layout">
                 <div class="review-score-column">
-                  <div class="review-score-box"><strong>4.8</strong><span>/ 5</span><div class="score-stars">★★★★★</div><small>76 đánh giá</small></div>
-                  <button class="write-review" type="button" @click="notify('Tính năng viết đánh giá sẽ sớm được mở')">Viết đánh giá</button>
+                  <div class="review-score-box"><strong>4.8</strong><span>/ 5</span><div class="score-stars">★★★★★</div><small>{{ detailedReviews.length }} đánh giá</small></div>
+                  <button class="write-review" type="button" @click="openReviewModal">Viết đánh giá</button>
                 </div>
                 <div class="rating-breakdown">
                   <div v-for="row in ratingBreakdown" :key="row.stars" class="rating-row"><span>{{ row.stars }} <UiIcon name="star" :size="11" fill="currentColor" /></span><div class="rating-track"><i :style="{ width: row.percent + '%' }"></i></div><strong>{{ row.count }}</strong></div>
                 </div>
                 <div class="review-feed">
-                  <article v-for="review in detailedReviews" :key="review.name" class="feed-review"><img :src="review.avatar" :alt="review.name" /><div><div class="feed-review-heading"><strong>{{ review.name }}</strong><span>{{ review.date }}</span></div><div class="feed-review-stars">★★★★★</div><p>{{ review.text }}</p></div></article>
-                  <button class="all-reviews" type="button" @click="activeTab = 'reviews'">Xem tất cả 76 đánh giá <span>→</span></button>
+                  <article v-for="review in detailedReviews" :key="review.name + review.date" class="feed-review"><img :src="review.avatar" :alt="review.name" /><div><div class="feed-review-heading"><strong>{{ review.name }}</strong><span>{{ review.date }}</span></div><div class="feed-review-stars">★★★★★</div><p>{{ review.text }}</p></div></article>
+                  <button class="all-reviews" type="button" @click="activeTab = 'reviews'">Xem tất cả {{ detailedReviews.length }} đánh giá <span>→</span></button>
                 </div>
               </div>
             </section>
@@ -216,7 +237,7 @@
 
           <aside class="location-card">
             <h2>Vị trí trên bản đồ</h2>
-            <div class="map-canvas" aria-label="Bản đồ khu vực Bến Nghé">
+            <div class="map-canvas" aria-label="Bản đồ khu vực Bến Nghé" @click="openMapModal" style="cursor: pointer;">
               <div class="map-road road-one"></div><div class="map-road road-two"></div><div class="map-road road-three"></div><div class="map-road road-four"></div>
               <span class="map-label label-one">Nguyễn Huệ</span><span class="map-label label-two">Tôn Đức Thắng</span><span class="map-label label-three">Lê Thánh Tôn</span>
               <span class="map-marker"><UiIcon name="home" :size="16" /></span>
@@ -225,50 +246,516 @@
             <h3>Bến Nghé, Quận 1, TP. Hồ Chí Minh</h3>
             <p class="location-note">Vị trí thuận tiện, gần nhiều địa điểm nổi tiếng</p>
             <div class="nearby-list"><div v-for="place in nearbyPlaces" :key="place.name"><span><i></i>{{ place.name }}</span><small>{{ place.time }}</small></div></div>
-            <button class="nearby-more" type="button" @click="notify('Đang mở bản đồ khu vực')">Xem thêm địa điểm xung quanh <span>→</span></button>
+            <button class="nearby-more" type="button" @click="openMapModal">Xem thêm địa điểm xung quanh <span>→</span></button>
           </aside>
         </div>
 
         <section class="similar-section">
-          <div class="similar-heading"><h2>Phòng tương tự</h2><button type="button" @click="notify('Đã hiển thị thêm các phòng tương tự')">Xem tất cả</button></div>
+          <div class="similar-heading"><h2>Phòng tương tự</h2><button type="button" @click="goBack">Xem tất cả</button></div>
           <div class="similar-list">
             <article v-for="room in similarRooms" :key="room.title" class="similar-card" @click="openSimilarRoom(room)">
               <div class="similar-image"><img :src="room.image" :alt="room.title" /><button type="button" aria-label="Lưu phòng" @click.stop="toggleFavorite"><UiIcon name="heart" :size="15" /></button></div>
               <div class="similar-body"><h3>{{ room.title }}</h3><p>{{ room.location }}</p><div class="similar-bottom"><strong>{{ room.price }}</strong><span><UiIcon name="star" :size="12" fill="currentColor" /> {{ room.rating }} <small>({{ room.reviews }})</small></span></div></div>
             </article>
           </div>
-          <button class="similar-arrow left" type="button" aria-label="Phòng trước"><UiIcon name="arrow-left" :size="16" /></button><button class="similar-arrow right" type="button" aria-label="Phòng tiếp theo"><UiIcon name="arrow-right" :size="16" /></button>
+          <button class="similar-arrow left" type="button" aria-label="Phòng trước" @click="notify('Đã hiển thị phòng trước')"><UiIcon name="arrow-left" :size="16" /></button>
+          <button class="similar-arrow right" type="button" aria-label="Phòng tiếp theo" @click="notify('Đã hiển thị phòng tiếp theo')"><UiIcon name="arrow-right" :size="16" /></button>
         </section>
 
-        <footer class="detail-footer">
-          <div class="footer-brand"><button class="brand" type="button" @click="goBack"><span class="brand-mark">R</span><span class="brand-name">RentOps</span></button><p>Nền tảng tìm kiếm và đặt phòng đáng tin cậy, giúp bạn tìm không gian lý tưởng cho mỗi hành trình.</p><div class="social-links"><button type="button" @click="notify('Đang mở Facebook')">f</button><button type="button" @click="notify('Đang mở Instagram')">◎</button><button type="button" @click="notify('Đang mở TikTok')">♪</button><button type="button" @click="notify('Đang mở Youtube')">▶</button></div></div>
-          <div v-for="column in footerColumns" :key="column.title" class="footer-column"><h3>{{ column.title }}</h3><button v-for="item in column.items" :key="item" type="button" @click="notify(item)">{{ item }}</button></div>
-        </footer>
-        <div class="footer-bottom"><span>© 2024 RentOps. Tất cả quyền được bảo lưu.</span><button type="button" aria-label="Lên đầu trang" @click="scrollToTop">↑</button></div>
       </section>
     </main>
 
+    <PublicFooter @notify="notify" />
+
+    <!-- TOAST MESSAGES -->
     <div v-if="toastMessage" class="toast-message" role="status"><UiIcon name="check" :size="16" /> {{ toastMessage }}</div>
 
+    <!-- GALLERY MODAL -->
     <div v-if="showGallery" class="modal-backdrop" @click.self="showGallery = false">
       <section class="gallery-modal" role="dialog" aria-modal="true" aria-label="Tất cả ảnh">
-        <div class="modal-header"><h2>Tất cả ảnh</h2><button type="button" aria-label="Đóng" @click="showGallery = false">×</button></div>
+        <div class="modal-header"><h2>Tất cả ảnh ({{ galleryImages.length }})</h2><button type="button" aria-label="Đóng" @click="showGallery = false">✕</button></div>
         <div class="modal-grid"><button v-for="(image, index) in galleryImages" :key="image.src" type="button" @click="activeImageIndex = index; showGallery = false"><img :src="image.src" :alt="image.alt" /></button></div>
       </section>
+    </div>
+
+    <!-- 1. BOOKING MODAL -->
+    <div v-if="showBookingModal" class="modal-backdrop" @click.self="showBookingModal = false">
+      <div class="interactive-modal max-w-lg">
+        <div class="modal-head">
+          <h3>⚡ Đặt Phòng Ngay - {{ currentRoom.title }}</h3>
+          <button type="button" @click="showBookingModal = false">✕</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <div class="room-summary-box">
+            <div class="font-bold text-slate-900">{{ currentRoom.title }}</div>
+            <div class="text-xs text-slate-500">📍 {{ currentRoom.address || currentRoom.location }}</div>
+            <div class="text-indigo-600 font-black mt-1">{{ currentRoom.price }} {{ currentRoom.pricePeriod }}</div>
+          </div>
+          <form @submit.prevent="submitBooking" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Họ và tên người đặt *</label>
+              <input v-model="bookingForm.fullName" required type="text" placeholder="Trần Văn Bình" class="form-input" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Số điện thoại *</label>
+                <input v-model="bookingForm.phone" required type="tel" placeholder="0901234567" class="form-input font-mono" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Số CCCD / CMND</label>
+                <input v-model="bookingForm.identityCard" type="text" placeholder="079201008899" class="form-input font-mono" />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Ngày dự kiến chuyển vào</label>
+                <input v-model="bookingForm.startDate" type="date" class="form-input" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 uppercase mb-1">Thời hạn hợp đồng</label>
+                <select v-model="bookingForm.durationMonths" class="form-input">
+                  <option :value="6">6 tháng</option>
+                  <option :value="12">12 tháng (Giảm 5%)</option>
+                  <option :value="24">24 tháng (Giảm 10%)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Ghi chú thêm cho chủ nhà</label>
+              <textarea v-model="bookingForm.notes" rows="2" placeholder="Ví dụ: Xin hẹn xem phòng trực tiếp vào chiều mai..." class="form-input"></textarea>
+            </div>
+            <div class="modal-foot pt-2">
+              <button type="button" class="btn-cancel" @click="showBookingModal = false">Hủy</button>
+              <button type="submit" class="btn-submit">Xác Nhận Đặt Phòng 🚀</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. LIVE CHAT MODAL -->
+    <div v-if="showChatModal" class="modal-backdrop" @click.self="showChatModal = false">
+      <div class="interactive-modal max-w-md flex flex-col h-[520px]">
+        <div class="modal-head flex items-center justify-between border-b pb-3">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <img src="/images/rooms/living.png" alt="Chủ nhà" class="w-10 h-10 rounded-full object-cover border-2 border-indigo-500" />
+              <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900">Chủ nhà: Minh House</div>
+              <div class="text-[11px] text-emerald-600 font-semibold">Online · Thường phản hồi &lt; 1h</div>
+            </div>
+          </div>
+          <button type="button" @click="showChatModal = false" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+        </div>
+
+        <div class="chat-messages flex-1 overflow-y-auto p-3 space-y-3 text-xs bg-slate-50 my-2 rounded-xl">
+          <div v-for="msg in chatMessages" :key="msg.id" :class="['flex flex-col', msg.sender === 'user' ? 'items-end' : (msg.sender === 'system' ? 'items-center' : 'items-start')]">
+            <span v-if="msg.sender === 'system'" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-full text-[10px] my-1 text-center max-w-[85%]">
+              {{ msg.text }}
+            </span>
+            <div v-else :class="['p-3 rounded-2xl max-w-[80%] shadow-xs', msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none']">
+              {{ msg.text }}
+              <div :class="['text-[9px] mt-1 font-mono text-right', msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400']">{{ msg.time }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar flex items-center gap-2 pt-2 border-t border-slate-100">
+          <input
+            v-model="chatInput"
+            @keyup.enter="sendChatMessage"
+            type="text"
+            placeholder="Nhập tin nhắn nhắn gửi chủ nhà..."
+            class="flex-1 px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button type="button" @click="sendChatMessage" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition">
+            Gửi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. HOST PROFILE MODAL -->
+    <div v-if="showHostProfileModal" class="modal-backdrop" @click.self="showHostProfileModal = false">
+      <div class="interactive-modal max-w-lg">
+        <div class="modal-head flex items-center justify-between border-b pb-3">
+          <h3 class="font-black text-slate-900 text-lg">👤 Trang Cá Nhân Chủ Nhà</h3>
+          <button type="button" @click="showHostProfileModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+
+        <div class="modal-body space-y-4 pt-3 text-xs">
+          <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+            <img src="/images/rooms/living.png" alt="Chủ nhà" class="w-16 h-16 rounded-full object-cover border-4 border-indigo-400/30" />
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-black">Minh House</span>
+                <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">⭐ Superhost</span>
+              </div>
+              <p class="text-indigo-200 text-[11px]">Chuyên nghiệp cho thuê căn hộ & phòng trọ từ 05/2021</p>
+              <div class="flex items-center gap-3 text-[11px] text-emerald-300 font-semibold pt-1">
+                <span>✓ Đã xác minh CCCD</span>
+                <span>✓ Đã duyệt giấy phép</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <strong class="text-lg font-black text-slate-900 block">128</strong>
+              <span class="text-slate-500 text-[10px]">Bất động sản</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <strong class="text-lg font-black text-indigo-600 block">98%</strong>
+              <span class="text-slate-500 text-[10px]">Tỷ lệ phản hồi</span>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <strong class="text-lg font-black text-emerald-600 block">&lt; 1 giờ</strong>
+              <span class="text-slate-500 text-[10px]">Thời gian trả lời</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 uppercase text-[10px]">📞 Thông tin liên hệ trực tiếp</h4>
+            <div class="flex items-center justify-between text-slate-700">
+              <span>Hotline / Zalo:</span>
+              <a href="tel:0908123456" class="font-mono font-bold text-indigo-600 hover:underline">0908.123.456</a>
+            </div>
+            <div class="flex items-center justify-between text-slate-700">
+              <span>Email làm việc:</span>
+              <span class="font-bold text-slate-900">minhhouse.rentals@gmail.com</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <a href="tel:0908123456" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center rounded-xl transition shadow-md">
+              📞 Gọi điện ngay
+            </a>
+            <button type="button" @click="showHostProfileModal = false; openChatModal()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md">
+              💬 Nhắn tin tư vấn
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MAP & NEARBY PLACES MODAL -->
+    <div v-if="showMapModal" class="modal-backdrop" @click.self="showMapModal = false">
+      <div class="interactive-modal max-w-2xl">
+        <div class="modal-head flex items-center justify-between border-b pb-3">
+          <h3 class="font-black text-slate-900 text-lg">🗺️ Bản Đồ Chi Tiết & Địa Điểm Xung Quanh</h3>
+          <button type="button" @click="showMapModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+
+        <div class="modal-body space-y-4 pt-3 text-xs">
+          <!-- Expanded Map View -->
+          <div class="relative h-56 bg-emerald-100 rounded-2xl overflow-hidden border border-emerald-300 shadow-inner flex items-center justify-center">
+            <div class="absolute inset-0 opacity-40 bg-[radial-gradient(#22c55e_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div class="text-center space-y-2 relative z-10 bg-white/90 p-4 rounded-2xl shadow-lg backdrop-blur-xs max-w-sm">
+              <span class="text-2xl">📍</span>
+              <div class="font-black text-slate-900 text-sm">{{ currentRoom.title }}</div>
+              <p class="text-slate-600 text-[11px] font-medium">{{ currentRoom.address || currentRoom.location }}</p>
+              <span class="inline-block px-3 py-1 bg-indigo-600 text-white font-bold text-[10px] rounded-full uppercase">Vị Trí Trung Tâm</span>
+            </div>
+          </div>
+
+          <!-- Category Filter Tabs -->
+          <div class="flex space-x-2 border-b border-slate-200 pb-2 overflow-x-auto">
+            <button
+              v-for="cat in [
+                { id: 'all', name: 'Tất cả (12)' },
+                { id: 'edu', name: '🎓 Giáo dục' },
+                { id: 'med', name: '🏥 Y tế' },
+                { id: 'shop', name: '🛒 Mua sắm' },
+                { id: 'trans', name: '🚌 Giao thông' },
+                { id: 'park', name: '🌳 Giải trí' }
+              ]"
+              :key="cat.id"
+              @click="selectedMapCategory = cat.id"
+              :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap', selectedMapCategory === cat.id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200']"
+            >
+              {{ cat.name }}
+            </button>
+          </div>
+
+          <!-- Places List -->
+          <div class="grid grid-cols-2 gap-3 max-h-52 overflow-y-auto pr-1">
+            <div v-for="place in filteredNearbyPlaces" :key="place.name" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+              <div>
+                <span class="font-bold text-slate-900 block text-xs">{{ place.name }}</span>
+                <span class="text-[10px] text-slate-400 font-medium">{{ place.type }}</span>
+              </div>
+              <span class="text-indigo-600 font-bold font-mono text-[11px] whitespace-nowrap bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                ⏱️ {{ place.time }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. WRITE REVIEW MODAL -->
+    <div v-if="showReviewModal" class="modal-backdrop" @click.self="showReviewModal = false">
+      <div class="interactive-modal max-w-md">
+        <div class="modal-head flex items-center justify-between border-b pb-3">
+          <h3 class="font-black text-slate-900 text-lg">✍️ Viết Đánh Giá Căn Hộ</h3>
+          <button type="button" @click="showReviewModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+
+        <form @submit.prevent="submitReview" class="space-y-4 pt-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Chấm điểm sao *</label>
+            <div class="flex items-center gap-2 text-2xl cursor-pointer">
+              <span v-for="s in 5" :key="s" @click="reviewForm.rating = s" :class="s <= reviewForm.rating ? 'text-amber-400' : 'text-slate-300'">
+                ★
+              </span>
+              <span class="text-xs font-bold text-slate-600 ml-2">({{ reviewForm.rating }}/5 sao)</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Họ tên người đánh giá *</label>
+            <input v-model="reviewForm.name" required type="text" placeholder="Nguyễn Văn A" class="form-input" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Nội dung đánh giá trải nghiệm *</label>
+            <textarea v-model="reviewForm.text" required rows="3" placeholder="Chia sẻ cảm nhận về căn hộ, sự sạch sẽ, thái độ chủ nhà..." class="form-input"></textarea>
+          </div>
+
+          <div class="modal-foot pt-2">
+            <button type="button" class="btn-cancel" @click="showReviewModal = false">Hủy</button>
+            <button type="submit" class="btn-submit">Gửi Đánh Giá Ngay ✨</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 6. POST LISTING MODAL -->
+    <div v-if="showPostListingModal" class="modal-backdrop" @click.self="showPostListingModal = false">
+      <div class="interactive-modal max-w-md">
+        <div class="modal-head flex items-center justify-between border-b pb-3">
+          <h3 class="font-black text-slate-900 text-lg">🏠 Đăng Tin Cho Thuê Phòng</h3>
+          <button type="button" @click="showPostListingModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+
+        <form @submit.prevent="submitListing" class="space-y-3 pt-3 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Tiêu đề căn hộ / phòng trọ *</label>
+            <input v-model="listingForm.title" required type="text" placeholder="vd: Phòng trọ ban công Quận 1 full nội thất" class="form-input" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Loại hình</label>
+              <select v-model="listingForm.category" class="form-input">
+                <option value="Phòng trọ">Phòng trọ</option>
+                <option value="Căn hộ mini">Căn hộ mini</option>
+                <option value="Căn hộ dịch vụ">Căn hộ dịch vụ</option>
+                <option value="Homestay">Homestay</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 uppercase mb-1">Giá cho thuê dự kiến</label>
+              <input v-model="listingForm.price" type="text" placeholder="4.500.000 đ" class="form-input font-mono" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Địa chỉ chi tiết *</label>
+            <input v-model="listingForm.address" required type="text" placeholder="Số 12 Nguyễn Thị Minh Khai, Q.1" class="form-input" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Số điện thoại chính chủ *</label>
+            <input v-model="listingForm.phone" required type="tel" placeholder="0908123456" class="form-input font-mono" />
+          </div>
+
+          <div class="modal-foot pt-2">
+            <button type="button" class="btn-cancel" @click="showPostListingModal = false">Hủy</button>
+            <button type="submit" class="btn-submit">Gửi Yêu Cầu Đăng Tin 🚀</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { useDataStore } from '../stores/data'
+import { useToastStore } from '../stores/toast'
+import PublicHeader from '../components/PublicHeader.vue'
+import PublicFooter from '../components/PublicFooter.vue'
+
+const route = useRoute()
+const router = useRouter()
+const dataStore = useDataStore()
+const toastStore = useToastStore()
 
 onMounted(() => {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 })
 
-const route = useRoute()
-const router = useRouter()
+// MODAL STATES
+const showBookingModal = ref(false)
+const showChatModal = ref(false)
+const showHostProfileModal = ref(false)
+const showMapModal = ref(false)
+const showReviewModal = ref(false)
+const showPostListingModal = ref(false)
+
+// FORMS & DATA
+const bookingForm = ref({
+  fullName: '',
+  phone: '',
+  identityCard: '',
+  startDate: new Date().toISOString().slice(0, 10),
+  durationMonths: 6,
+  notes: ''
+})
+
+const openBookingModal = () => {
+  bookingForm.value = {
+    fullName: '',
+    phone: '',
+    identityCard: '',
+    startDate: new Date().toISOString().slice(0, 10),
+    durationMonths: 6,
+    notes: ''
+  }
+  showBookingModal.value = true
+}
+
+const submitBooking = () => {
+  if (!bookingForm.value.fullName || !bookingForm.value.phone) {
+    toastStore.warning('Vui lòng nhập Họ tên và Số điện thoại liên hệ!')
+    return
+  }
+  try {
+    const roomId = currentRoom.value.id || 101
+    const priceNum = parseInt(String(currentRoom.value.price).replace(/[^0-9]/g, '')) || 4500000
+    dataStore.addContract({
+      roomId: roomId,
+      renterId: 1,
+      startDate: bookingForm.value.startDate,
+      endDate: new Date(new Date(bookingForm.value.startDate).setMonth(new Date(bookingForm.value.startDate).getMonth() + Number(bookingForm.value.durationMonths))).toISOString().slice(0, 10),
+      price: priceNum,
+      deposit: priceNum,
+      notes: bookingForm.value.notes || 'Đặt phòng trực tuyến từ website RentOps'
+    })
+    toastStore.success(`Đặt phòng thành công! Yêu cầu hợp đồng đã được tạo.`)
+  } catch (e) {
+    console.warn(e)
+  }
+  notify(`Cảm ơn ${bookingForm.value.fullName}! Đã tạo yêu cầu đặt phòng thành công.`)
+  showBookingModal.value = false
+}
+
+// CHAT STATE
+const chatInput = ref('')
+const chatMessages = ref([
+  { id: 1, sender: 'system', text: 'Cuộc trò chuyện được bảo mật. Chủ nhà sẽ nhận được thông báo ngay khi bạn gửi tin.' },
+  { id: 2, sender: 'host', text: 'Xin chào! Cảm ơn bạn đã quan tâm đến phòng. Bạn cần tư vấn thông tin gì hoặc xem phòng khi nào ạ?', time: 'Vừa xong' }
+])
+
+const openChatModal = () => {
+  showChatModal.value = true
+}
+
+const sendChatMessage = () => {
+  if (!chatInput.value.trim()) return
+  const userMsg = chatInput.value.trim()
+  chatMessages.value.push({
+    id: Date.now(),
+    sender: 'user',
+    text: userMsg,
+    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  })
+  chatInput.value = ''
+  setTimeout(() => {
+    chatMessages.value.push({
+      id: Date.now() + 1,
+      sender: 'host',
+      text: 'Dạ vâng! Em đã nhận được tin nhắn. Em sẽ gửi ảnh thực tế và hẹn lịch cho anh/chị nhé!',
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    })
+  }, 800)
+}
+
+const openHostProfileModal = () => {
+  showHostProfileModal.value = true
+}
+
+// MAP STATE
+const selectedMapCategory = ref('all')
+const expandedNearbyPlaces = [
+  { category: 'edu', name: 'Đại học KHXH&NV TP.HCM', time: '5 phút đi bộ (400m)', type: 'Giáo dục' },
+  { category: 'edu', name: 'Đại học Y Dược TP.HCM', time: '8 phút xe máy (2.5km)', type: 'Giáo dục' },
+  { category: 'edu', name: 'Trường THPT Lê Hồng Phong', time: '10 phút xe máy (3.1km)', type: 'Giáo dục' },
+  { category: 'med', name: 'Bệnh viện Quận 1', time: '4 phút đi xe (1.2km)', type: 'Y tế' },
+  { category: 'med', name: 'Bệnh viện Nhi Đồng 2', time: '7 phút đi xe (2.0km)', type: 'Y tế' },
+  { category: 'shop', name: 'Siêu thị WinMart 24/7', time: '2 phút đi bộ (150m)', type: 'Mua sắm' },
+  { category: 'shop', name: 'Trung tâm Vincom Center', time: '5 phút đi xe (1.5km)', type: 'Mua sắm' },
+  { category: 'shop', name: 'Chợ Bến Thành', time: '8 phút đi xe (2.2km)', type: 'Mua sắm' },
+  { category: 'trans', name: 'Trạm xe bus Nguyễn Huệ', time: '3 phút đi bộ (200m)', type: 'Giao thông' },
+  { category: 'trans', name: 'Ga Metro Bến Thành', time: '7 phút đi bộ (550m)', type: 'Giao thông' },
+  { category: 'park', name: 'Công viên 23 tháng 9', time: '10 phút đi bộ (800m)', type: 'Giải trí' },
+  { category: 'park', name: 'Thảo Cầm Viên Sài Gòn', time: '6 phút đi xe (1.8km)', type: 'Giải trí' }
+]
+
+const filteredNearbyPlaces = computed(() => {
+  if (selectedMapCategory.value === 'all') return expandedNearbyPlaces
+  return expandedNearbyPlaces.filter(p => p.category === selectedMapCategory.value)
+})
+
+const openMapModal = () => {
+  showMapModal.value = true
+}
+
+// REVIEW STATE
+const reviewForm = ref({ name: '', rating: 5, text: '' })
+const openReviewModal = () => {
+  reviewForm.value = { name: '', rating: 5, text: '' }
+  showReviewModal.value = true
+}
+
+const submitReview = () => {
+  if (!reviewForm.value.name.trim() || !reviewForm.value.text.trim()) {
+    toastStore.warning('Vui lòng điền tên và nội dung đánh giá!')
+    return
+  }
+  const newRev = {
+    name: reviewForm.value.name.trim(),
+    date: 'Vừa xong',
+    avatar: '/images/rooms/living.png',
+    text: reviewForm.value.text.trim()
+  }
+  detailedReviews.value.unshift(newRev)
+  reviews.value.unshift({ name: newRev.name, text: newRev.text, date: newRev.date })
+  notify('Đã gửi đánh giá của bạn thành công! Cảm ơn ý kiến của bạn.')
+  toastStore.success('Đã xuất bản đánh giá mới!')
+  showReviewModal.value = false
+}
+
+// POST LISTING STATE
+const listingForm = ref({ title: '', category: 'Phòng trọ', price: '', address: '', phone: '' })
+const openPostListingModal = () => {
+  listingForm.value = { title: '', category: 'Phòng trọ', price: '', address: '', phone: '' }
+  showPostListingModal.value = true
+}
+
+const submitListing = () => {
+  if (!listingForm.value.title || !listingForm.value.phone) {
+    toastStore.warning('Vui lòng nhập tên phòng và số điện thoại!')
+    return
+  }
+  notify('Yêu cầu đăng tin của bạn đã được tiếp nhận. Ban quản trị sẽ liên hệ xác minh trong 15 phút.')
+  toastStore.success('Đã gửi thông tin đăng tin phòng!')
+  showPostListingModal.value = false
+}
 
 const roomDatabase = {
   '1': {
@@ -334,26 +821,6 @@ const roomDatabase = {
       { src: '/images/suite.png', alt: 'Khu vực tiếp khách' }
     ]
   },
-  '4': {
-    id: 4,
-    title: 'Homestay xinh xắn không gian xanh',
-    category: 'Homestay',
-    location: 'Đà Lạt, Lâm Đồng',
-    address: '12 Khởi Nghĩa Bắc Sơn, Phường 10, Đà Lạt',
-    price: '600.000 đ',
-    pricePeriod: '/ đêm',
-    rating: '4.9',
-    reviewsCount: 56,
-    area: '20m²',
-    badge: 'HOMESTAY',
-    description: 'Homestay mang phong cách mộc mạc ngập tràn ánh nắng và sắc hoa Đà Lạt. Phù hợp cho cặp đôi nghỉ dưỡng cuối tuần.',
-    images: [
-      { src: '/images/rooms/kitchen.png', alt: 'Góc homestay dễ thương' },
-      { src: '/images/rooms/main.png', alt: 'View núi mộng mơ' },
-      { src: '/images/bedroom.png', alt: 'Phòng ngủ đệm êm' },
-      { src: '/images/studio.png', alt: 'Khu vực đọc sách' }
-    ]
-  },
   '101': {
     id: 101,
     title: 'Phòng trọ cao cấp Full nội thất ban công',
@@ -389,203 +856,6 @@ const roomDatabase = {
     images: [
       { src: '/images/studio.png', alt: 'Căn hộ mini' },
       { src: '/images/rooms/main.png', alt: 'Nội thất phòng' }
-    ]
-  },
-  '103': {
-    id: 103,
-    title: 'Căn hộ dịch vụ cao cấp view sông hồ bơi',
-    category: 'Căn hộ dịch vụ',
-    location: 'Phú Nhuận, TP. Hồ Chí Minh',
-    address: '120 Phan Xích Long, Phường 2, Phú Nhuận',
-    price: '8.500.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.8',
-    reviewsCount: 76,
-    area: '45m²',
-    badge: 'CHỦ NHÀ UY TÍN',
-    description: 'Căn hộ dịch vụ thiết kế phong cách Scandinavian ấm cúng, miễn phí giữ xe máy và dịch vụ giặt ủi.',
-    images: [
-      { src: '/images/bedroom.png', alt: 'Căn hộ dịch vụ' },
-      { src: '/images/rooms/kitchen.png', alt: 'Phòng bếp' }
-    ]
-  },
-  '104': {
-    id: 104,
-    title: 'Homestay xinh xắn ngập ánh nắng thiên nhiên',
-    category: 'Homestay',
-    location: 'Đà Lạt, Lâm Đồng',
-    address: '55 Hoàng Hoa Thám, Phường 10, Đà Lạt',
-    price: '600.000 đ',
-    pricePeriod: '/ đêm',
-    rating: '4.9',
-    reviewsCount: 56,
-    area: '20m²',
-    badge: 'SIÊU HOT',
-    description: 'Căn homestay gỗ ấm áp nhìn ra thung lũng thông xanh ngát, sẵn sàng nướng BBQ ngoài trời.',
-    images: [
-      { src: '/images/rooms/kitchen.png', alt: 'Homestay Đà Lạt' },
-      { src: '/images/rooms/main.png', alt: 'Góc chill' }
-    ]
-  },
-  '201': {
-    id: 201,
-    title: 'Phòng trọ cao cấp Full nội thất ban công',
-    category: 'Phòng trọ',
-    location: 'Quận 1, TP. Hồ Chí Minh',
-    address: '10 Nguyễn Trãi, Phường Bến Thành, Quận 1',
-    price: '4.500.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.8',
-    reviewsCount: 120,
-    area: '25m²',
-    badge: 'VIP',
-    description: 'Phòng trọ khép kín, có ban công trồng cây xanh, nội thất cao cấp full option.',
-    images: [
-      { src: '/images/suite.png', alt: 'Phòng trọ 201' },
-      { src: '/images/rooms/living.png', alt: 'Nội thất' }
-    ]
-  },
-  '202': {
-    id: 202,
-    title: 'Phòng trọ sinh viên đỗ xe máy miễn phí',
-    category: 'Phòng trọ',
-    location: 'Thủ Đức, TP. Hồ Chí Minh',
-    address: '18 Võ Văn Nâng, Linh Trung, Thủ Đức',
-    price: '2.200.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.7',
-    reviewsCount: 45,
-    area: '18m²',
-    badge: 'HOT',
-    description: 'Phòng trọ sạch đẹp cho sinh viên gần Làng Đại Học, khu sinh hoạt chung văn minh, giá điện nước bình ổn.',
-    images: [
-      { src: '/images/rooms/living.png', alt: 'Phòng trọ sinh viên' },
-      { src: '/images/rooms/bathroom.png', alt: 'WC riêng' }
-    ]
-  },
-  '203': {
-    id: 203,
-    title: 'Căn hộ mini ban công thoáng mát view phố',
-    category: 'Căn hộ mini',
-    location: 'Bình Thạnh, TP. Hồ Chí Minh',
-    address: '142 Bùi Đình Túy, Phường 12, Bình Thạnh',
-    price: '5.800.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.9',
-    reviewsCount: 98,
-    area: '32m²',
-    badge: 'GIÁ TỐT',
-    description: 'Căn hộ mini có gác lửng thông thoáng, cửa sổ kính tràn ngắm view thành phố về đêm.',
-    images: [
-      { src: '/images/studio.png', alt: 'Căn hộ mini 203' },
-      { src: '/images/rooms/main.png', alt: 'Bên trong phòng' }
-    ]
-  },
-  '204': {
-    id: 204,
-    title: 'Căn hộ mini duplex gác xếp hiện đại',
-    category: 'Căn hộ mini',
-    location: 'Quận 7, TP. Hồ Chí Minh',
-    address: '79 Lâm Văn Bền, Phường Tân Quy, Quận 7',
-    price: '6.500.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.9',
-    reviewsCount: 88,
-    badge: 'VIP',
-    description: 'Căn hộ Duplex gác cao đứng không đụng đầu, bảo vệ trực ban 24/7, thang máy thẻ từ cao cấp.',
-    images: [
-      { src: '/images/rooms/main.png', alt: 'Duplex gác xếp' },
-      { src: '/images/bedroom.png', alt: 'Giường gác' }
-    ]
-  },
-  '205': {
-    id: 205,
-    title: 'Căn hộ dịch vụ cao cấp view sông hồ bơi',
-    category: 'Căn hộ dịch vụ',
-    location: 'Phú Nhuận, TP. Hồ Chí Minh',
-    address: '202 Hoàng Văn Thụ, Phường 9, Phú Nhuận',
-    price: '8.500.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.8',
-    reviewsCount: 76,
-    badge: 'VIP',
-    description: 'Căn hộ dịch vụ trọn gói dịch vụ, thích hợp khách nước ngoài và gia đình trẻ lưu trú.',
-    images: [
-      { src: '/images/bedroom.png', alt: 'Căn hộ dịch vụ 205' },
-      { src: '/images/suite.png', alt: 'Phòng khách' }
-    ]
-  },
-  '206': {
-    id: 206,
-    title: 'Homestay xinh xắn ngập ánh nắng thiên nhiên',
-    category: 'Homestay',
-    location: 'Đà Lạt, Lâm Đồng',
-    address: '15 Yersin, Phường 9, Đà Lạt',
-    price: '600.000 đ',
-    pricePeriod: '/ đêm',
-    rating: '4.9',
-    reviewsCount: 56,
-    area: '20m²',
-    badge: 'HOMESTAY',
-    description: 'Không gian ấm cúng, thiết kế tinh tế với khu vườn nhỏ xinh để thưởng trà mỗi sáng.',
-    images: [
-      { src: '/images/rooms/kitchen.png', alt: 'Homestay 206' },
-      { src: '/images/rooms/living.png', alt: 'Khu sảnh' }
-    ]
-  },
-  '207': {
-    id: 207,
-    title: 'Ở ghép giường tầng căn hộ cao cấp bảo vệ 24/7',
-    category: 'Ở ghép',
-    location: 'Quận 2, TP. Hồ Chí Minh',
-    address: 'Thảo Điền Pearl, 12 Quốc Hương, Quận 2',
-    price: '1.200.000 đ',
-    pricePeriod: '/ người / tháng',
-    rating: '4.6',
-    reviewsCount: 34,
-    area: '15m²',
-    badge: 'Ở GHÉP',
-    description: 'Tìm bạn ở ghép chung cư cao cấp Thảo Điền, đầy đủ tiện ích hồ bơi, gym, môi trường lịch sự văn minh.',
-    images: [
-      { src: '/images/rooms/bathroom.png', alt: 'Phòng ở ghép' },
-      { src: '/images/suite.png', alt: 'Khu vực sinh hoạt chung' }
-    ]
-  },
-  '208': {
-    id: 208,
-    title: 'Phòng trọ yên tĩnh giờ giấc tự do',
-    category: 'Phòng trọ',
-    location: 'Gò Vấp, TP. Hồ Chí Minh',
-    address: '350 Phạm Văn Đồng, Phường 1, Gò Vấp',
-    price: '3.000.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.7',
-    reviewsCount: 52,
-    area: '22m²',
-    badge: 'GIỜ TỰ DO',
-    description: 'Phòng trọ ngõ rộng ô tô vào tận cửa, giờ giấc đi lại tự do ra vào vân tay bảo mật.',
-    images: [
-      { src: '/images/hero_banner.png', alt: 'Phòng trọ Gò Vấp' },
-      { src: '/images/rooms/living.png', alt: 'Góc phòng' }
-    ]
-  },
-  '301': {
-    id: 301,
-    title: 'Căn hộ Studio thiết kế sang trọng',
-    category: 'Căn hộ mini',
-    location: 'Đa Kao, Quận 1, TP. Hồ Chí Minh',
-    address: '12 Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1',
-    price: '6.200.000 đ',
-    pricePeriod: '/ tháng',
-    rating: '4.9',
-    reviewsCount: 84,
-    area: '30m²',
-    badge: 'ĐƯỢC YÊU THÍCH',
-    description: 'Căn hộ Studio khép kín ngay Phường Đa Kao Quận 1, nội thất cao cấp hiện đại ngập tràn ánh nắng.',
-    images: [
-      { src: '/images/rooms/main.png', alt: 'Studio Đa Kao' },
-      { src: '/images/rooms/living.png', alt: 'Phòng khách' },
-      { src: '/images/rooms/kitchen.png', alt: 'Bếp mini' }
     ]
   }
 }
@@ -654,7 +924,7 @@ const tabs = [
   { key: 'amenities', label: 'Tiện nghi' },
   { key: 'reviews', label: 'Đánh giá' },
   { key: 'rules', label: 'Quy định' },
-  { key: 'overview', label: 'Chủ nhà' }
+  { key: 'host', label: 'Chủ nhà' }
 ]
 
 const amenities = [
@@ -668,10 +938,10 @@ const amenities = [
   { icon: 'lock', label: 'Khóa thông minh' }
 ]
 
-const reviews = [
+const reviews = ref([
   { name: 'Ngọc Anh', text: 'Căn hộ rất sạch sẽ, đúng như hình. Vị trí trung tâm và chủ nhà hỗ trợ cực kỳ nhanh.', date: 'Tháng 5, 2024' },
   { name: 'Minh Tuấn', text: 'Không gian đẹp, yên tĩnh. Mình sẽ quay lại trong chuyến công tác sau.', date: 'Tháng 4, 2024' }
-]
+])
 
 const rules = ['Không hút thuốc trong căn hộ', 'Không tổ chức tiệc hoặc sự kiện', 'Giữ yên lặng sau 22:00', 'Nhận phòng từ 14:00, trả phòng trước 12:00']
 const detailedAmenities = [
@@ -701,28 +971,26 @@ const ratingBreakdown = [
   { stars: 2, percent: 2, count: 1 },
   { stars: 1, percent: 0, count: 0 }
 ]
-const detailedReviews = [
+
+const detailedReviews = ref([
   { name: 'Trần Minh Tuấn', date: '2 tuần trước', avatar: '/images/rooms/main.png', text: 'Căn hộ đẹp, sạch sẽ, view thành phố tuyệt vời. Chủ nhà thân thiện và hỗ trợ nhanh chóng.' },
   { name: 'Nguyễn Thảo Vy', date: '1 tháng trước', avatar: '/images/rooms/living.png', text: 'Vị trí quá tiện lợi, gần trung tâm và nhiều quán ăn ngon. Sẽ quay lại lần sau!' },
   { name: 'Lê Hoàng Nam', date: '2 tháng trước', avatar: '/images/rooms/kitchen.png', text: 'Không gian thoải mái, đầy đủ tiện nghi.' }
-]
+])
+
 const nearbyPlaces = [
   { name: 'Trung tâm thương mại', time: '5 phút đi bộ' },
   { name: 'Siêu thị tiện lợi 24/7', time: '2 phút đi bộ' },
   { name: 'Công viên cây xanh', time: '10 phút đi bộ' }
 ]
+
 const similarRooms = [
   { id: 201, title: 'Phòng trọ cao cấp Full nội thất', location: 'Quận 1, TP. Hồ Chí Minh', price: '4.500.000 đ / tháng', rating: '4.8', reviews: 120, image: '/images/suite.png' },
   { id: 203, title: 'Căn hộ mini ban công thoáng mát', location: 'Bình Thạnh, TP. Hồ Chí Minh', price: '5.800.000 đ / tháng', rating: '4.9', reviews: 98, image: '/images/studio.png' },
-  { id: 205, title: 'Căn hộ dịch vụ cao cấp view sông', location: 'Phú Nhuận, TP. Hồ Chí Minh', price: '8.500.000 đ / tháng', rating: '4.8', reviews: 76, image: '/images/bedroom.png' },
-  { id: 204, title: 'Căn hộ Duplex gác xếp hiện đại', location: 'Quận 7, TP. Hồ Chí Minh', price: '6.500.000 đ / tháng', rating: '4.9', reviews: 88, image: '/images/rooms/main.png' }
+  { id: 101, title: 'Căn hộ dịch vụ cao cấp view sông', location: 'Phú Nhuận, TP. Hồ Chí Minh', price: '8.500.000 đ / tháng', rating: '4.8', reviews: 76, image: '/images/bedroom.png' },
+  { id: 102, title: 'Căn hộ Duplex gác xếp hiện đại', location: 'Quận 7, TP. Hồ Chí Minh', price: '6.500.000 đ / tháng', rating: '4.9', reviews: 88, image: '/images/rooms/main.png' }
 ]
-const footerColumns = [
-  { title: 'Về chúng tôi', items: ['Giới thiệu', 'Tuyển dụng', 'Tin tức', 'Điều khoản dịch vụ', 'Chính sách bảo mật'] },
-  { title: 'Hỗ trợ', items: ['Trung tâm trợ giúp', 'Hướng dẫn đặt phòng', 'Chính sách hủy', 'Liên hệ hỗ trợ'] },
-  { title: 'Dành cho chủ nhà', items: ['Đăng cho thuê phòng', 'Quản lý phòng', 'Chính sách hợp tác', 'Bảng giá dịch vụ'] },
-  { title: 'Liên hệ', items: ['1900 1234', 'support@rentops.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
-]
+
 const trustItems = [
   { icon: 'shield', title: 'Xác nhận ngay lập tức', description: 'Đặt phòng và nhận hướng dẫn tự động' },
   { icon: 'clock', title: 'Hỗ trợ 24/7', description: 'Đội ngũ hỗ trợ luôn sẵn sàng giúp bạn' },
@@ -746,8 +1014,6 @@ const shareRoom = async () => {
     notify('Bạn có thể sao chép liên kết trên thanh địa chỉ')
   }
 }
-const bookNow = () => notify('Yêu cầu đặt phòng đã được ghi nhận')
-const sendMessage = () => notify('Đã mở cuộc trò chuyện với chủ nhà')
 const goBack = () => router.push('/landing')
 const openSimilarRoom = (targetRoom) => {
   activeImageIndex.value = 0
@@ -777,9 +1043,9 @@ const UiIcon = (props) => h('svg', { width: props.size || 18, height: props.size
 :global(*) { box-sizing: border-box; }
 :global(body) { background: #f8fafc; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button { font: inherit; }
-.detail-page { min-height: 100vh; padding-top: 76px; color: #172033; background: #fff; font-size: 15px; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+.detail-page { min-height: 100vh; padding-top: 60px; color: #172033; background: #fff; font-size: 15px; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
 .home-container { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
-.home-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 76px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); box-shadow: 0 4px 18px rgba(28,38,67,.06); backdrop-filter: blur(14px); }
+.home-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 60px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); box-shadow: 0 4px 18px rgba(28,38,67,.06); backdrop-filter: blur(14px); }
 .home-header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; }
 .home-brand { display: flex; align-items: center; gap: 10px; color: #172033; border: 0; background: transparent; cursor: pointer; font-size: 22px; font-weight: 800; white-space: nowrap; }
 .home-brand-mark { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border-radius: 16px; background: linear-gradient(135deg,#5e87f5,#5545e8); box-shadow: 0 8px 16px rgba(79,70,229,.22); font-size: 20px; }
@@ -832,9 +1098,10 @@ h1 { margin: 0; color: #1a2435; font-size: clamp(24px, 2.3vw, 30px); line-height
 .booking-column { position: sticky; top: 94px; }.booking-card, .host-card { border: 1px solid #e8eaf0; border-radius: 12px; background: #fff; box-shadow: 0 6px 23px rgba(26,35,59,.08); }.booking-card { position: relative; padding: 20px; }.price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }.price-row strong { color: #1c2536; font-size: 24px; letter-spacing: -.03em; }.price-row > div > span { margin-left: 3px; color: #7f8998; font-size: 13px; }.instant-label { display: inline-flex; align-items: center; gap: 3px; color: #4f46e5; font-size: 12px; font-weight: 700; }.small-note { margin: 4px 0 15px; color: #9aa2b0; font-size: 12px; }.booking-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }.date-field, .guest-field { position: relative; display: flex; flex-direction: column; gap: 4px; min-height: 54px; padding: 9px 28px 8px 10px; text-align: left; color: #374054; border: 1px solid #e4e6ec; border-radius: 7px; background: #fff; }.date-field span, .guest-field small { color: #929aaa; font-size: 11px; }.date-field strong, .guest-field strong { font-size: 12px; font-weight: 700; }.date-field .ui-icon, .guest-field .ui-icon { position: absolute; top: 19px; right: 9px; color: #747f92; }.guest-field { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; padding: 8px 10px; }.guest-field span { display: flex; flex-direction: column; gap: 3px; }.guest-field .ui-icon { position: static; }.guest-popover { position: absolute; z-index: 2; right: 18px; left: 18px; display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; color: #555f72; border: 1px solid #e2e5ec; border-radius: 8px; background: #fff; box-shadow: 0 9px 25px rgba(22,33,59,.15); font-size: 13px; }.guest-counter { display: flex; align-items: center; gap: 12px; }.guest-counter button { display: grid; place-items: center; width: 24px; height: 24px; color: #5147d7; border: 1px solid #d9daf3; border-radius: 50%; background: #fafaff; cursor: pointer; }.guest-counter button:disabled { color: #bdc2cb; cursor: not-allowed; }.guest-counter strong { color: #222c3c; font-size: 14px; }
 .primary-button, .secondary-button { width: 100%; min-height: 40px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 700; }.primary-button { margin-top: 14px; color: #fff; border: 1px solid #5549dc; background: #594dde; box-shadow: 0 5px 12px rgba(83,73,220,.2); }.primary-button:hover { background: #4e43ce; }.secondary-button { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 7px; color: #5549dc; border: 1px solid #bdb9f4; background: #fff; }.secondary-button:hover { background: #f8f7ff; }.booking-disclaimer { margin: 12px 0 16px; color: #9ba3b0; text-align: center; font-size: 11px; line-height: 1.45; }.trust-list { padding-top: 13px; border-top: 1px solid #eff0f3; }.trust-item { display: flex; align-items: flex-start; gap: 9px; margin-top: 12px; }.trust-item:first-child { margin-top: 0; }.trust-icon { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 27px; color: #6259dd; border-radius: 50%; background: #f0efff; }.trust-item > span:last-child { display: flex; flex-direction: column; gap: 3px; }.trust-item strong { color: #4d576a; font-size: 12px; }.trust-item small { color: #9ba3b0; font-size: 11px; }
 .host-card { margin-top: 12px; padding: 16px; }.host-header { display: flex; align-items: center; gap: 9px; }.host-header img { width: 42px; height: 42px; object-fit: cover; object-position: 58% 45%; border: 2px solid #eeeaff; border-radius: 50%; }.host-header > div { display: flex; flex: 1; flex-direction: column; gap: 4px; }.host-header span { color: #303a4c; font-size: 13px; font-weight: 800; }.host-header small { color: #8a94a3; font-size: 11px; }.host-stars { color: #f1ab24; }.host-header > .ui-icon { color: #99a1af; }.host-card > p { margin: 11px 0 13px 47px; color: #a0a8b4; font-size: 11px; }.host-stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 11px 0; border-top: 1px solid #f0f1f3; border-bottom: 1px solid #f0f1f3; text-align: center; }.host-stats span { display: flex; flex-direction: column; gap: 3px; border-right: 1px solid #f0f1f3; }.host-stats span:last-child { border-right: 0; }.host-stats strong { color: #4b5567; font-size: 12px; }.host-stats small { color: #9da5b1; font-size: 10px; }.host-card > button { width: 100%; margin-top: 11px; padding: 9px; color: #5549dc; border: 1px solid #c7c3f6; border-radius: 6px; font-size: 12px; font-weight: 700; }.host-card > button:hover { background: #f8f7ff; }
-.tab-panel { min-height: 180px; }.review-summary { display: flex; align-items: center; gap: 14px; padding: 15px; border-radius: 10px; background: #f8f7ff; }.big-rating { color: #302b8c; font-size: 32px; font-weight: 800; }.review-summary > span:last-child { display: flex; flex-direction: column; gap: 3px; }.stars, .review-top span { color: #f3a925; letter-spacing: 2px; }.review-summary small { color: #8490a1; font-size: 13px; }.review-list { display: grid; gap: 10px; margin-top: 15px; }.review-card { padding: 13px; border: 1px solid #eceef3; border-radius: 9px; }.review-top { display: flex; justify-content: space-between; }.review-top strong { color: #394255; font-size: 13px; }.review-top span { font-size: 12px; }.review-card p { margin: 7px 0; color: #707b8d; font-size: 13px; line-height: 1.5; }.review-card small { color: #a0a7b2; font-size: 11px; }.rules-list { display: grid; gap: 10px; }.rules-list p { display: flex; align-items: center; gap: 8px; margin: 0; color: #6b7688; font-size: 14px; }.rules-list .ui-icon { color: #5b51dc; }
-.toast-message { position: fixed; z-index: 20; right: 22px; bottom: 22px; display: flex; align-items: center; gap: 8px; padding: 11px 15px; color: #fff; border-radius: 8px; background: #253047; box-shadow: 0 10px 28px rgba(15,23,42,.2); font-size: 14px; }.toast-message .ui-icon { color: #a8f0cc; }
-.modal-backdrop { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 25px; background: rgba(13,19,33,.65); backdrop-filter: blur(4px); }.gallery-modal { width: min(860px, 100%); max-height: min(700px, 90vh); overflow: auto; padding: 20px; border-radius: 15px; background: #fff; }.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }.modal-header h2 { margin: 0; font-size: 19px; }.modal-header button { width: 30px; height: 30px; color: #657084; border: 1px solid #e5e7ec; border-radius: 50%; font-size: 22px; line-height: 1; }.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }.modal-grid button { min-height: 160px; overflow: hidden; padding: 0; border: 0; border-radius: 8px; background: #f1f2f4; cursor: pointer; }.modal-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tab-panel { min-height: 180px; }.review-summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px; border-radius: 10px; background: #f8f7ff; }.big-rating { color: #302b8c; font-size: 32px; font-weight: 800; }.review-summary > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; flex: 1; }.stars, .review-top span { color: #f3a925; letter-spacing: 2px; }.review-summary small { color: #8490a1; font-size: 13px; }.review-list { display: grid; gap: 10px; margin-top: 15px; }.review-card { padding: 13px; border: 1px solid #eceef3; border-radius: 9px; }.review-top { display: flex; justify-content: space-between; }.review-top strong { color: #394255; font-size: 13px; }.review-top span { font-size: 12px; }.review-card p { margin: 7px 0; color: #707b8d; font-size: 13px; line-height: 1.5; }.review-card small { color: #a0a7b2; font-size: 11px; }.rules-list { display: grid; gap: 10px; }.rules-list p { display: flex; align-items: center; gap: 8px; margin: 0; color: #6b7688; font-size: 14px; }.rules-list .ui-icon { color: #5b51dc; }
+.toast-message { position: fixed; z-index: 50; right: 22px; bottom: 22px; display: flex; align-items: center; gap: 8px; padding: 11px 15px; color: #fff; border-radius: 8px; background: #253047; box-shadow: 0 10px 28px rgba(15,23,42,.2); font-size: 14px; }.toast-message .ui-icon { color: #a8f0cc; }
+.modal-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(13,19,33,.65); backdrop-filter: blur(4px); }
+.gallery-modal { width: min(860px, 100%); max-height: min(700px, 90vh); overflow: auto; padding: 20px; border-radius: 15px; background: #fff; }.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }.modal-header h2 { margin: 0; font-size: 19px; }.modal-header button { width: 30px; height: 30px; color: #657084; border: 1px solid #e5e7ec; border-radius: 50%; font-size: 22px; line-height: 1; }.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }.modal-grid button { min-height: 160px; overflow: hidden; padding: 0; border: 0; border-radius: 8px; background: #f1f2f4; cursor: pointer; }.modal-grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .lower-content { margin-top: 46px; }
 .lower-grid { display: grid; grid-template-columns: minmax(0, 1fr) 365px; gap: 25px; align-items: start; }
 .lower-main { min-width: 0; }
@@ -861,8 +1128,35 @@ h1 { margin: 0; color: #1a2435; font-size: clamp(24px, 2.3vw, 30px); line-height
 .location-card h3 { margin: 0; color: #344055; font-size: 13px; }.location-note { margin: 4px 0 12px; color: #8d97a5; font-size: 11px; }.nearby-list { display: grid; gap: 8px; }.nearby-list > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #647085; font-size: 11px; }.nearby-list span { display: flex; align-items: center; gap: 6px; }.nearby-list i { width: 6px; height: 6px; border: 1px solid #9099a9; border-radius: 50%; }.nearby-list small { color: #7b8596; white-space: nowrap; }.nearby-more { margin-top: 14px; padding: 0; color: #5549dc; border: 0; background: transparent; cursor: pointer; font-size: 11px; font-weight: 700; }
 .similar-section { position: relative; margin-top: 35px; padding-top: 23px; border-top: 1px solid #edf0f4; }.similar-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }.similar-heading h2 { font-size: 18px; }.similar-heading button { padding: 0; color: #5549dc; border: 0; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }.similar-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px; }.similar-card { overflow: hidden; border: 1px solid #e7eaf0; border-radius: 9px; background: #fff; cursor: pointer; transition: transform .15s, box-shadow .15s; }.similar-card:hover { box-shadow: 0 8px 20px rgba(36,44,73,.11); transform: translateY(-2px); }.similar-image { position: relative; height: 125px; overflow: hidden; background: #eee; }.similar-image img { display: block; width: 100%; height: 100%; object-fit: cover; }.similar-image button { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 26px; height: 26px; color: #6b7586; border: 1px solid #e4e7ec; border-radius: 50%; background: rgba(255,255,255,.94); cursor: pointer; }.similar-image button:hover { color: #4f46e5; }.similar-body { padding: 10px 9px 11px; }.similar-body h3 { overflow: hidden; margin: 0; color: #3e485b; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }.similar-body p { overflow: hidden; margin: 4px 0 11px; color: #9aa2af; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }.similar-bottom { display: flex; align-items: center; justify-content: space-between; gap: 5px; }.similar-bottom strong { color: #4f46db; font-size: 12px; }.similar-bottom span { display: inline-flex; align-items: center; gap: 3px; color: #8b95a2; font-size: 11px; }.similar-bottom span .ui-icon { color: #f2aa16; }.similar-bottom small { color: #a3aab5; font-size: 10px; }.similar-arrow { position: absolute; top: 49%; display: grid; place-items: center; width: 33px; height: 33px; color: #5c55db; border: 1px solid #e1e3f5; border-radius: 50%; background: #fff; box-shadow: 0 3px 10px rgba(38,43,80,.1); cursor: pointer; }.similar-arrow.left { left: -15px; }.similar-arrow.right { right: -15px; }.similar-arrow:hover { background: #f7f6ff; }
 .detail-footer { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); gap: 35px; margin-top: 53px; padding: 27px 12px 22px; border-top: 1px solid #edf0f4; }.footer-brand .brand { padding: 0; }.footer-brand p { max-width: 220px; margin: 13px 0; color: #8b95a5; font-size: 11px; line-height: 1.65; }.social-links { display: flex; gap: 8px; }.social-links button { display: grid; place-items: center; width: 23px; height: 23px; color: #667184; border: 0; border-radius: 50%; background: #f1f3f7; cursor: pointer; font-size: 12px; font-weight: 800; }.footer-column { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }.footer-column h3 { margin: 3px 0 3px; color: #354054; font-size: 12px; }.footer-column button { padding: 0; color: #8b95a4; border: 0; background: transparent; cursor: pointer; text-align: left; font-size: 11px; line-height: 1.45; }.footer-column button:hover { color: #5549dc; }.footer-bottom { display: flex; align-items: center; justify-content: center; min-height: 30px; color: #9da5b2; border-top: 1px solid #f1f2f5; font-size: 10px; }.footer-bottom button { position: absolute; right: 23px; display: grid; place-items: center; width: 26px; height: 26px; color: #5f55df; border: 0; border-radius: 50%; background: #eae9ff; cursor: pointer; font-size: 16px; }
+
+/* Interactive Modals */
+.interactive-modal { width: 100%; background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); animation: modalIn 0.2s ease-out; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+.modal-head h3 { margin: 0; color: #0f172a; font-weight: 800; }
+.modal-head button { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
+.form-input { width: 100%; padding: 10px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 13px; outline: none; }
+.form-input:focus { background: #fff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-cancel { padding: 8px 16px; background: #f1f5f9; border: none; border-radius: 12px; font-weight: 700; color: #475569; cursor: pointer; }
+.btn-submit { padding: 8px 20px; background: #4f46e5; border: none; border-radius: 12px; font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); }
+.room-summary-box { background: #f8fafc; padding: 12px 16px; border-radius: 16px; border: 1px solid #e2e8f0; }
+
+.write-review-btn { padding: 6px 14px; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.host-tab-info { padding: 16px; background: #f8fafc; border-radius: 16px; border: 1px solid #e2e8f0; }
+.flex-host { display: flex; gap: 16px; align-items: flex-start; }
+.host-avatar-lg { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #6366f1; }
+.host-sub { font-size: 12px; color: #4f46e5; font-weight: 700; margin: 4px 0; }
+.host-bio { font-size: 13px; color: #475569; line-height: 1.5; margin: 0; }
+.host-actions-row { display: flex; gap: 10px; margin-top: 16px; }
+.host-btn { padding: 8px 16px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.host-btn.primary { background: #4f46e5; color: #fff; border: none; }
+.host-btn.secondary { background: #e0e7ff; color: #3730a3; border: none; }
+.host-btn.outline { background: #fff; color: #16a34a; border: 1px solid #bbf7d0; }
+
+@keyframes modalIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
 @media (max-width: 900px) { .main-grid { grid-template-columns: minmax(0, 1fr) 320px; gap: 15px; }.header-inner, .content-shell { padding-right: 16px; padding-left: 16px; }.feature-strip { gap: 5px; }.feature-item { gap: 4px; } }
-@media (max-width: 760px) { .detail-page { padding-top: 70px; }.detail-header { height: 70px; }.detail-nav { display: none; }.header-inner { padding-right: 16px; padding-left: 16px; }.header-actions { gap: 9px; }.login-button { width: 92px; height: 40px; border-radius: 13px; font-size: 12px; }.list-room-button { display: none; }.brand-mark { width: 40px; height: 40px; border-radius: 13px; font-size: 17px; }.brand-name { font-size: 18px; }.content-shell { padding-top: 15px; }.title-row { align-items: flex-start; }.title-actions { padding-top: 10px; }.main-grid { display: block; }.hero-gallery { height: min(64vw, 420px); min-height: 250px; }.booking-column { position: static; margin-top: 23px; }.booking-card { max-width: 520px; }.feature-strip { overflow-x: auto; justify-content: start; }.feature-item { min-width: 98px; justify-content: flex-start; }.detail-tabs { gap: 19px; overflow-x: auto; }.detail-tabs button { flex: 0 0 auto; }.thumbnail { height: 58px; }.amenity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.amenity-grid.expanded { grid-template-columns: repeat(2, minmax(0, 1fr)); }.modal-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) { .detail-page { padding-top: 60px; }.detail-header { height: 60px; }.detail-nav { display: none; }.header-inner { padding-right: 16px; padding-left: 16px; }.header-actions { gap: 9px; }.login-button { width: 92px; height: 40px; border-radius: 13px; font-size: 12px; }.list-room-button { display: none; }.brand-mark { width: 40px; height: 40px; border-radius: 13px; font-size: 17px; }.brand-name { font-size: 18px; }.content-shell { padding-top: 15px; }.title-row { align-items: flex-start; }.title-actions { padding-top: 10px; }.main-grid { display: block; }.hero-gallery { height: min(64vw, 420px); min-height: 250px; }.booking-column { position: static; margin-top: 23px; }.booking-card { max-width: 520px; }.feature-strip { overflow-x: auto; justify-content: start; }.feature-item { min-width: 98px; justify-content: flex-start; }.detail-tabs { gap: 19px; overflow-x: auto; }.detail-tabs button { flex: 0 0 auto; }.thumbnail { height: 58px; }.amenity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.amenity-grid.expanded { grid-template-columns: repeat(2, minmax(0, 1fr)); }.modal-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 430px) { .brand-name { font-size: 15px; }.login-button { width: 82px; height: 36px; font-size: 11px; }.breadcrumbs { font-size: 11px; }.title-row { gap: 8px; } h1 { font-size: 20px; }.property-meta { gap: 5px; font-size: 11px; }.gallery-badge { top: 10px; left: 10px; }.photo-count { right: 9px; bottom: 9px; }.thumbnail-row { gap: 5px; }.thumbnail { height: 50px; }.detail-tabs { gap: 17px; margin-top: 9px; }.detail-tabs button { font-size: 11px; }.feature-strip { margin-right: -16px; margin-left: -16px; padding: 12px 16px; border-right: 0; border-left: 0; border-radius: 0; }.amenity-grid { gap: 12px 8px; }.host-stats strong { font-size: 9px; }.host-stats small { font-size: 7px; } }
 @media (max-width: 900px) { .lower-grid { grid-template-columns: minmax(0, 1fr) 320px; gap: 15px; }.detailed-amenities { grid-template-columns: repeat(3, minmax(0, 1fr)); }.detail-footer { gap: 20px; } }
 @media (max-width: 760px) { .lower-content { margin-top: 32px; }.lower-grid { display: block; }.location-card { margin-top: 28px; }.reviews-layout { grid-template-columns: 100px 1fr; }.review-feed { grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #edf0f4; }.similar-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }.similar-image { height: 145px; }.similar-arrow { display: none; }.detail-footer { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 35px; padding-right: 0; padding-left: 0; }.footer-brand { grid-column: 1 / -1; }.footer-brand p { max-width: 280px; } }

@@ -186,6 +186,9 @@ const displayLogs = computed(() => {
 
 const filteredLogs = computed(() => {
   let list = displayLogs.value
+  if (selectedChannel.value) {
+    list = list.filter(l => String(l.channel || '').toUpperCase().includes(selectedChannel.value))
+  }
   if (!searchQuery.value) return list
   const q = searchQuery.value.toLowerCase()
   return list.filter(l =>

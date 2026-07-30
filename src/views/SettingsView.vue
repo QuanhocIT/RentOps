@@ -198,6 +198,9 @@
 import { ref, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import api from '../services/api'
+import { useDataStore } from '../stores/data'
+
+const dataStore = useDataStore()
 
 const submitting = ref(false)
 const upgrading = ref(false)
@@ -228,21 +231,33 @@ const form = ref({
 })
 
 const loadSettings = async () => {
+  // First load from dataStore as fallback
+  const ds = dataStore.settings
+  form.value = {
+    name: ds.businessName || ds.name || 'RentOps Mình House',
+    phone: ds.phone || ds.managerPhone || '0908123456',
+    subdomain: ds.subdomain || 'minhhouse',
+    bank_code: ds.bankName || ds.bank_code || 'MB',
+    bank_account: ds.accountNumber || ds.bank_account || '0908123456',
+    bank_account_name: ds.accountHost || ds.bank_account_name || 'NGUYEN VAN MINH'
+  }
   try {
     const res = await api.get('/tenant_settings')
     if (res?.data) {
-      form.value = { ...res.data }
+      form.value = { ...form.value, ...res.data }
       planInfo.value = {
         plan_name: res.data.plan_name || 'Gói Pro Enterprise',
         max_rooms: res.data.max_rooms || 500,
         max_properties: res.data.max_properties || 50,
-        current_rooms_count: res.data.current_rooms_count || 32,
-        current_properties_count: res.data.current_properties_count || 8,
+        current_rooms_count: res.data.current_rooms_count || dataStore.rooms.length,
+        current_properties_count: res.data.current_properties_count || dataStore.properties.length,
         monthly_price: res.data.monthly_price || 799000
       }
     }
   } catch (err) {
-    console.warn('Error loading tenant settings:', err)
+    console.warn('Error loading tenant settings (using local fallback):', err)
+    planInfo.value.current_rooms_count = dataStore.rooms.length
+    planInfo.value.current_properties_count = dataStore.properties.length
   }
 }
 
@@ -280,7 +295,20 @@ const updateSettings = async () => {
   submitting.value = true
   savedMessage.value = ''
   try {
-    await api.put('/tenant_settings', { tenant: form.value })
+    // Always save to dataStore for local persistence
+    dataStore.updateSettings({
+      businessName: form.value.name,
+      phone: form.value.phone,
+      bankName: form.value.bank_code,
+      accountNumber: form.value.bank_account,
+      accountHost: form.value.bank_account_name
+    })
+    // Try to also save to backend
+    try {
+      await api.put('/tenant_settings', { tenant: form.value })
+    } catch (apiErr) {
+      console.warn('Backend save failed, saved locally only:', apiErr)
+    }
     toastStore.success('Đã lưu thông tin cấu hình thành công!')
     savedMessage.value = 'Đã lưu thông tin cấu hình thành công!'
     setTimeout(() => { savedMessage.value = '' }, 3000)

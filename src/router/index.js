@@ -3,6 +3,7 @@ import { useAuthStore } from '../stores/auth'
 
 // Code-Splitting & Lazy Loading Routes
 const LandingView = () => import('../views/LandingView.vue')
+const AboutView = () => import('../views/AboutView.vue')
 const RoomDetailView = () => import('../views/RoomDetailView.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const DashboardGrid = () => import('../views/DashboardGrid.vue')
@@ -31,6 +32,12 @@ const routes = [
     path: '/landing',
     name: 'Landing',
     component: LandingView,
+    meta: { public: true }
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: AboutView,
     meta: { public: true }
   },
   {

@@ -542,9 +542,15 @@ const rooms = computed(() => {
   }
   return list.map(r => ({
     ...r,
+    // camelCase (originals)
     propertyId: r.propertyId,
     propertyName: r.propertyName,
     roomNumber: r.roomNumber,
+    // snake_case aliases for template
+    room_number: r.roomNumber || r.room_number,
+    property_name: r.propertyName || r.property_name,
+    property_type_icon: r.property_type_icon || '🏢',
+    room_type_label: r.room_type_label || null,
     bedrooms_count: r.bedrooms_count || 1,
     living_rooms_count: r.living_rooms_count || 1,
     bathrooms_count: r.bathrooms_count || 1,
@@ -604,7 +610,9 @@ const filteredRooms = computed(() => {
       (filterStatus.value === 'rented' && (r.status === 'occupied' || r.status === 1))
     const matchProp = !filterProperty.value || String(r.propertyId) === String(filterProperty.value)
     const q = searchQuery.value.toLowerCase()
-    const matchQuery = !q || (r.roomNumber || '').toLowerCase().includes(q) || (r.propertyName || '').toLowerCase().includes(q)
+    const matchQuery = !q ||
+      (r.roomNumber || r.room_number || '').toLowerCase().includes(q) ||
+      (r.propertyName || r.property_name || '').toLowerCase().includes(q)
     return matchStatus && matchProp && matchQuery
   })
 })

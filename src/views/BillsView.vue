@@ -515,15 +515,15 @@ const selectedPrintBill = ref(null)
 
 const form = ref({
   room_id: '',
-  billing_month: '07/2026',
+  billing_month: new Date().toISOString().slice(0, 7),
   room_fee: null,
   utility_fee: null,
   service_fee: 150000,
-  due_date: '2026-08-05'
+  due_date: ''
 })
 
 const batchForm = ref({
-  billing_month: '07/2026',
+  billing_month: new Date().toISOString().slice(0, 7),
   service_fee: 150000
 })
 

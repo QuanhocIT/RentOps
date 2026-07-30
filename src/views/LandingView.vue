@@ -1,30 +1,11 @@
 <template>
   <div class="home-page">
-    <header class="home-header">
-      <div class="home-container home-header-inner">
-        <button class="home-brand" type="button" @click="scrollToTop">
-          <span class="home-brand-mark">R</span>
-          <span>RentOps</span>
-        </button>
-
-        <nav class="home-nav" aria-label="Điều hướng chính">
-          <a href="#home">Trang chủ</a>
-          <a href="#search">Tìm phòng</a>
-          <a href="#areas">Khu vực</a>
-          <a href="#categories">Loại phòng</a>
-          <a href="#amenities">Tiện ích</a>
-          <a href="#featured">Blog</a>
-          <a href="#about">Về chúng tôi</a>
-        </nav>
-
-        <div class="home-actions">
-          <button class="favorite-action" type="button" @click="toggleFavorite">♡ Yêu thích</button>
-          <button class="bell-action" type="button" aria-label="Thông báo" @click="notify('Bạn chưa có thông báo mới')">♧</button>
-          <RouterLink class="home-login" to="/login">Đăng nhập</RouterLink>
-          <button class="home-listing" type="button" @click="showPostRoomModal = true">Đăng tin phòng +</button>
-        </div>
-      </div>
-    </header>
+    <PublicHeader
+      active="landing"
+      listing-action
+      @notify="notify('Bạn chưa có thông báo mới')"
+      @post-room="showPostRoomModal = true"
+    />
 
     <main id="home">
       <section class="hero-section">
@@ -68,11 +49,23 @@
       <section id="search" class="search-section">
         <div class="home-container">
           <form class="search-card" @submit.prevent="searchRooms">
-            <label class="search-field search-location"><span>Tìm kiếm</span><input v-model="searchTerm" type="text" placeholder="Nhập khu vực, tên đường..." /></label>
-            <label class="search-field"><span>Loại phòng</span><select v-model="roomType"><option>Tất cả loại phòng</option><option>Phòng trọ</option><option>Căn hộ mini</option><option>Căn hộ dịch vụ</option><option>Homestay</option><option>Ở ghép</option></select></label>
-            <label class="search-field"><span>Khoảng giá</span><select v-model="priceRange"><option>0đ - Không giới hạn</option><option>Dưới 3 triệu</option><option>3 - 7 triệu</option><option>Trên 7 triệu</option></select></label>
-            <label class="search-field"><span>Tiện ích</span><select v-model="amenity"><option>Chọn tiện ích</option><option>Điều hòa</option><option>Máy giặt</option><option>Wi-Fi</option><option>Ban công</option><option>Nội thất</option></select></label>
-            <button class="search-button" type="submit">⌕ <span>Tìm kiếm</span></button>
+            <label class="search-field search-location">
+              <span class="search-label"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg><strong>Tìm kiếm</strong></span>
+              <input v-model="searchTerm" type="text" placeholder="Nhập khu vực, tên đường..." />
+            </label>
+            <label class="search-field">
+              <span class="search-label"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 21V5.5L12 3l8 2.5V21M4 9h16M8 13h2M14 13h2M8 17h2M14 17h2"/></svg><strong>Loại phòng</strong></span>
+              <select v-model="roomType"><option>Tất cả loại phòng</option><option>Phòng trọ</option><option>Căn hộ mini</option><option>Căn hộ dịch vụ</option><option>Homestay</option><option>Ở ghép</option></select>
+            </label>
+            <label class="search-field">
+              <span class="search-label"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 8h12M8 4h8M5 12h14M8 16h8M10 20h4"/><circle cx="5" cy="8" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="7" cy="16" r="1.5"/></svg><strong>Khoảng giá</strong></span>
+              <select v-model="priceRange"><option>0đ - Không giới hạn</option><option>Dưới 3 triệu</option><option>3 - 7 triệu</option><option>Trên 7 triệu</option></select>
+            </label>
+            <label class="search-field">
+              <span class="search-label"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 1.4 4.1L17.5 9l-4.1 1.4L12 14l-1.4-3.6L6.5 9l4.1-1.9L12 3ZM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14ZM5 14l.7 1.8L7.5 16l-1.8.7L5 18.5l-.7-1.8L2.5 16l1.8-.7L5 14Z"/></svg><strong>Tiện ích</strong></span>
+              <select v-model="amenity"><option>Chọn tiện ích</option><option>Điều hòa</option><option>Máy giặt</option><option>Wi-Fi</option><option>Ban công</option><option>Nội thất</option></select>
+            </label>
+            <button class="search-button" type="submit"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.8"/><path d="m15.2 15.2 4.3 4.3"/></svg><span>Tìm kiếm</span></button>
           </form>
         </div>
       </section>
@@ -274,13 +267,7 @@
         </div>
       </section>
 
-      <footer class="home-footer">
-        <div class="home-container footer-grid">
-          <div class="footer-intro"><button class="home-brand" type="button" @click="scrollToTop"><span class="home-brand-mark">R</span><span>RentOps</span></button><p>Nền tảng kết nối người thuê và chủ nhà đáng tin cậy, giúp bạn tìm không gian sống lý tưởng.</p><div class="footer-social"><button type="button" @click="notify('Kênh Facebook RentOps')">f</button><button type="button" @click="notify('Kênh Instagram RentOps')">◎</button><button type="button" @click="notify('Kênh YouTube RentOps')">▶</button><button type="button" @click="notify('Kênh Zalo RentOps')">◉</button></div></div>
-          <div v-for="column in footerColumns" :key="column.title" class="footer-column"><h3>{{ column.title }}</h3><button v-for="item in column.items" :key="item" type="button" @click="notify(item)">{{ item }}</button></div>
-        </div>
-        <div class="home-container footer-copyright">© 2024 RentOps. Tất cả quyền được bảo lưu.<button type="button" @click="scrollToTop">↑</button></div>
-      </footer>
+      <PublicFooter @notify="notify" />
     </main>
 
     <!-- Post Room Listing Modal -->
@@ -341,6 +328,8 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
+import PublicHeader from '../components/PublicHeader.vue'
+import PublicFooter from '../components/PublicFooter.vue'
 
 const router = useRouter()
 const searchTerm = ref('')
@@ -468,13 +457,6 @@ const reviews = [
   { name: 'Phạm Đăng Khoa', role: 'Kỹ sư CNTT', avatar: '/images/suite.png', comment: 'Thanh toán qua VietQR gạch nợ tự động 24/7 vô cùng tiện lợi. Không còn lo trễ hạn đóng tiền nhà.' },
   { name: 'Vũ Ngọc Khánh', role: 'Chủ chuỗi trọ Quận 7', avatar: '/images/studio.png', comment: 'Phần mềm giúp tôi quản lý 30 phòng dễ dàng. Hóa đơn và nhắc nợ ZNS tự động siêu tiết kiệm thời gian.' }
 ]
-const footerColumns = [
-  { title: 'Về chúng tôi', items: ['Giới thiệu', 'Cách hoạt động', 'Tin tức', 'Tuyển dụng', 'Liên hệ'] },
-  { title: 'Hỗ trợ', items: ['Trung tâm trợ giúp', 'Quy định sử dụng', 'Chính sách bảo mật', 'Liên hệ hỗ trợ'] },
-  { title: 'Danh mục', items: ['Phòng trọ', 'Căn hộ mini', 'Căn hộ dịch vụ', 'Homestay', 'Ở ghép'] },
-  { title: 'Liên hệ', items: ['1900 1234', 'support@rentops.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
-]
-
 const visibleReviews = computed(() => {
   const count = reviews.length
   return [
@@ -616,9 +598,9 @@ onUnmounted(() => {
 :global(*) { box-sizing: border-box; }
 :global(body) { margin: 0; background: #f8f9fc; }
 button, input, select { font: inherit; }
-.home-page { min-height: 100vh; overflow: hidden; padding-top: 76px; color: #273147; background: #f8f9fc; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+.home-page { min-height: 100vh; overflow: hidden; padding-top: 60px; color: #273147; background: #f8f9fc; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
 .home-container { width: min(1280px, calc(100% - 64px)); margin: 0 auto; }
-.home-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 76px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); box-shadow: 0 4px 18px rgba(28,38,67,.06); backdrop-filter: blur(14px); }
+.home-header { position: fixed; z-index: 20; top: 0; right: 0; left: 0; height: 60px; border-bottom: 1px solid #eef0f5; background: rgba(255,255,255,.96); box-shadow: 0 4px 18px rgba(28,38,67,.06); backdrop-filter: blur(14px); }
 .home-header-inner { display: flex; align-items: center; justify-content: space-between; height: 100%; }
 .home-brand { display: flex; align-items: center; gap: 10px; color: #172033; border: 0; background: transparent; cursor: pointer; font-size: 22px; font-weight: 800; white-space: nowrap; }
 .home-brand-mark { display: grid; place-items: center; width: 44px; height: 44px; color: #fff; border-radius: 16px; background: linear-gradient(135deg,#5e87f5,#5545e8); box-shadow: 0 8px 16px rgba(79,70,229,.22); font-size: 20px; }
@@ -665,4 +647,98 @@ button, input, select { font: inherit; }
 @media (max-width: 1100px) { .home-nav { gap: 17px; margin-right: 15px; }.home-actions { gap: 8px; }.home-login { width: 110px; }.home-listing { width: 155px; }.hero-copy h1 { font-size: 44px; }.category-list { gap: 8px; }.area-grid { gap: 8px; } }
 @media (max-width: 850px) { .home-page { padding-top: 68px; }.home-container { width: min(100% - 32px, 720px); }.home-header { height: 68px; }.home-nav { display: none; }.home-actions { margin-left: auto; }.favorite-action { display: block; }.bell-action { display: none; }.home-login { width: 100px; height: 39px; font-size: 13px; }.home-listing { display: none; }.hero-layout { min-height: 0; padding-top: 28px; }.hero-copy { width: auto; min-height: 0; padding: 0 0 28px; }.hero-copy h1 { font-size: clamp(34px, 8vw, 48px); }.hero-copy p { max-width: 520px; }.hero-visual { position: relative; top: auto; right: auto; bottom: auto; left: auto; width: auto; height: min(55vw, 390px); min-height: 260px; margin: 0; transform: none; }.hero-visual::after { background: linear-gradient(0deg, rgba(244,246,253,.08), transparent 70%), linear-gradient(90deg, rgba(246,248,255,.25), transparent 45%); }.search-section { margin-top: -12px; }.search-section > .home-container { padding: 0 16px; }.search-card { grid-template-columns: repeat(2, 1fr); }.search-button { width: 100%; }.category-list { grid-template-columns: repeat(3, 1fr); }.featured-grid { grid-template-columns: repeat(2, 1fr); }.area-grid { grid-template-columns: repeat(3, 1fr); }.amenity-home-grid { grid-template-columns: repeat(2, 1fr); }.about-section { grid-template-columns: 1fr; }.why-grid { grid-template-columns: repeat(3, 1fr); row-gap: 18px; }.why-grid article:nth-child(3) { border-right: 0; }.steps-grid { grid-template-columns: 1fr 28px 1fr 28px 1fr; }.listing-cta { padding: 21px; }.cta-room-art { width: 190px; }.room-moments-section { margin-top: 52px; }.room-moments-heading { grid-template-columns: 1fr; gap: 10px; }.room-moments-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, 150px); grid-auto-rows: 150px; }.room-gallery-card:nth-child(n) { grid-column: auto; grid-row: auto; border-radius: 20px; }.room-gallery-card:nth-child(1) { grid-column: 1 / -1; grid-row: span 2; border-radius: 25px; }.room-gallery-card:nth-child(8) { grid-column: 1 / -1; } .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 22px; }.footer-intro { grid-column: 1 / -1; } }
 @media (max-width: 520px) { .home-container { width: calc(100% - 24px); }.home-brand { font-size: 18px; }.home-brand-mark { width: 38px; height: 38px; border-radius: 13px; font-size: 16px; }.favorite-action { font-size: 12px; }.hero-copy h1 { font-size: 36px; }.hero-kicker { font-size: 10px; letter-spacing: .13em; }.hero-benefits { grid-template-columns: repeat(2, 1fr); gap: 12px; }.hero-visual { height: 275px; }.search-section { margin-top: -10px; }.search-section > .home-container { padding: 0 12px; }.search-card { grid-template-columns: 1fr; padding: 13px; }.search-field { min-height: 39px; border-bottom: 1px solid #f0f1f5; }.search-button { height: 42px; }.category-list { grid-template-columns: repeat(2, 1fr); }.category-card:last-child { grid-column: 1 / -1; }.featured-grid { gap: 9px; }.featured-image { height: 135px; }.featured-body { padding: 9px 8px; }.featured-body h3 { font-size: 13px; }.room-tags { display: none; }.room-meta { margin-top: 8px; font-size: 10px; }.area-grid { grid-template-columns: repeat(2, 1fr); }.area-card { height: 175px; }.amenity-home-grid { grid-template-columns: 1fr; }.about-section { padding: 23px; }.about-section h2 { font-size: 26px; }.why-section { margin-top: 22px; }.why-grid { grid-template-columns: repeat(2, 1fr); }.why-grid article:nth-child(2), .why-grid article:nth-child(4) { border-right: 0; }.why-grid article:nth-child(3) { border-right: 1px solid #eceef5; }.steps-grid { grid-template-columns: 1fr; gap: 13px; }.step-arrow { display: none; }.reviews-grid { grid-template-columns: 1fr; margin-right: 7px; margin-left: 7px; }.review-arrow { display: none; }.listing-cta { display: block; }.cta-room-art { width: 100%; height: 95px; margin-top: 15px; }.room-moments-section { margin-top: 42px; }.room-moments-heading h2 { font-size: 25px; }.room-moments-heading p { font-size: 13px; }.room-moments-grid { grid-auto-rows: 126px; grid-template-rows: repeat(6, 126px); gap: 9px; }.room-gallery-card-featured .room-gallery-copy { right: 18px; bottom: 17px; left: 18px; }.room-gallery-card-featured .room-gallery-copy strong { font-size: 17px; }.room-gallery-copy { right: 12px; bottom: 12px; left: 12px; }.room-gallery-copy strong { font-size: 12px; }.room-gallery-index { top: 11px; right: 12px; font-size: 10px; }.footer-grid { grid-template-columns: repeat(2, 1fr); gap: 18px 12px; }.footer-copyright { justify-content: flex-start; padding-right: 34px; }.footer-copyright button { right: 12px; }.home-toast { right: 12px; bottom: 12px; left: 12px; text-align: center; } }
+@media (max-width: 850px) { .home-page { padding-top: 60px; }.home-header { height: 60px; } }
+
+/* Refined search panel */
+.search-card {
+  grid-template-columns: minmax(1.3fr, 1.35fr) repeat(3, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px;
+  border: 1px solid rgba(225, 228, 242, .9);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 20px 45px rgba(43, 51, 91, .14), 0 3px 10px rgba(43, 51, 91, .04);
+  backdrop-filter: blur(12px);
+}
+
+.search-field {
+  min-height: 86px;
+  padding: 14px 20px 12px;
+  gap: 7px;
+  border-right: 1px solid #edf0f7;
+  border-radius: 15px;
+  transition: background .2s ease, box-shadow .2s ease;
+}
+
+.search-field:first-child { padding-left: 16px; }
+.search-field:last-of-type { border-right: 0; }
+.search-field:hover { background: #fafaff; }
+.search-field:focus-within { background: #fafaff; box-shadow: inset 0 0 0 1px #e3e0ff; }
+
+.search-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #35405a;
+}
+
+.search-label svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: #6759df;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.search-label strong { font-size: 14px; font-weight: 800; }
+
+.search-field input,
+.search-field select {
+  height: 32px;
+  padding-right: 24px;
+  color: #7d879d;
+  font-size: 14px;
+}
+
+.search-field input::placeholder { color: #9aa3b5; opacity: 1; }
+.search-location input { background-image: none; }
+
+.search-button {
+  align-self: center;
+  height: 56px;
+  min-width: 154px;
+  margin-left: 10px;
+  padding: 0 22px;
+  gap: 8px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #584be1, #7d36e8);
+  box-shadow: 0 10px 20px rgba(91, 70, 224, .25);
+  font-size: 15px;
+  letter-spacing: -.01em;
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.search-button svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.search-button:hover { filter: none; box-shadow: 0 13px 24px rgba(91, 70, 224, .32); transform: translateY(-1px); }
+.search-button:active { box-shadow: 0 7px 14px rgba(91, 70, 224, .22); transform: translateY(0); }
+
+@media (max-width: 850px) {
+  .search-card { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+  .search-field { min-height: 78px; padding: 12px 14px 10px; border-right: 0; }
+  .search-field:nth-of-type(odd) { border-right: 1px solid #edf0f7; }
+  .search-field:last-of-type { border-right: 0; }
+  .search-button { grid-column: 1 / -1; width: 100%; height: 48px; margin: 4px 0 0; }
+}
+
+@media (max-width: 520px) {
+  .search-card { grid-template-columns: 1fr; gap: 0; padding: 8px; }
+  .search-field,
+  .search-field:nth-of-type(odd) { min-height: 68px; padding: 11px 12px; border-right: 0; border-bottom: 1px solid #edf0f7; }
+  .search-field:last-of-type { border-bottom: 0; }
+  .search-button { grid-column: auto; margin: 8px 0 0; }
+}
 </style>

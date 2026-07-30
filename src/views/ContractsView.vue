@@ -140,7 +140,7 @@
                   <span>•</span>
                   <span>Cọc: <strong class="text-emerald-600 font-mono">{{ formatCurrency(item.deposit_amount) }}</strong></span>
                   <span>•</span>
-                  <span>Trạng thái: <strong class="text-slate-700 uppercase">{{ item.status }}</strong></span>
+                  <span>Trạng thái: <strong class="text-slate-700 uppercase">{{ getContractStatusLabel(item.status) }}</strong></span>
                 </div>
               </div>
 
@@ -250,18 +250,26 @@ const rooms = computed(() => dataStore.rooms)
 const renters = computed(() => dataStore.renters)
 
 const contracts = computed(() => {
-  return dataStore.contracts.map(c => ({
-    ...c,
-    contract_code: c.contractNumber,
-    room_number: c.roomNumber,
-    renter_name: c.renterName,
-    monthly_rent: c.price,
-    deposit_amount: c.deposit,
-    start_date: c.startDate,
-    end_date: c.endDate,
-    co_tenants_count: dataStore.renters.find(r => r.id === c.renterId)?.coTenants?.length || 0,
-    is_expiring_soon: c.status === 'active' && new Date(c.endDate) - new Date() < 30 * 24 * 60 * 60 * 1000
-  }))
+  const now = new Date()
+  return dataStore.contracts.map(c => {
+    const endDate = new Date(c.endDate)
+    const msRemaining = endDate - now
+    const daysRemaining = Math.ceil(msRemaining / (24 * 60 * 60 * 1000))
+    const isExpiringSoon = c.status === 'active' && daysRemaining >= 0 && daysRemaining <= 30
+    return {
+      ...c,
+      contract_code: c.contractNumber,
+      room_number: c.roomNumber,
+      renter_name: c.renterName,
+      monthly_rent: c.price,
+      deposit_amount: c.deposit,
+      start_date: c.startDate,
+      end_date: c.endDate,
+      co_tenants_count: dataStore.renters.find(r => r.id === c.renterId)?.coTenants?.length || 0,
+      is_expiring_soon: isExpiringSoon,
+      days_remaining: daysRemaining
+    }
+  })
 })
 
 const activeContractsCount = computed(() => contracts.value.filter(c => c.status === 'active').length)
@@ -335,6 +343,14 @@ const renewContract = (item) => {
 
   dataStore.updateContract(item.id, { endDate: newEndDate, status: 'active' })
   toast.success(`Đã gia hạn hợp đồng ${item.contract_code} thêm ${months} tháng đến ${newEndDate}!`)
+}
+
+const getContractStatusLabel = (status) => {
+  if (status === 'active' || status === 1) return 'Đang hiệu lực'
+  if (status === 'terminated') return 'Đã thanh lý'
+  if (status === 'expired') return 'Hết hạn'
+  if (status === 'pending') return 'Chờ ký'
+  return status || 'Không rõ'
 }
 
 const deleteContract = (id) => {
