@@ -255,10 +255,10 @@
           <form @submit.prevent="saveRoom" class="space-y-4">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Thuộc Tòa Nhà / Bất Động Sản</label>
-              <select v-model="form.property_id" @change="onPropertySelect" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500">
+              <select v-model="form.propertyId" @change="onPropertySelect" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500">
                 <option value="" disabled>-- Chọn Tòa nhà --</option>
                 <option v-for="p in properties" :key="p.id" :value="p.id">
-                  {{ p.property_type_icon || '🏢' }} {{ p.name }} ({{ p.property_type_label }})
+                  {{ p.property_type_icon || '🏢' }} {{ p.name }}
                 </option>
               </select>
             </div>
@@ -279,7 +279,7 @@
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mã Căn / Số Phòng</label>
-                <input v-model="form.room_number" required type="text" placeholder="VD: 302 hoặc CH-201" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-indigo-500" />
+                <input v-model="form.roomNumber" required type="text" placeholder="VD: P103 hoặc R05" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:bg-white focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
 
@@ -486,10 +486,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
+import { useToastStore } from '../stores/toast'
 
-const rooms = ref([])
-const properties = ref([])
+const dataStore = useDataStore()
+const toastStore = useToastStore()
+
 const showModal = ref(false)
 const editingRoom = ref(null)
 const filterStatus = ref('')
@@ -498,6 +500,30 @@ const searchQuery = ref('')
 const viewMode = ref('table')
 const showDetailModal = ref(false)
 const selectedDetailRoom = ref(null)
+
+const rooms = computed(() => {
+  return dataStore.rooms.map(r => ({
+    ...r,
+    propertyId: r.propertyId,
+    propertyName: r.propertyName,
+    roomNumber: r.roomNumber,
+    bedrooms_count: r.bedrooms_count || 1,
+    living_rooms_count: r.living_rooms_count || 1,
+    bathrooms_count: r.bathrooms_count || 1,
+    kitchens_count: r.kitchens_count || 1,
+    layout_summary: `${r.area}m² • Tầng ${r.floor} • ${r.renterName ? 'Khách: ' + r.renterName : 'Phòng trống'}`
+  }))
+})
+
+const properties = computed(() => {
+  return dataStore.properties.map(p => ({
+    id: p.id,
+    name: p.name,
+    property_type: 'chung_cu_mini',
+    property_type_label: 'Chung cư mini',
+    property_type_icon: '🏢'
+  }))
+})
 
 const openDetailModal = (room) => {
   selectedDetailRoom.value = room
@@ -514,15 +540,15 @@ const getFurnishedLabel = (status) => {
 }
 
 const form = ref({
-  property_id: '',
-  property_name: '',
-  room_number: '',
+  propertyId: '',
+  propertyName: '',
+  roomNumber: '',
   floor: 1,
-  area: 45,
-  price: 5200000,
+  area: 30,
+  price: 5000000,
   status: 'vacant',
-  room_type: 'can_ho_2pn',
-  bedrooms_count: 2,
+  room_type: 'can_ho_1pn',
+  bedrooms_count: 1,
   living_rooms_count: 1,
   bathrooms_count: 1,
   kitchens_count: 1,
@@ -532,45 +558,12 @@ const form = ref({
   furnished_status: 'full_noi_that'
 })
 
-const defaultProperties = [
-  { id: 1, name: 'Tòa B - Cầu Giấy', property_type: 'chung_cu_mini', property_type_label: 'Chung cư mini', property_type_icon: '🏢' },
-  { id: 2, name: 'Tòa C - Bình Thạnh', property_type: 'can_ho_cao_cap', property_type_label: 'Căn hộ cao cấp', property_type_icon: '🏢✨' },
-  { id: 3, name: 'Tòa D - Thanh Xuân', property_type: 'nha_nguyen_can', property_type_label: 'Nhà nguyên căn', property_type_icon: '🏡' }
-]
-
-const defaultRooms = [
-  { id: 1, property_id: 1, property_name: 'Tòa B - Cầu Giấy', property_type_icon: '🏢', room_number: '302', floor: 3, area: 45, price: 5200000, status: 'occupied', room_type: 'can_ho_2pn', room_type_label: 'Căn hộ 2 Phòng Ngủ', bedrooms_count: 2, living_rooms_count: 1, bathrooms_count: 1, has_balcony: true, layout_summary: '2 PN • 1 PK • 1 WC • 45m² • Ban công' },
-  { id: 2, property_id: 2, property_name: 'Tòa C - Bình Thạnh', property_type_icon: '🏢✨', room_number: 'C-101', floor: 1, area: 55, price: 6800000, status: 'vacant', room_type: 'can_ho_2pn', room_type_label: 'Căn hộ 2 Phòng Ngủ', bedrooms_count: 2, living_rooms_count: 1, bathrooms_count: 2, has_balcony: true, layout_summary: '2 PN • 1 PK • 2 WC • 55m² • Ban công' },
-  { id: 3, property_id: 3, property_name: 'Tòa D - Thanh Xuân', property_type_icon: '🏡', room_number: 'D-101', floor: 1, area: 90, price: 14500000, status: 'occupied', room_type: 'nha_nguyen_can', room_type_label: 'Nhà nguyên căn', bedrooms_count: 3, living_rooms_count: 1, bathrooms_count: 3, has_balcony: true, layout_summary: '3 PN • 1 PK • 3 WC • 90m²' }
-]
-
-const loadData = async () => {
-  try {
-    const propRes = await api.get('/properties')
-    if (Array.isArray(propRes?.data) && propRes.data.length > 0) {
-      properties.value = propRes.data
-    } else {
-      properties.value = defaultProperties
-    }
-
-    const roomRes = await api.get('/rooms')
-    if (Array.isArray(roomRes?.data) && roomRes.data.length > 0) {
-      rooms.value = roomRes.data
-    } else {
-      rooms.value = defaultRooms
-    }
-  } catch (err) {
-    properties.value = defaultProperties
-    rooms.value = defaultRooms
-  }
-}
-
 const filteredRooms = computed(() => {
   return rooms.value.filter(r => {
-    const matchStatus = !filterStatus.value || r.status === filterStatus.value || (filterStatus.value === 'vacant' && r.status === 0)
-    const matchProp = !filterProperty.value || String(r.property_id) === String(filterProperty.value)
+    const matchStatus = !filterStatus.value || r.status === filterStatus.value
+    const matchProp = !filterProperty.value || String(r.propertyId) === String(filterProperty.value)
     const q = searchQuery.value.toLowerCase()
-    const matchQuery = !q || (r.room_number || '').toLowerCase().includes(q) || (r.property_name || '').toLowerCase().includes(q) || (r.layout_summary || '').toLowerCase().includes(q)
+    const matchQuery = !q || (r.roomNumber || '').toLowerCase().includes(q) || (r.propertyName || '').toLowerCase().includes(q)
     return matchStatus && matchProp && matchQuery
   })
 })
@@ -578,71 +571,59 @@ const filteredRooms = computed(() => {
 const openModal = (room = null) => {
   editingRoom.value = room
   if (room) {
-    form.value = { ...room }
+    form.value = {
+      ...room,
+      propertyId: room.propertyId || room.property_id,
+      propertyName: room.propertyName || room.property_name,
+      roomNumber: room.roomNumber || room.room_number
+    }
   } else {
     const defaultProp = properties.value[0] || {}
     form.value = {
-      property_id: defaultProp.id || '',
-      property_name: defaultProp.name || '',
-      room_number: '',
+      propertyId: defaultProp.id || 1,
+      propertyName: defaultProp.name || '',
+      roomNumber: '',
       floor: 1,
-      area: 45,
-      price: 5200000,
+      area: 30,
+      price: 5000000,
       status: 'vacant',
-      room_type: 'can_ho_2pn',
-      bedrooms_count: 2,
+      room_type: 'can_ho_1pn',
+      bedrooms_count: 1,
       living_rooms_count: 1,
       bathrooms_count: 1,
-      has_balcony: true
+      kitchens_count: 1,
+      has_balcony: true,
+      is_mezzanine: false,
+      is_shared_bathroom: false,
+      furnished_status: 'full_noi_that'
     }
   }
   showModal.value = true
 }
 
 const onPropertySelect = () => {
-  const p = properties.value.find(item => String(item.id) === String(form.value.property_id))
+  const p = properties.value.find(item => String(item.id) === String(form.value.propertyId))
   if (p) {
-    form.value.property_name = p.name
+    form.value.propertyName = p.name
   }
 }
 
-const saveRoom = async () => {
-  try {
-    if (editingRoom.value) {
-      await api.put(`/rooms/${editingRoom.value.id}`, { room: form.value })
-    } else {
-      await api.post('/rooms', { room: form.value })
-    }
-    await loadData()
-    showModal.value = false
-  } catch (err) {
-    if (editingRoom.value) {
-      const idx = rooms.value.findIndex(r => r.id === editingRoom.value.id)
-      if (idx !== -1) rooms.value[idx] = { ...editingRoom.value, ...form.value }
-    } else {
-      rooms.value.push({ id: Date.now(), ...form.value })
-    }
-    showModal.value = false
+const saveRoom = () => {
+  if (editingRoom.value) {
+    dataStore.updateRoom(editingRoom.value.id, form.value)
+  } else {
+    dataStore.addRoom(form.value)
   }
+  showModal.value = false
 }
 
-const quickUpdateStatus = async (room, newStatus) => {
-  room.status = newStatus
-  try {
-    await api.put(`/rooms/${room.id}`, { room: { status: newStatus } })
-  } catch (err) {
-    console.log('Updated state locally')
-  }
+const quickUpdateStatus = (room, newStatus) => {
+  dataStore.updateRoom(room.id, { status: newStatus })
 }
 
-const deleteRoom = async (id) => {
-  if (!confirm('Bạn có chắc chắn muốn xóa căn hộ/phòng này?')) return
-  try {
-    await api.delete(`/rooms/${id}`)
-    await loadData()
-  } catch (err) {
-    rooms.value = rooms.value.filter(r => r.id !== id)
-  }
+const deleteRoom = (id) => {
+  if (!confirm('Bạn có chắc chắn muốn xóa căn hộ/phòng này? (Phòng sẽ được chuyển vào thùng rác)')) return
+  dataStore.deleteRoom(id)
 }
 
 const formatLayout = (r) => {
@@ -683,5 +664,11 @@ const getStatusLabel = (status) => {
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
-onMounted(loadData)
+const loadData = () => {
+  toastStore.success('Đã tải lại danh sách căn hộ & phòng!')
+}
+
+onMounted(() => {
+  loadData()
+})
 </script>

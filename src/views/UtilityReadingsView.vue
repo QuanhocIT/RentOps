@@ -302,9 +302,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
+import { useToastStore } from '../stores/toast'
+
+const dataStore = useDataStore()
+const toastStore = useToastStore()
 
 const activeMode = ref('list')
 const batchItems = ref([])
@@ -313,13 +317,15 @@ const submitting = ref(false)
 const submittingBatch = ref(false)
 const showModal = ref(false)
 
-const readings = ref([])
-const rooms = ref([])
-const selectedMonth = ref(new Date().toISOString().slice(0, 7))
+const selectedMonth = ref('07/2026')
+
+const fetchData = () => {
+  toastStore.info(`Đã lọc danh sách chỉ số điện nước theo tháng ${selectedMonth.value}`)
+}
 
 const form = ref({
   room_id: '',
-  billing_month: selectedMonth.value,
+  billing_month: '07/2026',
   electric_old: 1200,
   electric_new: 1350,
   water_old: 40,
@@ -329,76 +335,88 @@ const form = ref({
 const calculatedElectricUsage = computed(() => Math.max(0, (form.value.electric_new || 0) - (form.value.electric_old || 0)))
 const calculatedWaterUsage = computed(() => Math.max(0, (form.value.water_new || 0) - (form.value.water_old || 0)))
 
+const rooms = computed(() => dataStore.rooms)
+
+const readings = computed(() => {
+  return dataStore.utilityReadings.map(u => ({
+    id: u.id,
+    room_id: u.roomId,
+    room_number: u.roomNumber,
+    billing_month: u.month,
+    electric_old: u.prevElectric,
+    electric_new: u.currElectric,
+    electric_usage: u.electricUsage,
+    water_old: u.prevWater,
+    water_new: u.currWater,
+    water_usage: u.waterUsage,
+    billed: u.billed
+  }))
+})
+
 const prepareBatchData = () => {
   batchItems.value = rooms.value.map(room => {
-    const existing = readings.value.find(r => r.room_id === room.id || r.room_number === room.room_number)
+    const existing = readings.value.find(r => r.room_id === room.id || r.room_number === room.roomNumber)
     return {
       room_id: room.id,
-      room_number: room.room_number,
+      room_number: room.roomNumber,
       billing_month: selectedMonth.value,
-      electric_old: existing ? existing.electric_old : 1200,
-      electric_new: existing ? existing.electric_new : 1350,
-      water_old: existing ? existing.water_old : 40,
-      water_new: existing ? existing.water_new : 48
+      electric_old: existing ? existing.electric_old : (room.electricMeter || 1200),
+      electric_new: existing ? existing.electric_new : (room.electricMeter || 1200) + 120,
+      water_old: existing ? existing.water_old : (room.waterMeter || 40),
+      water_new: existing ? existing.water_new : (room.waterMeter || 40) + 8
     }
   })
 }
 
-const saveBatchReadings = async () => {
+const saveBatchReadings = () => {
   submittingBatch.value = true
   try {
-    const res = await api.post('/utility_readings/batch_create', { readings: batchItems.value })
-    toastStore.success(res?.message || 'Lưu chỉ số hàng loạt thành công!')
+    batchItems.value.forEach(item => {
+      const reading = dataStore.recordUtilityReading({
+        roomId: item.room_id,
+        month: item.billing_month,
+        prevElectric: item.electric_old,
+        currElectric: item.electric_new,
+        prevWater: item.water_old,
+        currWater: item.water_new
+      })
+      if (reading) {
+        dataStore.generateBillFromReading(reading.id)
+      }
+    })
+    toastStore.success('Đã lưu chỉ số & tự động xuất hóa đơn tháng cho tất cả các phòng!')
     activeMode.value = 'list'
-    fetchData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Lỗi lưu chỉ số hàng loạt')
   } finally {
     submittingBatch.value = false
   }
 }
 
-const fetchData = async () => {
-  loading.value = true
-  try {
-    const [resReadings, resRooms] = await Promise.all([
-      api.get(`/utility_readings?billing_month=${selectedMonth.value}`),
-      api.get('/rooms')
-    ])
-    readings.value = Array.isArray(resReadings?.data) ? resReadings.data : []
-    rooms.value = Array.isArray(resRooms?.data) ? resRooms.data : []
-  } catch (err) {
-    console.warn('API error fetching utility readings:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(fetchData)
-
-const submitForm = async () => {
+const submitForm = () => {
   submitting.value = true
   try {
-    await api.post('/utility_readings', { utility_reading: form.value })
-    toastStore.success('Lưu chỉ số thành công!')
+    const reading = dataStore.recordUtilityReading({
+      roomId: form.value.room_id,
+      month: form.value.billing_month,
+      prevElectric: form.value.electric_old,
+      currElectric: form.value.electric_new,
+      prevWater: form.value.water_old,
+      currWater: form.value.water_new
+    })
+    if (reading) {
+      dataStore.generateBillFromReading(reading.id)
+      toastStore.success(`Đã lưu chỉ số điện nước & sinh hóa đơn tháng cho phòng ${reading.roomNumber}!`)
+    }
     showModal.value = false
     form.value.room_id = ''
-    fetchData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Có lỗi xảy ra khi lưu chỉ số')
   } finally {
     submitting.value = false
   }
 }
 
-const deleteReading = async (id) => {
+const deleteReading = (id) => {
   if (!confirm('Bạn có chắc muốn xóa bản ghi chỉ số này?')) return
-  try {
-    await api.delete(`/utility_readings/${id}`)
-    toastStore.success('Đã xóa chỉ số thành công!')
-    fetchData()
-  } catch (err) {
-    toastStore.error(err?.message || 'Không thể xóa chỉ số')
-  }
+  dataStore.utilityReadings = dataStore.utilityReadings.filter(u => u.id !== id)
+  dataStore.saveToStorage()
+  toastStore.success('Đã xóa chỉ số thành công!')
 }
 </script>

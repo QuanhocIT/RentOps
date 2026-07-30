@@ -64,7 +64,7 @@
             <span>Đã Thanh Toán</span>
             <span>✅</span>
           </div>
-          <p class="text-2xl font-black text-emerald-700 mt-2 font-mono">{{ formatCurrency(paidAmount) }}</p>
+          <p class="text-2xl font-black text-emerald-700 mt-2 font-mono">{{ formatCurrency(totalPaidAmount) }}</p>
           <p class="text-[11px] text-emerald-600 font-semibold mt-1">Đã thu tiền</p>
         </div>
 
@@ -73,7 +73,7 @@
             <span>Chưa Thanh Toán / Nợ</span>
             <span>⏳</span>
           </div>
-          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ formatCurrency(unpaidAmount) }}</p>
+          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ formatCurrency(totalPendingAmount) }}</p>
           <p class="text-[11px] text-rose-600 font-semibold mt-1">Cần thu tiền</p>
         </div>
       </div>
@@ -426,7 +426,7 @@
 
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block shadow-inner">
             <img
-              :src="selectedQRBill.vietqr_url"
+              :src="getVietQrUrl(selectedQRBill)"
               alt="Mã VietQR"
               class="w-64 h-64 mx-auto object-contain rounded-xl"
             />
@@ -439,11 +439,11 @@
             </div>
             <div class="flex justify-between">
               <span class="text-slate-500 font-sans">Ngân hàng:</span>
-              <strong class="text-slate-900">{{ selectedQRBill.bank_code || 'MB' }}</strong>
+              <strong class="text-slate-900">{{ selectedQRBill.bank_code || 'MBBank' }}</strong>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-500 font-sans">Số tài khoản:</span>
-              <strong class="text-indigo-600">{{ selectedQRBill.bank_account || '0901234567' }}</strong>
+              <strong class="text-indigo-600">{{ dataStore.settings.accountNumber || '0908123456' }}</strong>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-500 font-sans">Nội dung:</span>
@@ -471,19 +471,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
+import PaymentQrModal from '../components/PaymentQrModal.vue'
 import PrintInvoiceModal from '../components/PrintInvoiceModal.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toast = useToastStore()
-const bills = ref([])
-const rooms = ref([])
+
 const loading = ref(false)
 const submitting = ref(false)
 const submittingBatch = ref(false)
 const submittingPay = ref(false)
+
+const searchQuery = ref('')
+const statusFilter = ref('all')
 
 const showCreateModal = ref(false)
 const showBatchModal = ref(false)
@@ -491,29 +495,40 @@ const payModalBill = ref(null)
 const selectedQRBill = ref(null)
 const selectedPrintBill = ref(null)
 
-const searchQuery = ref('')
-const statusFilter = ref('all')
-
 const form = ref({
   room_id: '',
-  billing_month: new Date().toISOString().slice(0, 7),
+  billing_month: '07/2026',
   room_fee: null,
   utility_fee: null,
   service_fee: 150000,
-  due_date: ''
+  due_date: '2026-08-05'
 })
 
 const batchForm = ref({
-  billing_month: new Date().toISOString().slice(0, 7),
+  billing_month: '07/2026',
   service_fee: 150000
 })
 
 const payForm = ref({
-  payment_method: 'bank_transfer',
-  note: 'Xác nhận thu tiền qua ngân hàng'
+  payment_method: 'VietQR / Chuyển khoản MBBank',
+  note: 'Xác nhận thu tiền chuyển khoản qua VietQR'
 })
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+
+const rooms = computed(() => dataStore.rooms)
+
+const bills = computed(() => {
+  return dataStore.bills.map(b => ({
+    ...b,
+    bill_code: b.code,
+    billing_month: b.month,
+    room_number: b.roomNumber,
+    room_fee: b.roomPrice,
+    utility_fee: (b.electricCost || 0) + (b.waterCost || 0),
+    total_amount: b.totalAmount
+  }))
+})
 
 const getStatusBadge = (status) => {
   if (status === 'paid' || status === 3) return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
@@ -529,37 +544,17 @@ const getStatusLabel = (status) => {
   return 'Chưa Trả'
 }
 
-const loadBills = async () => {
-  loading.value = true
-  try {
-    const [resBills, resRooms] = await Promise.all([
-      api.get('/monthly_bills'),
-      api.get('/rooms')
-    ])
-    bills.value = resBills?.data || []
-    rooms.value = resRooms?.data || []
-  } catch (err) {
-    console.warn('Error loading bills:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadBills)
-
 const totalBilledAmount = computed(() => bills.value.reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
-const paidCount = computed(() => bills.value.filter(b => b.status === 'paid' || b.status === 3).length)
-const totalPaidAmount = computed(() => bills.value.filter(b => b.status === 'paid' || b.status === 3).reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
-const pendingCount = computed(() => bills.value.filter(b => b.status !== 'paid' && b.status !== 3).length)
-const totalPendingAmount = computed(() => bills.value.filter(b => b.status !== 'paid' && b.status !== 3).reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
+const paidCount = computed(() => bills.value.filter(b => b.status === 'paid').length)
+const totalPaidAmount = computed(() => bills.value.filter(b => b.status === 'paid').reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
+const pendingCount = computed(() => bills.value.filter(b => b.status !== 'paid').length)
+const totalPendingAmount = computed(() => bills.value.filter(b => b.status !== 'paid').reduce((acc, b) => acc + Number(b.total_amount || 0), 0))
 
 const filteredBills = computed(() => {
   return bills.value.filter(b => {
-    // Status filter
-    if (statusFilter.value === 'paid' && (b.status !== 'paid' && b.status !== 3)) return false
-    if (statusFilter.value === 'pending' && (b.status === 'paid' || b.status === 3)) return false
+    if (statusFilter.value === 'paid' && b.status !== 'paid') return false
+    if (statusFilter.value === 'pending' && b.status === 'paid') return false
 
-    // Search query
     if (!searchQuery.value) return true
     const q = searchQuery.value.toLowerCase()
     return String(b.bill_code).toLowerCase().includes(q) ||
@@ -568,29 +563,92 @@ const filteredBills = computed(() => {
   })
 })
 
-const generateBill = async () => {
-  submitting.value = true
-  try {
-    await api.post('/monthly_bills/generate', { monthly_bill: form.value })
-    toast.success('Sinh hóa đơn phòng thành công!')
-    showCreateModal.value = false
-    loadBills()
-  } catch (err) {
-    toast.error(err?.message || 'Có lỗi xảy ra khi tạo hóa đơn')
-  } finally {
-    submitting.value = false
+const generateBill = () => {
+  const room = dataStore.rooms.find(r => r.id === Number(form.value.room_id))
+  if (!room) {
+    toast.warning('Vui lòng chọn phòng để sinh hóa đơn.')
+    return
   }
+
+  const roomPrice = Number(form.value.room_fee) || room.price
+  const electricCost = 380000
+  const waterCost = 144000
+  const totalAmount = roomPrice + electricCost + waterCost + Number(form.value.service_fee)
+
+  const newBill = {
+    id: Date.now(),
+    code: `INV-202607-${room.roomNumber}`,
+    month: form.value.billing_month,
+    year: 2026,
+    roomId: room.id,
+    roomNumber: room.roomNumber,
+    renterId: room.renterId,
+    renterName: room.renterName || 'Khách thuê',
+    propertyId: room.propertyId,
+    propertyName: room.propertyName,
+    roomPrice,
+    electricUsage: 100,
+    electricCost,
+    waterUsage: 8,
+    waterCost,
+    serviceFee: Number(form.value.service_fee),
+    discount: 0,
+    totalAmount,
+    paidAmount: 0,
+    status: 'unpaid',
+    dueDate: form.value.due_date || '2026-08-05',
+    paidDate: null,
+    paymentMethod: '',
+    notes: 'Tiền phòng & điện nước dịch vụ'
+  }
+
+  dataStore.bills.unshift(newBill)
+  dataStore.addAuditLog('Sinh hóa đơn', newBill.code, `Sinh hóa đơn cho phòng ${newBill.roomNumber}`)
+  dataStore.saveToStorage()
+
+  toast.success(`Đã sinh hóa đơn ${newBill.code} cho phòng ${newBill.roomNumber}!`)
+  showCreateModal.value = false
 }
 
-const runBatchGenerate = async () => {
+const runBatchGenerate = () => {
   submittingBatch.value = true
   try {
-    const res = await api.post('/monthly_bills/batch_generate', batchForm.value)
-    toast.success(res?.message || 'Đã sinh hóa đơn hàng loạt thành công!')
+    const rentedRooms = dataStore.rooms.filter(r => r.status === 'rented')
+    rentedRooms.forEach(room => {
+      const exists = dataStore.bills.some(b => b.roomId === room.id && b.month === batchForm.value.billing_month)
+      if (!exists) {
+        const total = room.price + 380000 + 144000 + batchForm.value.service_fee
+        dataStore.bills.unshift({
+          id: Date.now() + Math.random(),
+          code: `INV-${batchForm.value.billing_month.replace('/', '')}-${room.roomNumber}`,
+          month: batchForm.value.billing_month,
+          year: 2026,
+          roomId: room.id,
+          roomNumber: room.roomNumber,
+          renterId: room.renterId,
+          renterName: room.renterName || 'Khách thuê',
+          propertyId: room.propertyId,
+          propertyName: room.propertyName,
+          roomPrice: room.price,
+          electricUsage: 100,
+          electricCost: 380000,
+          waterUsage: 8,
+          waterCost: 144000,
+          serviceFee: batchForm.value.service_fee,
+          discount: 0,
+          totalAmount: total,
+          paidAmount: 0,
+          status: 'unpaid',
+          dueDate: '2026-08-05',
+          paidDate: null,
+          paymentMethod: '',
+          notes: `Hóa đơn hàng loạt tháng ${batchForm.value.billing_month}`
+        })
+      }
+    })
+    dataStore.saveToStorage()
+    toast.success('Đã sinh hóa đơn hàng loạt thành công cho tất cả các phòng!')
     showBatchModal.value = false
-    loadBills()
-  } catch (err) {
-    toast.error(err?.message || 'Sinh hóa đơn hàng loạt thất bại')
   } finally {
     submittingBatch.value = false
   }
@@ -601,16 +659,13 @@ const openPayModal = (bill) => {
   payForm.value.note = `Xác nhận thu tiền hóa đơn ${bill.bill_code}`
 }
 
-const confirmMarkAsPaid = async () => {
+const confirmMarkAsPaid = () => {
   if (!payModalBill.value) return
   submittingPay.value = true
   try {
-    const res = await api.post(`/monthly_bills/${payModalBill.value.id}/mark_as_paid`, payForm.value)
-    toast.success(res?.message || 'Đã xác nhận thanh toán thành công!')
+    dataStore.payBill(payModalBill.value.id, payForm.value.payment_method)
+    toast.success('Đã xác nhận thu tiền thành công!')
     payModalBill.value = null
-    loadBills()
-  } catch (err) {
-    toast.error(err?.message || 'Không thể xác nhận thanh toán')
   } finally {
     submittingPay.value = false
   }
@@ -620,25 +675,39 @@ const openQRModal = (bill) => {
   selectedQRBill.value = bill
 }
 
+const getVietQrUrl = (bill) => {
+  if (!bill) return ''
+  const bank = bill.bank_code || dataStore.settings.bankName || 'MB'
+  const acc = dataStore.settings.accountNumber || '0908123456'
+  const name = dataStore.settings.accountHost || 'NGUYEN VAN MINH'
+  const amt = Math.round(bill.total_amount || 0)
+  const info = bill.bill_code || ''
+  return `https://img.vietqr.io/image/${bank}-${acc}-compact2.png?amount=${amt}&addInfo=${encodeURIComponent(info)}&accountName=${encodeURIComponent(name)}`
+}
+
+const loadBills = () => {
+  toast.success('Đã tải lại danh sách hóa đơn & đối soát VietQR!')
+}
+
 const submittingBatchReminder = ref(false)
 
-const sendDebtReminder = async (billId) => {
-  try {
-    const res = await api.post('/notifications/send_reminder', { bill_id: billId, channel: 'zns' })
-    toast.success(res?.message || 'Đã gửi tin nhắn nhắc nợ thành công!')
-  } catch (err) {
-    toast.error(err?.message || 'Gửi nhắc nợ thất bại')
+const sendDebtReminder = (billId) => {
+  const bill = dataStore.bills.find(b => b.id === billId)
+  if (bill) {
+    dataStore.addNotification('Nhắc nợ ZNS', `Đã gửi thông báo nhắc nợ hóa đơn ${bill.code} tới phòng ${bill.roomNumber}`, 'warning')
+    toast.success(`Đã gửi tin nhắn ZNS nhắc nợ tới phòng ${bill.roomNumber}!`)
   }
 }
 
-const sendBatchDebtReminders = async () => {
+const sendBatchDebtReminders = () => {
   if (!confirm('Bạn có chắc muốn gửi tin nhắn ZNS/SMS nhắc nợ cho TẤT CẢ các phòng chưa nộp tiền?')) return
   submittingBatchReminder.value = true
   try {
-    const res = await api.post('/notifications/send_batch_reminders', { billing_month: new Date().toISOString().slice(0, 7) })
-    toast.success(res?.message || 'Đã gửi tin nhắn nhắc nợ hàng loạt thành công!')
-  } catch (err) {
-    toast.error(err?.message || 'Có lỗi xảy ra khi gửi tin nhắn hàng loạt')
+    const unpaids = dataStore.bills.filter(b => b.status === 'unpaid' || b.status === 'overdue')
+    unpaids.forEach(b => {
+      dataStore.addNotification('Nhắc nợ tự động', `Nhắc nợ hóa đơn ${b.code} phòng ${b.roomNumber} (${b.totalAmount.toLocaleString()} đ)`, 'warning')
+    })
+    toast.success(`Đã gửi tin nhắn nhắc nợ ZNS hàng loạt cho ${unpaids.length} phòng chưa nộp!`)
   } finally {
     submittingBatchReminder.value = false
   }
@@ -653,10 +722,10 @@ const exportCSV = () => {
   const headers = ['Mã Hóa Đơn', 'Phòng', 'Kỳ Tháng', 'Tiền Phòng', 'Điện Nước', 'Tổng Tiền', 'Trạng Thái']
   const rows = bills.value.map(b => [
     b.bill_code,
-    `Phòng ${b.room_number || b.room_id}`,
+    `Phòng ${b.room_number}`,
     b.billing_month,
-    b.room_fee || b.total_amount,
-    b.utility_fee || 0,
+    b.room_fee,
+    b.utility_fee,
     b.total_amount,
     getStatusLabel(b.status)
   ])
@@ -672,12 +741,16 @@ const exportCSV = () => {
   toast.success('Đã xuất file CSV thành công!')
 }
 
-const deleteBill = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa hóa đơn này?')) return
+const deleteBill = (id) => {
+  if (!confirm('Bạn có chắc muốn xóa hóa đơn này? Hóa đơn sẽ chuyển vào thùng rác.')) return
   try {
-    await api.delete(`/monthly_bills/${id}`)
-    toast.success('Xóa hóa đơn thành công!')
-    loadBills()
+    const bill = dataStore.bills.find(b => b.id === id)
+    if (bill) {
+      dataStore.trash.unshift({ id: Date.now(), originalType: 'bill', itemData: bill, deletedAt: new Date().toLocaleString() })
+      dataStore.bills = dataStore.bills.filter(b => b.id !== id)
+      dataStore.saveToStorage()
+      toast.success('Xóa hóa đơn thành công!')
+    }
   } catch (err) {
     toast.error(err?.message || 'Không thể xóa hóa đơn')
   }

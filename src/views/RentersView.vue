@@ -135,13 +135,13 @@
           <form @submit.prevent="saveRenter" class="space-y-4 text-xs">
             <div>
               <label class="block font-semibold text-slate-700 uppercase mb-1">Họ và Tên Cư Dân *</label>
-              <input v-model="form.full_name" required type="text" placeholder="vd: Trần Văn Bình" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
+              <input v-model="form.fullName" required type="text" placeholder="vd: Trần Văn Bình" class="w-full px-3 py-2 border border-slate-300 rounded-xl" />
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block font-semibold text-slate-700 uppercase mb-1">Số CCCD / CMND</label>
-                <input v-model="form.id_card_number" type="text" placeholder="079201008899" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono" />
+                <input v-model="form.identityCard" type="text" placeholder="079201008899" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono" />
               </div>
               <div>
                 <label class="block font-semibold text-slate-700 uppercase mb-1">Số điện thoại *</label>
@@ -231,26 +231,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toastStore = useToastStore()
 
-const defaultSampleRenters = [
-  { id: 1, full_name: 'Trần Văn Bình', email: 'tranbinh@gmail.com', phone: '0901234567', id_card_number: '079201008899', hometown: 'Ninh Bình' },
-  { id: 2, full_name: 'Lê Thị Hoài', email: 'lehoai.design@gmail.com', phone: '0988776655', id_card_number: '038198001122', hometown: 'Thanh Hóa' },
-  { id: 3, full_name: 'Nguyễn Quốc Anh', email: 'quocanh.dev@gmail.com', phone: '0912345678', id_card_number: '001200004567', hometown: 'Hà Nội' },
-  { id: 4, full_name: 'Vũ Hoàng Nam', email: 'hoangnam@gmail.com', phone: '0977123456', id_card_number: '048202009988', hometown: 'Đà Nẵng' }
-]
-
-const renters = ref([])
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
 const editingRenter = ref(null)
 const searchQuery = ref('')
+
+const loadRenters = () => {
+  toastStore.success('Đã tải lại danh sách cư dân & khách thuê!')
+}
 
 const showDetailModal = ref(false)
 const selectedDetailRenter = ref(null)
@@ -260,29 +257,16 @@ const openDetailModal = (r) => {
   showDetailModal.value = true
 }
 
-const form = ref({ full_name: '', email: '', phone: '', id_card_number: '', hometown: '' })
+const form = ref({ fullName: '', email: '', phone: '', identityCard: '', hometown: '', roomId: '' })
 
 const displayRenters = computed(() => {
-  return renters.value && renters.value.length > 0 ? renters.value : defaultSampleRenters
+  return dataStore.renters.map(r => ({
+    ...r,
+    full_name: r.fullName,
+    id_card_number: r.identityCard,
+    room_number: r.roomNumber
+  }))
 })
-
-const loadRenters = async () => {
-  loading.value = true
-  try {
-    const res = await api.get('/renters')
-    if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-      renters.value = res.data
-    } else {
-      renters.value = defaultSampleRenters
-    }
-  } catch (err) {
-    renters.value = defaultSampleRenters
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadRenters)
 
 const filteredRenters = computed(() => {
   return displayRenters.value.filter(r => {
@@ -298,48 +282,52 @@ const filteredRenters = computed(() => {
 const openModal = (item = null) => {
   editingRenter.value = item
   if (item) {
-    form.value = { ...item }
+    form.value = {
+      fullName: item.full_name || item.fullName,
+      email: item.email,
+      phone: item.phone,
+      identityCard: item.id_card_number || item.identityCard,
+      hometown: item.hometown || 'Chưa cập nhật',
+      roomId: item.roomId || ''
+    }
   } else {
-    form.value = { full_name: '', email: '', phone: '', id_card_number: '', hometown: '' }
+    form.value = { fullName: '', email: '', phone: '', identityCard: '', hometown: '', roomId: '' }
   }
   showModal.value = true
 }
 
-const saveRenter = async () => {
+const saveRenter = () => {
   submitting.value = true
   try {
     if (editingRenter.value) {
-      await api.put(`/renters/${editingRenter.value.id}`, { renter: form.value })
+      dataStore.updateRenter(editingRenter.value.id, {
+        fullName: form.value.fullName,
+        email: form.value.email,
+        phone: form.value.phone,
+        identityCard: form.value.identityCard,
+        hometown: form.value.hometown
+      })
       toastStore.success('Cập nhật hồ sơ cư dân thành công!')
     } else {
-      await api.post('/renters', { renter: form.value })
+      dataStore.addRenter({
+        fullName: form.value.fullName,
+        email: form.value.email,
+        phone: form.value.phone,
+        identityCard: form.value.identityCard,
+        hometown: form.value.hometown,
+        roomId: form.value.roomId || (dataStore.rooms.find(r => r.status === 'vacant')?.id || 101)
+      })
       toastStore.success('Thêm khách thuê mới thành công!')
     }
     showModal.value = false
-    await loadRenters()
-  } catch (err) {
-    if (editingRenter.value) {
-      const idx = renters.value.findIndex(r => r.id === editingRenter.value.id)
-      if (idx !== -1) renters.value[idx] = { ...form.value }
-    } else {
-      renters.value.push({ ...form.value, id: Date.now() })
-    }
-    showModal.value = false
-    toastStore.success('Đã lưu hồ sơ khách thuê!')
   } finally {
     submitting.value = false
   }
 }
 
-const deleteRenter = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa khách thuê này?')) return
-  try {
-    await api.delete(`/renters/${id}`)
-    toastStore.success('Đã xóa khách thuê!')
-    await loadRenters()
-  } catch (err) {
-    renters.value = renters.value.filter(r => r.id !== id)
-    toastStore.success('Đã xóa khách thuê!')
-  }
+const deleteRenter = (id) => {
+  if (!confirm('Bạn có chắc muốn xóa khách thuê này? Hồ sơ sẽ chuyển vào thùng rác.')) return
+  dataStore.deleteRenter(id)
+  toastStore.success('Đã xóa khách thuê!')
 }
 </script>

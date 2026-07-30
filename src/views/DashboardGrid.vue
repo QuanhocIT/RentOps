@@ -9,7 +9,7 @@
         </div>
         <div class="dashboard-filters">
           <button type="button" class="date-filter">
-            <span>01/06/2024 - 31/06/2024</span>
+            <span>01/07/2026 - 31/07/2026</span>
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" stroke="currentColor" stroke-width="1.6" /><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
           </button>
           <button type="button" class="filter-icon" aria-label="Chọn ngày">
@@ -56,8 +56,8 @@
                 <line x1="371" y1="0" x2="371" y2="240" stroke="#dce0ee" stroke-dasharray="5 5" />
                 <circle cx="371" cy="116" r="5" fill="#fff" stroke="#5149ed" stroke-width="3" vector-effect="non-scaling-stroke" />
               </svg>
-              <div class="chart-tooltip"><strong>16/06/2024</strong><span><i></i> Doanh thu: 68.500.000 đ</span></div>
-              <div class="chart-x-axis"><span>01/06</span><span>06/06</span><span>11/06</span><span>16/06</span><span>21/06</span><span>26/06</span><span>31/06</span></div>
+              <div class="chart-tooltip"><strong>16/07/2026</strong><span><i></i> Doanh thu: 68.500.000 đ</span></div>
+              <div class="chart-x-axis"><span>01/07</span><span>06/07</span><span>11/07</span><span>16/07</span><span>21/07</span><span>26/07</span><span>31/07</span></div>
             </div>
           </div>
         </article>
@@ -162,55 +162,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppLayout from '../components/AppLayout.vue'
-import api from '../services/api'
+import { useDataStore } from '../stores/data'
 
-const dashboardData = ref(null)
-const rooms = ref([])
-const hasLiveRooms = ref(false)
+const dataStore = useDataStore()
 
-const fallbackRooms = [
-  { id: 1, property_name: 'Deluxe City View', room_number: '101', price: 2850000, status: 'occupied', floor: 1 },
-  { id: 2, property_name: 'Studio Balcony', room_number: '203', price: 1950000, status: 'vacant', floor: 2 },
-  { id: 3, property_name: 'Family Room', room_number: '301', price: 3200000, status: 'occupied', floor: 3 },
-  { id: 4, property_name: 'Standard Room', room_number: '102', price: 1560000, status: 'occupied', floor: 1 },
-  { id: 5, property_name: 'Penthouse Suite', room_number: '501', price: 4250000, status: 'maintenance', floor: 5 }
-]
-
-const normalizeStatus = (status) => {
-  if (status === 0 || status === '0') return 'vacant'
-  if (status === 1 || status === '1') return 'occupied'
-  if (status === 2 || status === '2') return 'reserved'
-  if (status === 3 || status === '3') return 'maintenance'
-  return status
-}
-
-const fetchData = async () => {
-  try {
-    const [roomsResponse, dashboardResponse] = await Promise.all([api.get('/rooms'), api.get('/dashboard/summary')])
-    const roomsPayload = Array.isArray(roomsResponse) ? roomsResponse : roomsResponse?.data
-    rooms.value = Array.isArray(roomsPayload) ? roomsPayload.map((room) => ({ ...room, status: normalizeStatus(room.status) })) : fallbackRooms
-    hasLiveRooms.value = Array.isArray(roomsPayload)
-    dashboardData.value = dashboardResponse?.data || dashboardResponse || null
-  } catch {
-    rooms.value = fallbackRooms
-    hasLiveRooms.value = false
-  }
-}
-
-onMounted(fetchData)
-
-const liveCount = (status, demoValue) => computed(() => hasLiveRooms.value ? rooms.value.filter((room) => normalizeStatus(room.status) === status).length : demoValue)
-const vacantCount = liveCount('vacant', 36)
-const occupiedCount = liveCount('occupied', 156)
-const maintenanceCount = liveCount('maintenance', 8)
-const occupancyRate = computed(() => {
-  if (!hasLiveRooms.value) return Number(dashboardData.value?.occupancy_rate || 78)
-  const total = rooms.value.length || 1
-  return Math.round((occupiedCount.value / total) * 100)
-})
+const vacantCount = computed(() => dataStore.vacantRoomsCount)
+const occupiedCount = computed(() => dataStore.rentedRoomsCount)
+const maintenanceCount = computed(() => dataStore.maintenanceRoomsCount)
+const occupancyRate = computed(() => dataStore.occupancyRate)
 
 const formatCurrency = (value) => `${new Intl.NumberFormat('vi-VN').format(value || 0)} đ`
 
@@ -228,49 +190,75 @@ const iconPaths = {
 }
 
 const statCards = computed(() => [
-  { label: 'Tổng doanh thu', value: formatCurrency(dashboardData.value?.financials?.paid_billed || 128500000), delta: '18.5%', icon: iconPaths.wallet, iconClass: 'metric-icon--purple' },
-  { label: 'Đơn đặt phòng', value: dashboardData.value?.bookings_count || '156', delta: '12.5%', icon: iconPaths.document, iconClass: 'metric-icon--blue' },
-  { label: 'Tỷ lệ lấp đầy', value: `${occupancyRate.value}%`, delta: '8.3%', icon: iconPaths.heart, iconClass: 'metric-icon--orange' },
-  { label: 'Đánh giá trung bình', value: '4.8/5', delta: '0.3', caption: 'so với tháng trước', icon: iconPaths.star, iconClass: 'metric-icon--lavender' }
+  { label: 'Tổng doanh thu đã thu', value: formatCurrency(dataStore.totalMonthlyRevenue), delta: '15.2%', icon: iconPaths.wallet, iconClass: 'metric-icon--purple' },
+  { label: 'Hợp đồng hoạt động', value: `${dataStore.contracts.filter(c => c.status === 'active').length}`, delta: '8.5%', icon: iconPaths.document, iconClass: 'metric-icon--blue' },
+  { label: 'Tỷ lệ lấp đầy', value: `${occupancyRate.value}%`, delta: '5.3%', icon: iconPaths.heart, iconClass: 'metric-icon--orange' },
+  { label: 'Công nợ chưa thu', value: formatCurrency(dataStore.unpaidRevenue), delta: '-4.1%', caption: 'cần nhắc nợ', icon: iconPaths.star, iconClass: 'metric-icon--lavender' }
 ])
 
 const quickActions = [
-  { title: 'Thêm phòng mới', desc: 'Đăng phòng cho thuê', path: '/rooms', icon: iconPaths.house, iconClass: 'quick-icon--purple' },
-  { title: 'Quản lý giá', desc: 'Cập nhật giá phòng', path: '/rooms', icon: iconPaths.wallet, iconClass: 'quick-icon--green' },
-  { title: 'Xem lịch đặt phòng', desc: 'Quản lý lịch & đặt phòng', path: '/contracts', icon: iconPaths.calendar, iconClass: 'quick-icon--blue' },
-  { title: 'Báo cáo doanh thu', desc: 'Xem chi tiết báo cáo', path: '/reports', icon: iconPaths.chart, iconClass: 'quick-icon--orange' }
+  { title: 'Thêm phòng mới', desc: 'Đăng phòng cho thuê mới', path: '/rooms', icon: iconPaths.house, iconClass: 'quick-icon--purple' },
+  { title: 'Quản lý hợp đồng', desc: 'Tạo & ký hợp đồng điện tử', path: '/contracts', icon: iconPaths.calendar, iconClass: 'quick-icon--blue' },
+  { title: 'Ghi chỉ số điện nước', desc: 'Cập nhật số điện nước tháng', path: '/utility-readings', icon: iconPaths.wallet, iconClass: 'quick-icon--green' },
+  { title: 'Báo cáo tài chính', desc: 'Báo cáo thu chi & lợi nhuận', path: '/reports', icon: iconPaths.chart, iconClass: 'quick-icon--orange' }
 ]
 
-const bookingRows = [
-  { code: '#BK12456', customer: 'Trần Thị Mai', email: 'maitran@email.com', room: 'Deluxe City View', property: '101', checkin: '20/06/2024', status: 'Đã xác nhận', statusClass: 'status-confirmed', total: '2.500.000 đ' },
-  { code: '#BK12455', customer: 'Lê Hoàng Nam', email: 'namle@email.com', room: 'Studio Balcony', property: '203', checkin: '21/06/2024', status: 'Chờ xác nhận', statusClass: 'status-pending', total: '1.800.000 đ' },
-  { code: '#BK12454', customer: 'Phạm Minh Anh', email: 'anhpham@email.com', room: 'Family Room', property: '301', checkin: '22/06/2024', status: 'Đã thanh toán', statusClass: 'status-paid', total: '3.200.000 đ' },
-  { code: '#BK12453', customer: 'Nguyễn Văn Hùng', email: 'hungnguyen@email.com', room: 'Deluxe City View', property: '102', checkin: '23/06/2024', status: 'Đã xác nhận', statusClass: 'status-confirmed', total: '2.500.000 đ' },
-  { code: '#BK12452', customer: 'Vũ Thị Hương', email: 'huongvu@email.com', room: 'Studio Balcony', property: '204', checkin: '24/06/2024', status: 'Đã hủy', statusClass: 'status-cancelled', total: '1.800.000 đ' }
-]
+const bookingRows = computed(() => {
+  return dataStore.contracts.slice(0, 5).map(c => ({
+    code: c.contractNumber,
+    customer: c.renterName,
+    email: `${c.renterName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+    room: c.roomNumber,
+    property: c.propertyName,
+    checkin: c.startDate,
+    status: c.status === 'active' ? 'Đang hiệu lực' : 'Chờ xác nhận',
+    statusClass: c.status === 'active' ? 'status-confirmed' : 'status-pending',
+    total: formatCurrency(c.price)
+  }))
+})
 
-const activeRooms = [
-  { name: 'Deluxe City View', rooms: '12 phòng', fill: 86, occupancy: '10/12 phòng', image: '/images/rooms/main.png' },
-  { name: 'Studio Balcony', rooms: '8 phòng', fill: 70, occupancy: '6/8 phòng', image: '/images/rooms/living.png' },
-  { name: 'Family Room', rooms: '6 phòng', fill: 83, occupancy: '5/6 phòng', image: '/images/rooms/kitchen.png' },
-  { name: 'Standard Room', rooms: '10 phòng', fill: 70, occupancy: '7/10 phòng', image: '/images/rooms/bathroom.png' },
-  { name: 'Penthouse Suite', rooms: '2 phòng', fill: 50, occupancy: '1/2 phòng', image: '/images/bedroom.png' }
-]
+const activeRooms = computed(() => {
+  return dataStore.properties.map(p => {
+    const pRooms = dataStore.rooms.filter(r => r.propertyId === p.id)
+    const rented = pRooms.filter(r => r.status === 'rented').length
+    const fill = pRooms.length ? Math.round((rented / pRooms.length) * 100) : 0
+    return {
+      name: p.name,
+      rooms: `${pRooms.length} phòng`,
+      fill,
+      occupancy: `${rented}/${pRooms.length} phòng`,
+      image: p.image || '/images/rooms/main.png'
+    }
+  })
+})
 
-const revenueByRoom = [
-  { name: 'Deluxe City View', revenue: '28.500.000 đ', bookings: 35, fillLabel: '85%', fillColor: 'fill-green', avg: '2.850.000 đ' },
-  { name: 'Studio Balcony', revenue: '18.200.000 đ', bookings: 28, fillLabel: '70%', fillColor: 'fill-yellow', avg: '1.950.000 đ' },
-  { name: 'Family Room', revenue: '24.800.000 đ', bookings: 22, fillLabel: '73%', fillColor: 'fill-green', avg: '3.200.000 đ' },
-  { name: 'Standard Room', revenue: '15.600.000 đ', bookings: 30, fillLabel: '60%', fillColor: 'fill-orange', avg: '1.560.000 đ' },
-  { name: 'Penthouse Suite', revenue: '8.500.000 đ', bookings: 8, fillLabel: '50%', fillColor: 'fill-red', avg: '4.250.000 đ' }
-]
+const revenueByRoom = computed(() => {
+  return dataStore.properties.map(p => {
+    const pRooms = dataStore.rooms.filter(r => r.propertyId === p.id)
+    const pBills = dataStore.bills.filter(b => b.propertyId === p.id && b.status === 'paid')
+    const rev = pBills.reduce((sum, b) => sum + b.totalAmount, 0)
+    const rented = pRooms.filter(r => r.status === 'rented').length
+    const fill = pRooms.length ? Math.round((rented / pRooms.length) * 100) : 0
+    return {
+      name: p.name,
+      revenue: formatCurrency(rev),
+      bookings: pBills.length,
+      fillLabel: `${fill}%`,
+      fillColor: fill > 75 ? 'fill-green' : fill > 50 ? 'fill-yellow' : 'fill-orange',
+      avg: formatCurrency(pRooms.length ? rev / pRooms.length : 0)
+    }
+  })
+})
 
-const notifications = [
-  { icon: iconPaths.house, iconClass: 'notification-icon--green', title: 'Đặt phòng mới', desc: 'Trần Thị Mai đã đặt phòng Deluxe City View', time: '2 phút trước' },
-  { icon: iconPaths.star, iconClass: 'notification-icon--yellow', title: 'Nhận xét mới', desc: 'Khách hàng đã để lại đánh giá 5 sao', time: '15 phút trước' },
-  { icon: iconPaths.wallet, iconClass: 'notification-icon--blue', title: 'Thanh toán thành công', desc: 'Lê Hoàng Nam đã thanh toán thành công', time: '1 giờ trước' },
-  { icon: iconPaths.bell, iconClass: 'notification-icon--purple', title: 'Nhắc nhở', desc: 'Có 3 đặt phòng sẽ đến trong hôm nay', time: '2 giờ trước' }
-]
+const notifications = computed(() => {
+  return dataStore.notifications.slice(0, 4).map(n => ({
+    icon: iconPaths.bell,
+    iconClass: n.type === 'success' ? 'notification-icon--green' : n.type === 'warning' ? 'notification-icon--yellow' : 'notification-icon--purple',
+    title: n.title,
+    desc: n.message,
+    time: n.createdDate
+  }))
+})
 </script>
 
 <style scoped>

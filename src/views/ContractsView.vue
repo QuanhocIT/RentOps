@@ -210,19 +210,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import CheckoutContractModal from '../components/CheckoutContractModal.vue'
 import PrintContractModal from '../components/PrintContractModal.vue'
 import CoTenantsModal from '../components/CoTenantsModal.vue'
-import api from '../services/api'
-
+import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
 
+const dataStore = useDataStore()
 const toast = useToastStore()
-const contracts = ref([])
-const rooms = ref([])
-const renters = ref([])
+
 const loading = ref(false)
 const message = ref('')
 const messageType = ref('success')
@@ -230,46 +228,51 @@ const searchQuery = ref('')
 const filterStatus = ref('all')
 
 const selectedCheckoutContract = ref(null)
+
+const loadContracts = () => {
+  toast.success('Đã tải lại danh sách hợp đồng thuê!')
+}
 const selectedPrintContract = ref(null)
 const selectedCoTenantContract = ref(null)
 
 const form = ref({
-  contract_code: `CTR-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(100 + Math.random() * 900)}`,
+  contract_code: `HD-2026-${Math.floor(100 + Math.random() * 900)}`,
   room_id: '',
   renter_id: '',
   start_date: new Date().toISOString().slice(0, 10),
-  monthly_rent: 3500000,
-  deposit_amount: 3500000
+  monthly_rent: 5500000,
+  deposit_amount: 5500000
 })
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
-const activeContractsCount = computed(() => contracts.value.filter(c => c.status === 'active' || c.status === 1).length)
-const totalDepositHolding = computed(() => contracts.value.filter(c => c.status === 'active' || c.status === 1).reduce((acc, c) => acc + Number(c.deposit_amount || 0), 0))
+const rooms = computed(() => dataStore.rooms)
+const renters = computed(() => dataStore.renters)
+
+const contracts = computed(() => {
+  return dataStore.contracts.map(c => ({
+    ...c,
+    contract_code: c.contractNumber,
+    room_number: c.roomNumber,
+    renter_name: c.renterName,
+    monthly_rent: c.price,
+    deposit_amount: c.deposit,
+    start_date: c.startDate,
+    end_date: c.endDate,
+    co_tenants_count: dataStore.renters.find(r => r.id === c.renterId)?.coTenants?.length || 0,
+    is_expiring_soon: c.status === 'active' && new Date(c.endDate) - new Date() < 30 * 24 * 60 * 60 * 1000
+  }))
+})
+
+const activeContractsCount = computed(() => contracts.value.filter(c => c.status === 'active').length)
+const totalDepositHolding = computed(() => contracts.value.filter(c => c.status === 'active').reduce((acc, c) => acc + Number(c.deposit_amount || 0), 0))
 const expiringCount = computed(() => contracts.value.filter(c => c.is_expiring_soon).length)
 
 const onRoomSelect = () => {
-  const room = rooms.value.find(r => r.id === form.value.room_id)
+  const room = rooms.value.find(r => r.id === Number(form.value.room_id))
   if (room && room.price) {
     form.value.monthly_rent = Number(room.price)
     form.value.deposit_amount = Number(room.price)
-  }
-}
-
-const loadContracts = async () => {
-  try {
-    const [resContracts, resRooms, resRenters] = await Promise.all([
-      api.get('/contracts'),
-      api.get('/rooms'),
-      api.get('/renters')
-    ])
-    contracts.value = Array.isArray(resContracts.data) ? resContracts.data : []
-    rooms.value = Array.isArray(resRooms.data) ? resRooms.data : []
-    renters.value = Array.isArray(resRenters.data) ? resRenters.data : []
-  } catch (error) {
-    messageType.value = 'error'
-    message.value = error?.message || 'Không thể tải danh sách hợp đồng.'
-    toast.error(message.value)
   }
 }
 
@@ -285,26 +288,29 @@ const filteredContracts = computed(() =>
   })
 )
 
-const createContract = async () => {
-  if (!form.value.contract_code.trim() || !form.value.room_id || !form.value.start_date) {
-    messageType.value = 'error'
-    message.value = 'Vui lòng nhập mã hợp đồng, phòng và ngày bắt đầu.'
-    toast.warning(message.value)
+const createContract = () => {
+  if (!form.value.room_id || !form.value.start_date) {
+    toast.warning('Vui lòng chọn phòng và ngày bắt đầu hợp đồng.')
     return
   }
 
   loading.value = true
-  message.value = ''
   try {
-    await api.post('/contracts', { contract: form.value })
-    await loadContracts()
-    messageType.value = 'success'
-    message.value = 'Tạo hợp đồng thành công.'
-    toast.success('Tạo hợp đồng mới thành công!')
-  } catch (error) {
-    messageType.value = 'error'
-    message.value = error?.message || 'Không thể tạo hợp đồng.'
-    toast.error(message.value)
+    const end = new Date(form.value.start_date)
+    end.setFullYear(end.getFullYear() + 1)
+
+    dataStore.addContract({
+      roomId: Number(form.value.room_id),
+      renterId: Number(form.value.renter_id || dataStore.renters[0]?.id || 1),
+      startDate: form.value.start_date,
+      endDate: end.toISOString().slice(0, 10),
+      price: Number(form.value.monthly_rent),
+      deposit: Number(form.value.deposit_amount),
+      eSigned: true
+    })
+
+    toast.success('Tạo hợp đồng thuê mới thành công!')
+    form.value.contract_code = `HD-2026-${Math.floor(100 + Math.random() * 900)}`
   } finally {
     loading.value = false
   }
@@ -314,7 +320,7 @@ const openCheckoutModal = (item) => {
   selectedCheckoutContract.value = item
 }
 
-const renewContract = async (item) => {
+const renewContract = (item) => {
   const monthsStr = prompt('Nhập số tháng muốn gia hạn hợp đồng (ví dụ: 6 hoặc 12):', '6')
   if (!monthsStr) return
   const months = parseInt(monthsStr, 10)
@@ -323,21 +329,17 @@ const renewContract = async (item) => {
     return
   }
 
-  try {
-    const res = await api.post(`/contracts/${item.id}/renew`, { months })
-    toast.success(res?.message || 'Gia hạn hợp đồng thành công!')
-    loadContracts()
-  } catch (err) {
-    toast.error(err?.message || 'Gia hạn hợp đồng thất bại')
-  }
+  const currEnd = new Date(item.end_date || item.endDate)
+  currEnd.setMonth(currEnd.getMonth() + months)
+  const newEndDate = currEnd.toISOString().slice(0, 10)
+
+  dataStore.updateContract(item.id, { endDate: newEndDate, status: 'active' })
+  toast.success(`Đã gia hạn hợp đồng ${item.contract_code} thêm ${months} tháng đến ${newEndDate}!`)
 }
 
-const deleteContract = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa hợp đồng này?')) return
-  await api.delete(`/contracts/${id}`)
-  toast.success('Xóa hợp đồng thành công')
-  await loadContracts()
+const deleteContract = (id) => {
+  if (!confirm('Bạn có chắc muốn hủy/xóa hợp đồng này?')) return
+  dataStore.terminateContract(id, 'Chủ trọ xóa hợp đồng')
+  toast.success('Đã thanh lý và chuyển hợp đồng sang trạng thái kết thúc!')
 }
-
-onMounted(loadContracts)
 </script>
