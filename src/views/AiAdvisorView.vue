@@ -260,7 +260,7 @@ const submitAiQuestion = async () => {
     const res = await api.post('/ai_advisor/ask', { question })
     aiResponse.value = res?.answer || res?.data?.answer || `🤖 [Đề Xuất AI cho: "${question}"]\n\n1. Dựa trên dữ liệu RentOps hiện tại, bạn nên ưu tiên gửi thông báo nhắc nợ ZNS tự động kèm ưu đãi giảm 2% nếu thanh toán trước 24h.\n2. Đối với các phòng trống, bạn có thể triển khai chương trình "Tặng 500k tiền điện tháng đầu" hoặc hợp tác với cổng môi giới trên Tenant Portal.\n3. Rà soát lại hợp đồng sắp hết hạn để gửi đề xuất gia hạn sớm trước 30 ngày.`
   } catch (err) {
-    aiResponse.value = `🤖 [Đề Xuất AI cho: "${question}"]\n\n1. Chiến lược lấp đầy phòng: Đăng lại bài niêm yết lên Rentalio Landing View với ảnh chụp sắc nét và tặng kèm gói Wi-Fi 200Mbps miễn phí.\n2. Quản lý công nợ: Kích hoạt tính năng nhắc nợ VietQR 1-Click tự động gửi tới Zalo/SMS của cư dân.\n3. Tối ưu chi phí: Kiểm tra chỉ số tiêu thụ điện nước thất thoát ở các khu vực dùng chung tòa nhà.`
+    aiResponse.value = `🤖 [Đề Xuất AI cho: "${question}"]\n\n1. Chiến lược lấp đầy phòng: Đăng lại bài niêm yết lên RentOps Landing View với ảnh chụp sắc nét và tặng kèm gói Wi-Fi 200Mbps miễn phí.\n2. Quản lý công nợ: Kích hoạt tính năng nhắc nợ VietQR 1-Click tự động gửi tới Zalo/SMS của cư dân.\n3. Tối ưu chi phí: Kiểm tra chỉ số tiêu thụ điện nước thất thoát ở các khu vực dùng chung tòa nhà.`
   } finally {
     aiAsking.value = false
   }

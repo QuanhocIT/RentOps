@@ -4,7 +4,7 @@
       <div class="home-container home-header-inner">
         <button class="home-brand" type="button" @click="scrollToTop">
           <span class="home-brand-mark">R</span>
-          <span>Rentalio</span>
+          <span>RentOps</span>
         </button>
 
         <nav class="home-nav" aria-label="Điều hướng chính">
@@ -118,7 +118,7 @@
       </section>
 
       <section id="amenities" class="home-container why-section">
-        <h2>Vì sao chọn <em>Rentalio?</em></h2>
+        <h2>Vì sao chọn <em>RentOps?</em></h2>
         <div class="why-grid">
           <article v-for="item in whyItems" :key="item.title">
             <span v-html="item.icon"></span>
@@ -176,10 +176,10 @@
 
       <footer class="home-footer">
         <div class="home-container footer-grid">
-          <div class="footer-intro"><button class="home-brand" type="button" @click="scrollToTop"><span class="home-brand-mark">R</span><span>Rentalio</span></button><p>Nền tảng kết nối người thuê và chủ nhà đáng tin cậy, giúp bạn tìm không gian sống lý tưởng.</p><div class="footer-social"><button type="button" @click="notify('Kênh Facebook Rentalio')">f</button><button type="button" @click="notify('Kênh Instagram Rentalio')">◎</button><button type="button" @click="notify('Kênh YouTube Rentalio')">▶</button><button type="button" @click="notify('Kênh Zalo Rentalio')">◉</button></div></div>
+          <div class="footer-intro"><button class="home-brand" type="button" @click="scrollToTop"><span class="home-brand-mark">R</span><span>RentOps</span></button><p>Nền tảng kết nối người thuê và chủ nhà đáng tin cậy, giúp bạn tìm không gian sống lý tưởng.</p><div class="footer-social"><button type="button" @click="notify('Kênh Facebook RentOps')">f</button><button type="button" @click="notify('Kênh Instagram RentOps')">◎</button><button type="button" @click="notify('Kênh YouTube RentOps')">▶</button><button type="button" @click="notify('Kênh Zalo RentOps')">◉</button></div></div>
           <div v-for="column in footerColumns" :key="column.title" class="footer-column"><h3>{{ column.title }}</h3><button v-for="item in column.items" :key="item" type="button" @click="notify(item)">{{ item }}</button></div>
         </div>
-        <div class="home-container footer-copyright">© 2024 Rentalio. Tất cả quyền được bảo lưu.<button type="button" @click="scrollToTop">↑</button></div>
+        <div class="home-container footer-copyright">© 2024 RentOps. Tất cả quyền được bảo lưu.<button type="button" @click="scrollToTop">↑</button></div>
       </footer>
     </main>
 
@@ -310,8 +310,8 @@ const steps = [
 ]
 const reviews = [
   { name: 'Nguyễn Minh Anh', role: 'Sinh viên', avatar: '/images/rooms/main.png', comment: 'Tìm được phòng ưng ý chỉ trong 1 ngày! Giao diện dễ dùng, thông tin rõ ràng và chủ phòng rất nhiệt tình.' },
-  { name: 'Trần Hoàng Nam', role: 'Nhân viên văn phòng', avatar: '/images/rooms/living.png', comment: 'Rất hài lòng với dịch vụ của Rentalio. Hỗ trợ nhanh chóng và nhiều lựa chọn phòng chất lượng.' },
-  { name: 'Lê Thu Trang', role: 'Freelancer', avatar: '/images/rooms/kitchen.png', comment: 'Homestay ở Đà Lạt rất xinh và sạch sẽ. Giá cả hợp lý, sẽ tiếp tục ủng hộ Rentalio!' },
+  { name: 'Trần Hoàng Nam', role: 'Nhân viên văn phòng', avatar: '/images/rooms/living.png', comment: 'Rất hài lòng với dịch vụ của RentOps. Hỗ trợ nhanh chóng và nhiều lựa chọn phòng chất lượng.' },
+  { name: 'Lê Thu Trang', role: 'Freelancer', avatar: '/images/rooms/kitchen.png', comment: 'Homestay ở Đà Lạt rất xinh và sạch sẽ. Giá cả hợp lý, sẽ tiếp tục ủng hộ RentOps!' },
   { name: 'Phạm Đăng Khoa', role: 'Kỹ sư CNTT', avatar: '/images/suite.png', comment: 'Thanh toán qua VietQR gạch nợ tự động 24/7 vô cùng tiện lợi. Không còn lo trễ hạn đóng tiền nhà.' },
   { name: 'Vũ Ngọc Khánh', role: 'Chủ chuỗi trọ Quận 7', avatar: '/images/studio.png', comment: 'Phần mềm giúp tôi quản lý 30 phòng dễ dàng. Hóa đơn và nhắc nợ ZNS tự động siêu tiết kiệm thời gian.' }
 ]
@@ -319,7 +319,7 @@ const footerColumns = [
   { title: 'Về chúng tôi', items: ['Giới thiệu', 'Cách hoạt động', 'Tin tức', 'Tuyển dụng', 'Liên hệ'] },
   { title: 'Hỗ trợ', items: ['Trung tâm trợ giúp', 'Quy định sử dụng', 'Chính sách bảo mật', 'Liên hệ hỗ trợ'] },
   { title: 'Danh mục', items: ['Phòng trọ', 'Căn hộ mini', 'Căn hộ dịch vụ', 'Homestay', 'Ở ghép'] },
-  { title: 'Liên hệ', items: ['1900 1234', 'support@rentalio.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
+  { title: 'Liên hệ', items: ['1900 1234', 'support@rentops.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
 ]
 
 const visibleReviews = computed(() => {

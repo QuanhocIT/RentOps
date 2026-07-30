@@ -61,29 +61,104 @@
         </div>
       </div>
 
-      <!-- Maintenance List -->
+      <!-- Maintenance List & Kanban View Header -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div class="font-bold text-slate-900 text-base">Danh Sách Yêu Cầu Sửa Chữa</div>
           <div class="flex items-center gap-3">
-            <select v-model="filterStatus" @change="loadData" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="font-extrabold text-slate-900 text-base">Quản Lý Yêu Cầu Sửa Chữa</span>
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+              <button
+                @click="viewMode = 'list'"
+                :class="['px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1', viewMode === 'list' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+              >
+                <span>📊</span> Dạng Bảng
+              </button>
+              <button
+                @click="viewMode = 'kanban'"
+                :class="['px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1', viewMode === 'kanban' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900']"
+              >
+                <span>📋</span> Kanban Board
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <select v-model="filterStatus" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="">Tất cả trạng thái</option>
               <option value="pending">Chờ xử lý</option>
               <option value="in_progress">Đang sửa</option>
               <option value="resolved">Đã hoàn thành</option>
             </select>
-            <select v-model="filterPriority" @change="loadData" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <select v-model="filterPriority" class="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="">Tất cả mức ưu tiên</option>
               <option value="urgent">Khẩn cấp</option>
               <option value="high">Cao</option>
               <option value="medium">Trung bình</option>
               <option value="low">Thấp</option>
             </select>
-            <button @click="loadData" class="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200" title="Tải lại">🔄</button>
           </div>
         </div>
 
-        <div v-if="loading" class="p-8 text-center text-slate-500">Đang tải danh sách sự cố...</div>
+        <!-- KANBAN BOARD VIEW MODE -->
+        <div v-if="viewMode === 'kanban'" class="p-6 bg-slate-50/70 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Column 1: Pending -->
+          <div class="bg-slate-100/90 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between font-bold text-xs uppercase text-amber-800 pb-2 border-b border-slate-200">
+              <span>⏳ 1. Chờ Tiếp Nhận</span>
+              <span class="bg-amber-200 px-2 py-0.5 rounded-full text-amber-900">{{ kanbanPending.length }}</span>
+            </div>
+            <div v-for="item in kanbanPending" :key="item.id" class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+              <div class="flex justify-between items-start">
+                <span class="font-bold text-slate-900 text-xs">P.{{ item.room_number }}</span>
+                <span :class="['px-2 py-0.5 text-[10px] font-bold rounded-md', getPriorityBadge(item.priority)]">{{ item.priority }}</span>
+              </div>
+              <p class="font-bold text-slate-800 text-xs line-clamp-1">{{ item.title }}</p>
+              <div class="text-[11px] text-amber-600 font-mono font-bold flex items-center gap-1">
+                <span>⏱️ SLA: 4h còn lại</span>
+              </div>
+              <button @click="advanceKanbanStatus(item, 'Đang xử lý')" class="w-full mt-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold rounded-lg transition">
+                ▶ Chuyển Đang Sửa
+              </button>
+            </div>
+          </div>
+
+          <!-- Column 2: In Progress -->
+          <div class="bg-slate-100/90 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between font-bold text-xs uppercase text-blue-800 pb-2 border-b border-slate-200">
+              <span>🔧 2. Đang Sửa Chữa</span>
+              <span class="bg-blue-200 px-2 py-0.5 rounded-full text-blue-900">{{ kanbanInProgress.length }}</span>
+            </div>
+            <div v-for="item in kanbanInProgress" :key="item.id" class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+              <div class="flex justify-between items-start">
+                <span class="font-bold text-slate-900 text-xs">P.{{ item.room_number }}</span>
+                <span :class="['px-2 py-0.5 text-[10px] font-bold rounded-md', getPriorityBadge(item.priority)]">{{ item.priority }}</span>
+              </div>
+              <p class="font-bold text-slate-800 text-xs line-clamp-1">{{ item.title }}</p>
+              <div class="text-[10px] text-slate-500 font-medium">Thợ: {{ item.assignedTo || 'Kỹ thuật viên' }}</div>
+              <button @click="openResolveModal(item)" class="w-full mt-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold rounded-lg transition">
+                ✓ Hoàn Thành & Nhập Chi Phí
+              </button>
+            </div>
+          </div>
+
+          <!-- Column 3: Resolved -->
+          <div class="bg-slate-100/90 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between font-bold text-xs uppercase text-emerald-800 pb-2 border-b border-slate-200">
+              <span>✅ 3. Đã Hoàn Thành</span>
+              <span class="bg-emerald-200 px-2 py-0.5 rounded-full text-emerald-900">{{ kanbanResolved.length }}</span>
+            </div>
+            <div v-for="item in kanbanResolved" :key="item.id" class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2 opacity-90">
+              <div class="flex justify-between items-start">
+                <span class="font-bold text-slate-900 text-xs">P.{{ item.room_number }}</span>
+                <span class="text-emerald-700 font-bold text-xs font-mono">{{ formatCurrency(item.cost) }}</span>
+              </div>
+              <p class="font-semibold text-slate-700 text-xs line-clamp-1">{{ item.title }}</p>
+              <div class="text-[10px] text-slate-400">Hoàn thành lúc {{ item.resolvedDate || 'Gần đây' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="viewMode === 'list' && loading" class="p-8 text-center text-slate-500">Đang tải danh sách sự cố...</div>
 
         <div v-else-if="requests.length === 0" class="p-12 text-center text-slate-500">Chưa có sự cố nào cần xử lý.</div>
 
@@ -283,6 +358,7 @@ const toastStore = useToastStore()
 const loading = ref(false)
 const submitting = ref(false)
 const showModal = ref(false)
+const viewMode = ref('list')
 const filterStatus = ref('')
 const filterPriority = ref('')
 
@@ -315,6 +391,15 @@ const requests = computed(() => {
     handyman_name: m.assignedTo
   }))
 })
+
+const kanbanPending = computed(() => requests.value.filter(r => r.status === 'Chờ xử lý' || r.status === 'pending'))
+const kanbanInProgress = computed(() => requests.value.filter(r => r.status === 'Đang xử lý' || r.status === 'in_progress'))
+const kanbanResolved = computed(() => requests.value.filter(r => r.status === 'Hoàn thành' || r.status === 'resolved'))
+
+const advanceKanbanStatus = (item, newStatus) => {
+  dataStore.updateMaintenanceStatus(item.id, newStatus, item.cost || 0)
+  toastStore.success(`Đã chuyển sự cố P.${item.room_number} sang "${newStatus}"!`)
+}
 
 const pendingCount = computed(() => dataStore.pendingMaintenanceCount)
 

@@ -132,6 +132,7 @@
                   {{ formatCurrency(getDepreciatedValue(item)) }}
                 </td>
                 <td class="px-6 py-4 text-right space-x-2">
+                  <button @click="openQrModal(item)" class="text-emerald-600 hover:text-emerald-800 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg">📱 QR Code</button>
                   <button @click="openModal(item)" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold">Sửa</button>
                   <button @click="deleteAsset(item.id)" class="text-rose-600 hover:text-rose-700 text-xs font-semibold">Xóa</button>
                 </td>
@@ -141,6 +142,23 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Asset QR Code Modal -->
+      <div v-if="showQrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-slate-900 shadow-2xl text-center space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-900 text-sm">📱 QR Code Quản Lý Tài Sản</h3>
+            <button @click="showQrModal = false" class="text-slate-400 hover:text-slate-700">✕</button>
+          </div>
+          <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex flex-col items-center">
+            <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(selectedQrAsset?.asset_code || 'ASSET-101')}`" alt="QR Code" class="w-44 h-44 rounded-lg shadow-sm" />
+            <p class="font-bold text-indigo-900 text-base mt-3">{{ selectedQrAsset?.name }}</p>
+            <p class="font-mono text-xs font-bold text-indigo-600 bg-white px-2 py-1 rounded border border-indigo-200 mt-1">Mã: {{ selectedQrAsset?.asset_code || 'N/A' }}</p>
+          </div>
+          <p class="text-xs text-slate-500">Dán mã QR này lên thiết bị. Kỹ thuật viên quét mã để xem lịch sử bảo trì & thông số kỹ thuật.</p>
+          <button @click="showQrModal = false" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md">Đóng</button>
         </div>
       </div>
 
@@ -226,7 +244,14 @@ const searchQuery = ref('')
 const filterCategory = ref('')
 const filterCondition = ref('')
 const showModal = ref(false)
+const showQrModal = ref(false)
+const selectedQrAsset = ref(null)
 const editingAssetId = ref(null)
+
+const openQrModal = (item) => {
+  selectedQrAsset.value = item
+  showQrModal.value = true
+}
 
 const form = ref({
   name: '',

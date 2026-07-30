@@ -4,7 +4,7 @@
       <div class="header-inner">
         <button class="brand" type="button" @click="goBack">
           <span class="brand-mark">R</span>
-          <span class="brand-name">Rentalio</span>
+          <span class="brand-name">RentOps</span>
         </button>
 
         <nav class="detail-nav" aria-label="Điều hướng chính">
@@ -242,10 +242,10 @@
         </section>
 
         <footer class="detail-footer">
-          <div class="footer-brand"><button class="brand" type="button" @click="goBack"><span class="brand-mark">R</span><span class="brand-name">Rentalio</span></button><p>Nền tảng tìm kiếm và đặt phòng đáng tin cậy, giúp bạn tìm không gian lý tưởng cho mỗi hành trình.</p><div class="social-links"><button type="button" @click="notify('Đang mở Facebook')">f</button><button type="button" @click="notify('Đang mở Instagram')">◎</button><button type="button" @click="notify('Đang mở TikTok')">♪</button><button type="button" @click="notify('Đang mở Youtube')">▶</button></div></div>
+          <div class="footer-brand"><button class="brand" type="button" @click="goBack"><span class="brand-mark">R</span><span class="brand-name">RentOps</span></button><p>Nền tảng tìm kiếm và đặt phòng đáng tin cậy, giúp bạn tìm không gian lý tưởng cho mỗi hành trình.</p><div class="social-links"><button type="button" @click="notify('Đang mở Facebook')">f</button><button type="button" @click="notify('Đang mở Instagram')">◎</button><button type="button" @click="notify('Đang mở TikTok')">♪</button><button type="button" @click="notify('Đang mở Youtube')">▶</button></div></div>
           <div v-for="column in footerColumns" :key="column.title" class="footer-column"><h3>{{ column.title }}</h3><button v-for="item in column.items" :key="item" type="button" @click="notify(item)">{{ item }}</button></div>
         </footer>
-        <div class="footer-bottom"><span>© 2024 Rentalio. Tất cả quyền được bảo lưu.</span><button type="button" aria-label="Lên đầu trang" @click="scrollToTop">↑</button></div>
+        <div class="footer-bottom"><span>© 2024 RentOps. Tất cả quyền được bảo lưu.</span><button type="button" aria-label="Lên đầu trang" @click="scrollToTop">↑</button></div>
       </section>
     </main>
 
@@ -365,7 +365,7 @@ const footerColumns = [
   { title: 'Về chúng tôi', items: ['Giới thiệu', 'Tuyển dụng', 'Tin tức', 'Điều khoản dịch vụ', 'Chính sách bảo mật'] },
   { title: 'Hỗ trợ', items: ['Trung tâm trợ giúp', 'Hướng dẫn đặt phòng', 'Chính sách hủy', 'Liên hệ hỗ trợ'] },
   { title: 'Dành cho chủ nhà', items: ['Đăng cho thuê phòng', 'Quản lý phòng', 'Chính sách hợp tác', 'Bảng giá dịch vụ'] },
-  { title: 'Liên hệ', items: ['1900 1234', 'support@rentalio.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
+  { title: 'Liên hệ', items: ['1900 1234', 'support@rentops.vn', '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh'] }
 ]
 const trustItems = [
   { icon: 'shield', title: 'Xác nhận ngay lập tức', description: 'Đặt phòng và nhận hướng dẫn tự động' },

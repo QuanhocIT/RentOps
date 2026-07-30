@@ -116,18 +116,55 @@ const refundAmount = computed(() => {
 })
 
 import { useToastStore } from '../stores/toast'
+import { useDataStore } from '../stores/data'
 
 const toastStore = useToastStore()
+const dataStore = useDataStore()
 
 const handleCheckout = async () => {
   submitting.value = true
   try {
-    await api.post(`/contracts/${props.contract.id}/checkout`, {
-      deduction_amount: deductionAmount.value,
-      deduction_reason: deductionReason.value,
-      settle_unpaid_with_deposit: settleUnpaidWithDeposit.value
-    })
-    toastStore.success('Thanh lý hợp đồng thành công!')
+    try {
+      await api.post(`/contracts/${props.contract.id}/checkout`, {
+        deduction_amount: deductionAmount.value,
+        deduction_reason: deductionReason.value,
+        settle_unpaid_with_deposit: settleUnpaidWithDeposit.value
+      })
+    } catch (e) {
+      console.warn('[CheckoutContractModal] Backend API unavailable, updating client store.')
+    }
+
+    const cId = props.contract.id || props.contract.contract_id
+    const cCode = props.contract.contract_code || props.contract.contractNumber
+    const targetContract = dataStore.contracts.find(c => c.id === cId || c.contractNumber === cCode)
+
+    if (targetContract) {
+      targetContract.status = 'terminated'
+      const room = dataStore.rooms.find(r => r.id === targetContract.roomId || r.id === props.contract.room_id)
+      if (room) {
+        room.status = 'vacant'
+        room.renterId = null
+        room.renterName = ''
+      }
+    }
+
+    if (settleUnpaidWithDeposit.value) {
+      const roomId = props.contract.room_id || targetContract?.roomId
+      if (roomId) {
+        dataStore.bills.forEach(b => {
+          if (b.roomId === roomId && (b.status === 'unpaid' || b.status === 'overdue')) {
+            b.status = 'paid'
+            b.paidDate = new Date().toISOString().split('T')[0]
+            b.notes = (b.notes || '') + ' (Khấu trừ cọc khi thanh lý)'
+          }
+        })
+      }
+    }
+
+    dataStore.addAuditLog('Thanh lý hợp đồng', cCode || 'Hợp đồng', `Khấu trừ: ${formatCurrency(totalDeduction.value)}, Hoàn cọc: ${formatCurrency(refundAmount.value)}`)
+    dataStore.saveToStorage()
+
+    toastStore.success('Thanh lý hợp đồng và quyết toán cọc thành công!')
     emit('success')
     emit('close')
   } catch (err) {

@@ -189,12 +189,17 @@ const iconPaths = {
   sparkle: '<path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'
 }
 
-const statCards = computed(() => [
-  { label: 'Tổng doanh thu đã thu', value: formatCurrency(dataStore.totalMonthlyRevenue), delta: '15.2%', icon: iconPaths.wallet, iconClass: 'metric-icon--purple' },
-  { label: 'Hợp đồng hoạt động', value: `${dataStore.contracts.filter(c => c.status === 'active').length}`, delta: '8.5%', icon: iconPaths.document, iconClass: 'metric-icon--blue' },
-  { label: 'Tỷ lệ lấp đầy', value: `${occupancyRate.value}%`, delta: '5.3%', icon: iconPaths.heart, iconClass: 'metric-icon--orange' },
-  { label: 'Công nợ chưa thu', value: formatCurrency(dataStore.unpaidRevenue), delta: '-4.1%', caption: 'cần nhắc nợ', icon: iconPaths.star, iconClass: 'metric-icon--lavender' }
-])
+const statCards = computed(() => {
+  const paid = dataStore.totalMonthlyRevenue
+  const unpaid = dataStore.unpaidRevenue
+  const accrual = paid + unpaid
+  return [
+    { label: 'Thực thu (Cash Collected)', value: formatCurrency(paid), delta: '15.2%', icon: iconPaths.wallet, iconClass: 'metric-icon--purple' },
+    { label: 'Ghi nhận (Accrual)', value: formatCurrency(accrual), delta: '12.0%', icon: iconPaths.document, iconClass: 'metric-icon--blue' },
+    { label: 'Tỷ lệ lấp đầy', value: `${occupancyRate.value}%`, delta: '5.3%', icon: iconPaths.heart, iconClass: 'metric-icon--orange' },
+    { label: 'Công nợ chưa thu (Outstanding)', value: formatCurrency(unpaid), delta: '-4.1%', caption: 'cần nhắc nợ', icon: iconPaths.star, iconClass: 'metric-icon--lavender' }
+  ]
+})
 
 const quickActions = [
   { title: 'Thêm phòng mới', desc: 'Đăng phòng cho thuê mới', path: '/rooms', icon: iconPaths.house, iconClass: 'quick-icon--purple' },

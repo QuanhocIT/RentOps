@@ -44,10 +44,10 @@
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
           <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
-            <span>Đang Ở</span>
+            <span>Đang Ở / Đang Thuê</span>
             <span>🔴</span>
           </div>
-          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ rooms.filter(r => r.status === 'occupied' || r.status === 1).length }}</p>
+          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ rooms.filter(r => r.status === 'rented' || r.status === 'occupied' || r.status === 1).length }}</p>
           <p class="text-[11px] text-slate-400 font-medium mt-1">Đã có hợp đồng</p>
         </div>
 
@@ -450,6 +450,33 @@
             </div>
           </div>
 
+          <!-- Maintenance History & Cost Analysis (Issue #11) -->
+          <div class="bg-rose-50/60 p-4 rounded-2xl border border-rose-100 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-extrabold text-rose-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🔧</span> <span>Lịch Sử & Chi Phí Bảo Trì Phòng</span>
+              </h3>
+              <span class="text-xs font-mono font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-lg">
+                Tổng chi phí: {{ formatCurrency(dataStore.getRoomMaintenanceCost(selectedDetailRoom.id)) }}
+              </span>
+            </div>
+
+            <div v-if="dataStore.getRoomMaintenanceHistory(selectedDetailRoom.id).length" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+              <div
+                v-for="item in dataStore.getRoomMaintenanceHistory(selectedDetailRoom.id)"
+                :key="item.id"
+                class="bg-white p-2.5 rounded-xl border border-rose-100 flex items-center justify-between text-xs"
+              >
+                <div>
+                  <strong class="text-slate-900 block text-[11px]">{{ item.title }}</strong>
+                  <small class="text-slate-400 font-mono">{{ item.createdDate || item.created_at }} • {{ item.status }}</small>
+                </div>
+                <span class="font-mono font-bold text-rose-600">{{ formatCurrency(item.cost) }}</span>
+              </div>
+            </div>
+            <p v-else class="text-[11px] text-slate-500 italic">Phòng này chưa có lịch sử sửa chữa hoặc phát sinh chi phí bảo trì.</p>
+          </div>
+
           <!-- Utility Standard Pricing -->
           <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 space-y-2 text-xs">
             <h3 class="font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -491,6 +518,8 @@ import { useToastStore } from '../stores/toast'
 
 const dataStore = useDataStore()
 const toastStore = useToastStore()
+
+const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
 const showModal = ref(false)
 const editingRoom = ref(null)
@@ -560,7 +589,10 @@ const form = ref({
 
 const filteredRooms = computed(() => {
   return rooms.value.filter(r => {
-    const matchStatus = !filterStatus.value || r.status === filterStatus.value
+    const matchStatus = !filterStatus.value ||
+      r.status === filterStatus.value ||
+      (filterStatus.value === 'occupied' && (r.status === 'rented' || r.status === 1)) ||
+      (filterStatus.value === 'rented' && (r.status === 'occupied' || r.status === 1))
     const matchProp = !filterProperty.value || String(r.propertyId) === String(filterProperty.value)
     const q = searchQuery.value.toLowerCase()
     const matchQuery = !q || (r.roomNumber || '').toLowerCase().includes(q) || (r.propertyName || '').toLowerCase().includes(q)
@@ -649,20 +681,18 @@ const getRoomTypeLabel = (type) => {
 
 const getStatusBadge = (status) => {
   if (status === 'vacant' || status === 0) return 'bg-emerald-100 text-emerald-800'
-  if (status === 'occupied' || status === 1) return 'bg-rose-100 text-rose-800'
+  if (status === 'occupied' || status === 'rented' || status === 1) return 'bg-rose-100 text-rose-800'
   if (status === 'reserved' || status === 2) return 'bg-amber-100 text-amber-800'
   return 'bg-slate-200 text-slate-700'
 }
 
 const getStatusLabel = (status) => {
   if (status === 'vacant' || status === 0) return 'Trống'
-  if (status === 'occupied' || status === 1) return 'Đang ở'
+  if (status === 'occupied' || status === 'rented' || status === 1) return 'Đang ở'
   if (status === 'reserved' || status === 2) return 'Đã cọc'
   if (status === 'maintenance') return 'Bảo trì'
   return 'Khác'
 }
-
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
 const loadData = () => {
   toastStore.success('Đã tải lại danh sách căn hộ & phòng!')

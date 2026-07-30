@@ -1,29 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '../views/LoginView.vue'
-import DashboardGrid from '../views/DashboardGrid.vue'
-import RoomsView from '../views/RoomsView.vue'
-import PropertiesView from '../views/PropertiesView.vue'
-import ContractsView from '../views/ContractsView.vue'
-import BillsView from '../views/BillsView.vue'
-import UtilityReadingsView from '../views/UtilityReadingsView.vue'
-import ServicesView from '../views/ServicesView.vue'
-import ExpensesView from '../views/ExpensesView.vue'
-import RentersView from '../views/RentersView.vue'
-import ReportsView from '../views/ReportsView.vue'
-import MaintenanceView from '../views/MaintenanceView.vue'
-import AmenitiesView from '../views/AmenitiesView.vue'
-import AuditLogsView from '../views/AuditLogsView.vue'
-import SettingsView from '../views/SettingsView.vue'
-import NotificationsView from '../views/NotificationsView.vue'
-import AssetsView from '../views/AssetsView.vue'
-import TenantPortalView from '../views/TenantPortalView.vue'
-import SuperAdminView from '../views/SuperAdminView.vue'
-import TrashView from '../views/TrashView.vue'
-import AiAdvisorView from '../views/AiAdvisorView.vue'
 import { useAuthStore } from '../stores/auth'
 
-import LandingView from '../views/LandingView.vue'
-import RoomDetailView from '../views/RoomDetailView.vue'
+// Code-Splitting & Lazy Loading Routes
+const LandingView = () => import('../views/LandingView.vue')
+const RoomDetailView = () => import('../views/RoomDetailView.vue')
+const LoginView = () => import('../views/LoginView.vue')
+const DashboardGrid = () => import('../views/DashboardGrid.vue')
+const RoomsView = () => import('../views/RoomsView.vue')
+const PropertiesView = () => import('../views/PropertiesView.vue')
+const ContractsView = () => import('../views/ContractsView.vue')
+const BillsView = () => import('../views/BillsView.vue')
+const UtilityReadingsView = () => import('../views/UtilityReadingsView.vue')
+const ServicesView = () => import('../views/ServicesView.vue')
+const ExpensesView = () => import('../views/ExpensesView.vue')
+const RentersView = () => import('../views/RentersView.vue')
+const ReportsView = () => import('../views/ReportsView.vue')
+const MaintenanceView = () => import('../views/MaintenanceView.vue')
+const AmenitiesView = () => import('../views/AmenitiesView.vue')
+const AuditLogsView = () => import('../views/AuditLogsView.vue')
+const SettingsView = () => import('../views/SettingsView.vue')
+const NotificationsView = () => import('../views/NotificationsView.vue')
+const AssetsView = () => import('../views/AssetsView.vue')
+const TenantPortalView = () => import('../views/TenantPortalView.vue')
+const SuperAdminView = () => import('../views/SuperAdminView.vue')
+const TrashView = () => import('../views/TrashView.vue')
+const AiAdvisorView = () => import('../views/AiAdvisorView.vue')
 
 const routes = [
   {

@@ -289,8 +289,8 @@ const filteredContracts = computed(() =>
 )
 
 const createContract = () => {
-  if (!form.value.room_id || !form.value.start_date) {
-    toast.warning('Vui lòng chọn phòng và ngày bắt đầu hợp đồng.')
+  if (!form.value.room_id || !form.value.start_date || !form.value.renter_id) {
+    toast.warning('Vui lòng chọn phòng, người thuê và ngày bắt đầu hợp đồng.')
     return
   }
 
@@ -301,7 +301,7 @@ const createContract = () => {
 
     dataStore.addContract({
       roomId: Number(form.value.room_id),
-      renterId: Number(form.value.renter_id || dataStore.renters[0]?.id || 1),
+      renterId: Number(form.value.renter_id),
       startDate: form.value.start_date,
       endDate: end.toISOString().slice(0, 10),
       price: Number(form.value.monthly_rent),
