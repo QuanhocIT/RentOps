@@ -1,9 +1,13 @@
 <template>
   <AppLayout>
-    <div class="owner-dashboard">
+    <div class="owner-dashboard animate-slide-up">
       <section class="dashboard-heading">
-        <div>
-          <span class="dashboard-kicker">BUSINESS OVERVIEW</span>
+        <div class="dashboard-heading-copy">
+          <div class="dashboard-heading-meta">
+            <span class="dashboard-kicker">BUSINESS OVERVIEW</span>
+            <span class="dashboard-heading-separator" aria-hidden="true">•</span>
+            <span class="dashboard-heading-context">RentOps Business Workspace</span>
+          </div>
           <h1>Tổng quan</h1>
           <p>Cập nhật tình hình kinh doanh của bạn hôm nay</p>
         </div>
@@ -288,31 +292,64 @@ const notifications = computed(() => {
 .dashboard-heading {
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
+}
+
+.dashboard-heading-copy {
+  min-width: 0;
+}
+
+.dashboard-heading-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 28px;
 }
 
 .dashboard-kicker {
-  display: block;
-  margin-bottom: 7px;
-  color: #7564ea;
-  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border: 1px solid #e1ddff;
+  border-radius: 9px;
+  color: #5d48ef;
+  background: #efedff;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.dashboard-heading-separator {
+  color: #a8b1c2;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.dashboard-heading-context {
+  color: #8993a8;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .dashboard-heading h1 {
-  margin: 0;
+  margin: 10px 0 0;
   color: #1b2642;
-  font-size: 27px;
+  font-size: 38px;
   font-weight: 800;
   letter-spacing: -0.04em;
+  line-height: 1.08;
 }
 
 .dashboard-heading p,
 .panel-heading p {
-  margin: 5px 0 0;
+  max-width: 760px;
+  margin: 9px 0 0;
   color: #8993a8;
-  font-size: 11px;
+  font-size: 15px;
+  line-height: 1.45;
 }
 
 .dashboard-filters {
@@ -336,6 +373,13 @@ const notifications = computed(() => {
   background: #fff;
   box-shadow: 0 2px 4px rgba(33, 49, 85, 0.025);
   cursor: pointer;
+}
+
+.date-filter:hover,
+.filter-icon:hover {
+  border-color: #c9c2ff;
+  color: #5d48ef;
+  box-shadow: 0 7px 18px rgba(93, 72, 239, 0.1);
 }
 
 .date-filter {
@@ -1016,6 +1060,13 @@ td small {
 
   .dashboard-filters {
     width: 100%;
+  }
+
+  .dashboard-heading h1 { font-size: 30px; }
+  .dashboard-heading p { font-size: 13px; }
+
+  .dashboard-heading-context {
+    font-size: 12px;
   }
 
   .date-filter {
