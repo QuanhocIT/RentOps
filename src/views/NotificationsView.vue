@@ -3,16 +3,29 @@
     <div class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Nhật Ký Nhắc Nợ ZNS / SMS / Email</h1>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Nhắc Nợ ZNS / SMS</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Nhật Ký Nhắc Nợ ZNS / SMS / Email</h1>
           <p class="text-slate-500 text-sm mt-0.5">Lịch sử gửi thông báo nhắc nợ tự động tới khách thuê chưa thanh toán</p>
         </div>
 
         <div class="flex items-center gap-3">
-          <button @click="sendBatchReminders" :disabled="sending" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-sm shadow-md transition disabled:opacity-50">
-            <span>📩</span> {{ sending ? 'Đang gửi...' : 'Gửi Nhắc Nợ Hàng Loạt ZNS / SMS' }}
+          <button
+            @click="sendBatchReminders"
+            :disabled="sending"
+            class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <span>📩</span>
+            <span>{{ sending ? 'Đang gửi...' : 'Gửi Nhắc Nợ 1-Click' }}</span>
           </button>
-          <button @click="loadLogs" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
-            🔄 Tải lại nhật ký
+          <button
+            @click="loadLogs"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5"
+          >
+            <span>🔄</span>
+            <span>Tải lại</span>
           </button>
         </div>
       </div>

@@ -2,42 +2,61 @@
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
       <!-- Header Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>📈</span> Báo Cáo Tài Chính & Vận Hành
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Tổng hợp doanh thu, dòng tiền thực thu, chi phí vận hành và lợi nhuận ròng toàn bộ hệ thống</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Báo Cáo Tài Chính</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Báo Cáo Tài Chính & Vận Hành</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Tổng hợp doanh thu, dòng tiền thực thu, chi phí vận hành và lợi nhuận ròng toàn bộ hệ thống</p>
         </div>
 
-        <div class="flex items-center space-x-3">
-          <button @click="exportCSV" class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-emerald-600/25 transition hover:scale-105 active:scale-95">
-            📊 Xuất Báo Cáo Excel/CSV
+        <div class="flex items-center gap-3">
+          <button
+            @click="exportCSV"
+            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>📊</span>
+            <span>Xuất Báo Cáo Excel/CSV</span>
           </button>
-          <button @click="loadData" class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-white border border-slate-200/90 rounded-xl font-bold text-slate-700 text-xs hover:bg-slate-50 shadow-xs transition hover:scale-105 active:scale-95">
-            🔄 Cập nhật báo cáo
+          <button
+            @click="loadData"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5"
+          >
+            <span>🔄</span>
+            <span>Cập nhật</span>
           </button>
         </div>
       </div>
 
       <!-- Financial Metrics Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <div class="text-[11px] uppercase tracking-wider font-extrabold text-slate-400">Doanh Thu Ước Tính</div>
-          <div class="text-2xl font-black text-slate-900 mt-2 font-mono tracking-tight">{{ formatCurrency(financials.monthly_revenue_estimate) }}</div>
-          <p class="text-xs text-slate-500 mt-1 font-medium">Tính từ tất cả hợp đồng active</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Doanh Thu Ước Tính</span>
+            <span>📈</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ formatCurrency(financials.monthly_revenue_estimate) }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Tính từ tất cả hợp đồng active</p>
         </div>
 
-        <div class="bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-emerald-100 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <div class="text-[11px] uppercase tracking-wider font-extrabold text-emerald-600">Đã Thu Thực Tế</div>
-          <div class="text-2xl font-black text-emerald-600 mt-2 font-mono tracking-tight">{{ formatCurrency(financials.paid_billed) }}</div>
-          <p class="text-xs text-emerald-700 mt-1 font-medium">Hóa đơn đã gạch nợ thành công</p>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-emerald-600 flex items-center justify-between">
+            <span>Đã Thu Thực Tế</span>
+            <span>✅</span>
+          </div>
+          <p class="text-2xl font-black text-emerald-600 mt-2 font-mono">{{ formatCurrency(financials.paid_billed) }}</p>
+          <p class="text-[11px] text-emerald-600 font-semibold mt-1">Hóa đơn đã gạch nợ thành công</p>
         </div>
 
-        <div class="bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-rose-100 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-          <div class="text-[11px] uppercase tracking-wider font-extrabold text-rose-600">Tổng Chi Phí Vận Hành</div>
-          <div class="text-2xl font-black text-rose-600 mt-2 font-mono tracking-tight">{{ formatCurrency(financials.total_expenses) }}</div>
-          <p class="text-xs text-rose-700 mt-1 font-medium">Điện nước chung, sửa chữa, wifi</p>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
+            <span>Tổng Chi Phí Vận Hành</span>
+            <span>💸</span>
+          </div>
+          <p class="text-2xl font-black text-rose-600 mt-2 font-mono">{{ formatCurrency(financials.total_expenses) }}</p>
+          <p class="text-[11px] text-rose-600 font-semibold mt-1">Điện nước chung, sửa chữa, wifi</p>
         </div>
 
         <div class="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border border-indigo-700/50">
@@ -75,6 +94,52 @@
             </div>
             <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden p-0.5 border border-slate-200/80">
               <div class="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-700 shadow-xs" :style="{ width: `${counters.occupancy_rate}%` }"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Month Financial Trend Chart Visualizer -->
+      <div v-if="financialTrends.length > 0" class="bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+              <span>📈</span> Biểu Đồ Xu Hướng Dòng Tiền & Lợi Nhuận 6 Tháng
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">So sánh Thực thu, Chi phí vận hành và Lợi nhuận ròng qua các tháng</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs font-bold">
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-emerald-500"></span><span class="text-slate-600">Thực Thu</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-rose-500"></span><span class="text-slate-600">Chi Phí</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-indigo-600"></span><span class="text-slate-600">Lợi Nhuận Ròng</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div v-for="t in financialTrends" :key="t.month" class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 hover:border-indigo-300 transition space-y-3 flex flex-col justify-between">
+            <div class="text-center font-extrabold text-slate-700 text-xs border-b border-slate-200 pb-2">
+              {{ t.month_name }}
+            </div>
+            
+            <div class="space-y-2 text-[11px] font-mono">
+              <div>
+                <div class="text-slate-400 text-[10px] font-sans font-semibold uppercase">Thực Thu</div>
+                <div class="font-bold text-emerald-600">{{ formatCurrency(t.paid_billed) }}</div>
+              </div>
+              <div>
+                <div class="text-slate-400 text-[10px] font-sans font-semibold uppercase">Chi Phí</div>
+                <div class="font-bold text-rose-600">{{ formatCurrency(t.expenses) }}</div>
+              </div>
+              <div class="pt-1 border-t border-slate-200">
+                <div class="text-slate-400 text-[10px] font-sans font-semibold uppercase">Lợi Nhuận</div>
+                <div class="font-black text-indigo-600 text-xs">{{ formatCurrency(t.net_profit) }}</div>
+              </div>
+            </div>
+
+            <!-- Mini Progress Indicator -->
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
+              <div class="bg-emerald-500 h-full" :style="{ width: getTrendPercentage(t.paid_billed) + '%' }"></div>
+              <div class="bg-rose-500 h-full" :style="{ width: getTrendPercentage(t.expenses) + '%' }"></div>
             </div>
           </div>
         </div>
@@ -169,8 +234,14 @@ const counters = ref({
 
 const byProperty = ref([])
 const expenseCategories = ref([])
+const financialTrends = ref([])
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
+
+const getTrendPercentage = (val) => {
+  const max = Math.max(...financialTrends.value.map(t => Math.max(t.paid_billed || 0, t.expenses || 0)), 1)
+  return Math.min(Math.round(((val || 0) / max) * 100), 100)
+}
 
 const exportCSV = () => {
   const rows = [
@@ -208,6 +279,7 @@ const loadData = async () => {
       counters.value = res.data.counters || {}
       byProperty.value = res.data.by_property || []
       expenseCategories.value = res.data.expense_categories || []
+      financialTrends.value = res.data.financial_trends || []
     }
   } catch (err) {
     console.warn('API error fetching summary report:', err)

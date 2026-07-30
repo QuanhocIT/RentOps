@@ -19,6 +19,7 @@ import AssetsView from '../views/AssetsView.vue'
 import TenantPortalView from '../views/TenantPortalView.vue'
 import SuperAdminView from '../views/SuperAdminView.vue'
 import TrashView from '../views/TrashView.vue'
+import AiAdvisorView from '../views/AiAdvisorView.vue'
 import { useAuthStore } from '../stores/auth'
 
 import LandingView from '../views/LandingView.vue'
@@ -47,6 +48,11 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: DashboardGrid
+  },
+  {
+    path: '/ai-advisor',
+    name: 'AiAdvisor',
+    component: AiAdvisorView
   },
   {
     path: '/rooms',
@@ -153,7 +159,24 @@ router.beforeEach((to) => {
     return { name: 'Landing' }
   }
 
+  const isSuperAdminUser = authStore.currentUser?.role === 'super_admin' || authStore.currentUser?.email?.toLowerCase().includes('superadmin')
+  const isRenterUser = authStore.currentUser?.role === 'renter'
+
+  if (authStore.isAuthenticated) {
+    if (isSuperAdminUser && to.path === '/') {
+      return { name: 'SuperAdmin' }
+    }
+    if (isRenterUser && to.name !== 'TenantPortal' && !to.meta?.public) {
+      return { name: 'TenantPortal' }
+    }
+  }
+
   if ((to.name === 'Login' || to.name === 'Landing') && authStore.isAuthenticated) {
+    if (isSuperAdminUser) {
+      return { name: 'SuperAdmin' }
+    } else if (isRenterUser) {
+      return { name: 'TenantPortal' }
+    }
     return { name: 'Dashboard' }
   }
 })

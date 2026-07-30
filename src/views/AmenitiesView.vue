@@ -1,55 +1,60 @@
 <template>
   <AppLayout>
     <div class="space-y-6">
-      <!-- Glass Header Bar -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <!-- Header Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>🛋️</span> Danh Mục Tiện Ích & Nội Thất
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Quản lý danh mục các thiết bị, đồ dùng trang bị cho từng phòng trọ & căn hộ dịch vụ</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Tiện Ích Phòng</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Danh Mục Tiện Ích & Nội Thất</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Quản lý danh mục các thiết bị, đồ dùng trang bị cho từng phòng trọ & căn hộ dịch vụ</p>
         </div>
 
         <div class="flex items-center gap-3">
           <button
             @click="seedSampleData"
-            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300/80 transition"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition"
           >
             ⚡ Tạo Thêm Dữ Liệu Mẫu
           </button>
           <button
             @click="showModal = true"
-            class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>🛋️</span> Thêm Tiện Ích Mới
+            <span>🛋️</span>
+            <span>Thêm Tiện Ích Mới</span>
           </button>
         </div>
       </div>
 
       <!-- Summary Metric Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-slate-400">Tổng Số Tiện Ích</div>
-            <div class="text-2xl font-black text-slate-900 mt-1 font-mono">{{ displayAmenities.length }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Tổng Số Tiện Ích</span>
+            <span>🛋️</span>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">🛋️</div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ displayAmenities.length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Danh mục tiện ích khả dụng</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-emerald-600 flex items-center justify-between">
+            <span>Điện Lạnh & Khác</span>
+            <span>❄️</span>
+          </div>
+          <p class="text-2xl font-black text-emerald-600 mt-2 font-mono">{{ smartCount }}</p>
+          <p class="text-[11px] text-emerald-600 font-semibold mt-1">Điều hòa, tủ lạnh, bình nóng lạnh</p>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-emerald-600">Thiết Bị Điện Lạnh / Thông Minh</div>
-            <div class="text-2xl font-black text-emerald-600 mt-1 font-mono">{{ smartCount }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-amber-600 flex items-center justify-between">
+            <span>Nội Thất Gỗ & Decor</span>
+            <span>🛏️</span>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg">❄️</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-amber-600">Nội Thất Gỗ & Decor</div>
-            <div class="text-2xl font-black text-amber-600 mt-1 font-mono font-mono">{{ furnitureCount }}</div>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">🛏️</div>
+          <p class="text-2xl font-black text-amber-600 mt-2 font-mono">{{ furnitureCount }}</p>
+          <p class="text-[11px] text-amber-600 font-semibold mt-1">Giường, tủ, bàn ghế</p>
         </div>
       </div>
 

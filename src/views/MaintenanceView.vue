@@ -1,46 +1,63 @@
 <template>
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>🔧</span> Quản Lý Sự Cố & Bảo Trì
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Tiếp nhận báo hỏng hóc, phân công sửa chữa và ghi nhận chi phí vật tư</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Sự Cố & Bảo Trì</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Quản Lý Sự Cố & Bảo Trì Chi Tiết</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Tiếp nhận báo hỏng hóc, phân công thợ sửa chữa, phân bổ chi phí (Chủ nhà / Khách trả) và liên kết hóa đơn</p>
         </div>
 
-        <button
-          @click="showModal = true"
-          class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
-        >
-          <span>🔧</span> Báo sự cố mới
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="showModal = true"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>🔧</span>
+            <span>Báo Sự Cố Mới</span>
+          </button>
+        </div>
       </div>
 
       <!-- Summary Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-slate-400">Tổng Số Sự Cố</div>
-            <div class="text-2xl font-black text-slate-900 mt-1 font-mono">{{ requests.length }}</div>
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Tổng Số Sự Cố</span>
+            <span>🔧</span>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg">🔧</div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ requests.length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Tất cả yêu cầu bảo trì</p>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-amber-600">Đang Chờ Xử Lý</div>
-            <div class="text-2xl font-black text-amber-600 mt-1 font-mono">{{ pendingCount }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-amber-600 flex items-center justify-between">
+            <span>Đang Chờ Xử Lý</span>
+            <span>⏳</span>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">⏳</div>
+          <p class="text-2xl font-black text-amber-600 mt-2 font-mono">{{ pendingCount }}</p>
+          <p class="text-[11px] text-amber-600 font-semibold mt-1">Cần kỹ thuật / thợ sửa</p>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-rose-600">Tổng Chi Phí Sửa Chữa</div>
-            <div class="text-2xl font-black text-rose-600 mt-1 font-mono">{{ formatCurrency(totalCost) }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
+            <span>Chủ Nhà Chi Phí</span>
+            <span>🏠</span>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-lg">💸</div>
+          <p class="text-2xl font-black text-rose-600 mt-2 font-mono">{{ formatCurrency(ownerCost) }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Trừ vào Lợi nhuận ròng</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-indigo-600 flex items-center justify-between">
+            <span>Khách Thuê Trả</span>
+            <span>👤</span>
+          </div>
+          <p class="text-2xl font-black text-indigo-600 mt-2 font-mono">{{ formatCurrency(renterCost) }}</p>
+          <p class="text-[11px] text-indigo-600 font-medium mt-1">Tự động cộng vào Hóa đơn</p>
         </div>
       </div>
 
@@ -76,6 +93,8 @@
               <tr>
                 <th class="px-6 py-4">Tên sự cố / Tiêu đề</th>
                 <th class="px-6 py-4">Phòng</th>
+                <th class="px-6 py-4">Thợ / Đơn vị sửa</th>
+                <th class="px-6 py-4">Bên trả chi phí</th>
                 <th class="px-6 py-4">Độ ưu tiên</th>
                 <th class="px-6 py-4">Trạng thái</th>
                 <th class="px-6 py-4">Chi phí (VNĐ)</th>
@@ -89,6 +108,21 @@
                   <span v-if="req.description" class="block text-xs font-normal text-slate-400 mt-0.5">{{ req.description }}</span>
                 </td>
                 <td class="px-6 py-4 font-bold text-slate-800">Phòng {{ req.room_number }}</td>
+                <td class="px-6 py-4 text-xs font-medium text-slate-700">
+                  <div v-if="req.handyman_name" class="font-semibold text-indigo-900">
+                    👨‍🔧 {{ req.handyman_name }}
+                    <span v-if="req.handyman_phone" class="block font-mono text-[11px] text-slate-400">📞 {{ req.handyman_phone }}</span>
+                  </div>
+                  <span v-else class="text-slate-400 italic">Chưa phân công</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span v-if="req.cost_bearer === 'renter'" class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                    👤 Khách thuê trả
+                  </span>
+                  <span v-else class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    🏠 Chủ nhà chịu
+                  </span>
+                </td>
                 <td class="px-6 py-4">
                   <span :class="['px-2 py-0.5 rounded-full text-xs font-bold uppercase', getPriorityBadge(req.priority)]">
                     {{ req.priority }}
@@ -105,7 +139,7 @@
                 <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
                   <button
                     v-if="req.status !== 'resolved' && req.status !== 2"
-                    @click="markResolved(req)"
+                    @click="openResolveModal(req)"
                     class="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200"
                   >
                     Đánh dấu đã xong
@@ -153,6 +187,20 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Bên chịu chi phí</label>
+                <select v-model="form.cost_bearer" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-indigo-900 focus:bg-white">
+                  <option value="owner">🏠 Chủ nhà chịu chi phí</option>
+                  <option value="renter">👤 Khách thuê trả (Cộng hóa đơn)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Thợ / Đơn vị sửa</label>
+                <input v-model="form.handyman_name" type="text" placeholder="Tên thợ sửa..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white" />
+              </div>
+            </div>
+
             <div>
               <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Mô tả chi tiết</label>
               <textarea v-model="form.description" rows="2" placeholder="Ghi rõ hiện trạng hư hỏng..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:bg-white"></textarea>
@@ -188,7 +236,9 @@ const form = ref({
   title: '',
   room_id: '',
   priority: 'medium',
-  description: ''
+  description: '',
+  cost_bearer: 'owner',
+  handyman_name: ''
 })
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
@@ -197,8 +247,12 @@ const pendingCount = computed(() => {
   return requests.value.filter(r => r.status === 'pending' || r.status === 'in_progress' || r.status === 0 || r.status === 1).length
 })
 
-const totalCost = computed(() => {
-  return requests.value.reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
+const ownerCost = computed(() => {
+  return requests.value.filter(r => r.cost_bearer === 'owner' || !r.cost_bearer).reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
+})
+
+const renterCost = computed(() => {
+  return requests.value.filter(r => r.cost_bearer === 'renter').reduce((acc, curr) => acc + Number(curr.cost || 0), 0)
 })
 
 const getPriorityBadge = (p) => {
@@ -246,7 +300,7 @@ const createRequest = async () => {
   try {
     await api.post('/maintenance_requests', { maintenance_request: form.value })
     showModal.value = false
-    form.value = { title: '', room_id: '', priority: 'medium', description: '' }
+    form.value = { title: '', room_id: '', priority: 'medium', description: '', cost_bearer: 'owner', handyman_name: '' }
     loadData()
   } catch (err) {
     alert(err?.message || 'Có lỗi xảy ra')
@@ -255,8 +309,8 @@ const createRequest = async () => {
   }
 }
 
-const markResolved = async (req) => {
-  const cost = prompt('Nhập chi phí sửa chữa vật tư (VNĐ):', '150000')
+const openResolveModal = async (req) => {
+  const cost = prompt('Nhập chi phí sửa chữa vật tư (VNĐ):', req.cost || '150000')
   if (cost === null) return
   try {
     await api.put(`/maintenance_requests/${req.id}`, {

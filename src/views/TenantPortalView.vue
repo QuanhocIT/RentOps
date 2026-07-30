@@ -8,8 +8,8 @@
             <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-full border border-indigo-400/30 uppercase tracking-wider">
               Tenant Self-Service Portal
             </span>
-            <h1 class="text-2xl font-bold text-white mt-2">Xin chào, Nguyễn Văn An 👋</h1>
-            <p class="text-xs text-indigo-200 mt-1">Phòng 102 • Tòa nhà Landmark Residence</p>
+            <h1 class="text-2xl font-bold text-white mt-2">Xin chào, {{ currentUser?.full_name || 'Khách Thuê (Cư Dân)' }} 👋</h1>
+            <p class="text-xs text-indigo-200 mt-1">SĐT: {{ currentUser?.phone || '0988777666' }} • Khách thuê trọ RentOps Platform</p>
           </div>
 
           <div class="text-right">
@@ -178,11 +178,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import PaymentQrModal from '../components/PaymentQrModal.vue'
 import ESignatureModal from '../components/ESignatureModal.vue'
 import api from '../services/api'
+import { useAuthStore } from '../stores/auth'
+
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 
 const showPayQr = ref(false)
 const showSignModal = ref(false)

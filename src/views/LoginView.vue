@@ -186,13 +186,18 @@ const registerForm = ref({
 const loginDemo = async () => {
   loading.value = true
 
+  const inputEmail = email.value || 'admin@rentops.vn'
+  const isSuperAdminEmail = inputEmail.toLowerCase().includes('superadmin')
+  const isRenterEmail = inputEmail.toLowerCase().includes('renter') || inputEmail.toLowerCase().includes('khach')
+
   const defaultUser = {
-    id: 1,
-    email: email.value || 'admin@rentops.vn',
-    full_name: 'Quản trị viên RentOps'
+    id: isSuperAdminEmail ? 999 : (isRenterEmail ? 102 : 1),
+    email: inputEmail,
+    full_name: isSuperAdminEmail ? 'Super Admin Hệ Thống' : (isRenterEmail ? 'Khách Thuê (Cư Dân)' : 'Quản trị viên RentOps'),
+    role: isSuperAdminEmail ? 'super_admin' : (isRenterEmail ? 'renter' : 'owner')
   }
 
-  const defaultTenant = {
+  const defaultTenant = isSuperAdminEmail ? null : {
     id: 1,
     name: 'Tòa Nhà Demo RentOps',
     subdomain: 'demo'
@@ -202,7 +207,7 @@ const loginDemo = async () => {
 
   try {
     const res = await api.post('/auth/login', {
-      email: email.value || 'admin@rentops.vn',
+      email: inputEmail,
       password: password.value
     })
 
@@ -220,7 +225,14 @@ const loginDemo = async () => {
     })
   } finally {
     loading.value = false
-    await router.push('/')
+    const loggedUser = authStore.user
+    if (loggedUser?.role === 'super_admin' || loggedUser?.email?.toLowerCase().includes('superadmin')) {
+      await router.push('/super-admin')
+    } else if (loggedUser?.role === 'renter') {
+      await router.push('/tenant-portal')
+    } else {
+      await router.push('/')
+    }
   }
 }
 

@@ -2,42 +2,45 @@
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
       <!-- Title & Header -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>📊</span> Chi Phí Vận Hành Tòa Nhà
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Theo dõi chi phí sửa chữa, điện nước chung, bảo trì và tính toán lợi nhuận ròng</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Chi Phí Vận Hành</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Chi Phí Vận Hành Tòa Nhà</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Theo dõi chi phí sửa chữa, điện nước chung, bảo trì và tính toán lợi nhuận ròng</p>
         </div>
 
-        <button
-          @click="showModal = true"
-          class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
-        >
-          <span>➕</span> Thêm chi phí mới
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="showModal = true"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>➕</span>
+            <span>Thêm Chi Phí Mới</span>
+          </button>
+        </div>
       </div>
 
       <!-- Expense Summary Card -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-semibold text-slate-400">Tổng Chi Phí</div>
-            <div class="text-2xl font-black text-rose-600 mt-1">{{ formatCurrency(totalAmount) }}</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
+            <span>Tổng Chi Phí</span>
+            <span>💸</span>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xl">
-            💸
-          </div>
+          <p class="text-2xl font-black text-rose-600 mt-2 font-mono">{{ formatCurrency(totalAmount) }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Toàn bộ chi phí đã ghi nhận</p>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-semibold text-slate-400">Số Mục Chi Phí</div>
-            <div class="text-2xl font-black text-slate-900 mt-1">{{ expenses.length }} mục</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Số Mục Chi Phí</span>
+            <span>📑</span>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
-            📑
-          </div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ expenses.length }} mục</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Danh mục các khoản chi</p>
         </div>
 
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">

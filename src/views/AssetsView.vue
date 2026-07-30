@@ -4,40 +4,52 @@
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Quản Lý Trang Thiết Bị & Tài Sản</h1>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Quản Lý Tài Sản</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Quản Lý Trang Thiết Bị & Tài Sản</h1>
           <p class="text-slate-500 text-sm mt-0.5">Theo dõi đồ dùng, nội thất, thiết bị theo từng phòng và biên bản bàn giao</p>
         </div>
 
-        <button
-          @click="openModal()"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
-        >
-          <span>➕</span> Thêm thiết bị mới
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="openModal()"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>📦</span>
+            <span>Thêm Thiết Bị Mới</span>
+          </button>
+        </div>
       </div>
 
       <!-- Stats Summary -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-slate-400">Tổng Số Thiết Bị</div>
-            <div class="text-xl font-black text-slate-900 mt-0.5">{{ assets.length }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Tổng Số Thiết Bị</span>
+            <span>📦</span>
           </div>
-          <span class="text-2xl">📦</span>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ assets.length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Toàn bộ trang thiết bị</p>
         </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-emerald-600">Tình Trạng Tốt</div>
-            <div class="text-xl font-black text-emerald-700 mt-0.5">{{ assets.filter(a => a.condition === 'good' || a.condition === 'new').length }}</div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-emerald-600 flex items-center justify-between">
+            <span>Tình Trạng Tốt</span>
+            <span>🟢</span>
           </div>
-          <span class="text-2xl">🟢</span>
+          <p class="text-2xl font-black text-emerald-700 mt-2 font-mono">{{ assets.filter(a => a.condition === 'good' || a.condition === 'new').length }}</p>
+          <p class="text-[11px] text-emerald-600 font-semibold mt-1">Đang hoạt động bình thường</p>
         </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs uppercase font-bold text-rose-600">Cần Sửa / Hỏng</div>
-            <div class="text-xl font-black text-rose-700 mt-0.5">{{ assets.filter(a => a.condition === 'damaged' || a.condition === 'repair').length }}</div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
+            <span>Cần Sửa / Hỏng</span>
+            <span>🔴</span>
           </div>
-          <span class="text-2xl">🔴</span>
+          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ assets.filter(a => a.condition === 'damaged' || a.condition === 'repair').length }}</p>
+          <p class="text-[11px] text-rose-600 font-semibold mt-1">Cần bảo trì</p>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>

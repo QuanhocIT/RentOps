@@ -2,12 +2,14 @@
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
       <!-- Title & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>⚡</span> Quản Lý Chỉ Số Điện Nước
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Nhập nhanh ma trận chỉ số công tơ điện nước hoặc quản lý danh sách phòng</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Chỉ Số Điện Nước</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Ghi Chỉ Số Điện Nước Hàng Tháng</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Nhập nhanh ma trận chỉ số công tơ điện nước hoặc quản lý theo danh sách phòng</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -15,32 +17,43 @@
             v-model="selectedMonth"
             type="month"
             @change="fetchData"
-            class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-indigo-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            class="px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-indigo-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             @click="showModal = true"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>⚡</span> Nhập 1 phòng
+            <span>⚡</span>
+            <span>Nhập 1 phòng</span>
           </button>
         </div>
       </div>
 
       <!-- Mode Tabs -->
-      <div class="flex space-x-2 bg-slate-200/60 p-1.5 rounded-xl w-fit">
+      <div class="flex border-b border-slate-200 gap-2 overflow-x-auto">
         <button
           @click="activeMode = 'list'"
-          :class="activeMode === 'list' ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-          class="px-4 py-2 text-xs rounded-lg transition"
+          :class="[
+            'px-4 py-2.5 text-xs font-bold rounded-t-xl transition flex items-center gap-2 border-b-2',
+            activeMode === 'list'
+              ? 'border-indigo-600 text-indigo-600 bg-white shadow-xs'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
+          ]"
         >
-          📋 Danh Sách Chỉ Số Tháng {{ selectedMonth }}
+          <span>📋</span>
+          <span>Danh Sách Chỉ Số Tháng {{ selectedMonth }}</span>
         </button>
         <button
           @click="activeMode = 'batch'; prepareBatchData()"
-          :class="activeMode === 'batch' ? 'bg-white text-indigo-600 font-bold shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-          class="px-4 py-2 text-xs rounded-lg transition flex items-center space-x-1"
+          :class="[
+            'px-4 py-2.5 text-xs font-bold rounded-t-xl transition flex items-center gap-2 border-b-2',
+            activeMode === 'batch'
+              ? 'border-indigo-600 text-indigo-600 bg-white shadow-xs'
+              : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
+          ]"
         >
-          <span>⚡ Nhập Điện Nước Hàng Loạt Tất Cả Phòng</span>
+          <span>⚡</span>
+          <span>Nhập Điện Nước Hàng Loạt Tất Cả Phòng</span>
         </button>
       </div>
 
@@ -130,6 +143,7 @@
                 <th class="px-6 py-4">Điện Tiêu Thụ</th>
                 <th class="px-6 py-4">Chỉ số Nước (Cũ ➔ Mới)</th>
                 <th class="px-6 py-4">Nước Tiêu Thụ</th>
+                <th class="px-6 py-4">Cảnh Báo Tiêu Thụ</th>
                 <th class="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -158,6 +172,15 @@
                   <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold font-mono">
                     💧 {{ r.water_usage || (r.water_new - r.water_old) }} m³
                   </span>
+                </td>
+                <td class="px-6 py-4">
+                  <span v-if="r.anomaly_detected" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                    ⚠️ Đột biến (+{{ r.elec_increase_pct }}%)
+                  </span>
+                  <span v-else-if="r.is_high_electric || r.is_high_usage" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                    ⚡ Tiêu thụ cao
+                  </span>
+                  <span v-else class="text-xs text-slate-400 font-medium">Bình thường</span>
                 </td>
                 <td class="px-6 py-4 text-right">
                   <button

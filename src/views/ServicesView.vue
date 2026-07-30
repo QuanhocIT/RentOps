@@ -3,7 +3,11 @@
     <div class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Bảng Giá Dịch Vụ & Điện Nước</h1>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Bảng Giá Dịch Vụ</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Bảng Giá Dịch Vụ & Điện Nước</h1>
           <p class="text-slate-500 text-sm mt-0.5">Quản lý đơn giá cố định cho Điện, Nước, Internet, Vệ sinh, Gửi xe áp dụng toàn hệ thống</p>
         </div>
 
@@ -11,15 +15,17 @@
           <button
             @click="seedSampleData"
             :disabled="seeding"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md transition"
+            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>✨</span> {{ seeding ? 'Đang tạo mẫu...' : 'Khởi Tạo Mẫu Dịch Vụ' }}
+            <span>✨</span>
+            <span>{{ seeding ? 'Đang tạo mẫu...' : 'Khởi Tạo Mẫu Dịch Vụ' }}</span>
           </button>
           <button
             @click="openModal()"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>⚡</span> Thêm loại dịch vụ mới
+            <span>⚡</span>
+            <span>Thêm dịch vụ mới</span>
           </button>
         </div>
       </div>

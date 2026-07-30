@@ -165,6 +165,37 @@
             </div>
           </div>
 
+          <!-- Apartment Layout Breakdown (2 Bedrooms, 1 Living Room, 1 WC, Kitchen, Furnished, etc.) -->
+          <div class="bg-gradient-to-r from-indigo-900/60 to-purple-900/60 rounded-3xl p-6 border border-indigo-500/40 shadow-xl space-y-3">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🏗️</span> Cấu Trúc Layout & Không Gian Cho Thuê
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+              <div class="bg-slate-900/80 p-3 rounded-2xl border border-indigo-500/30">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block">Số Phòng Ngủ</span>
+                <span class="text-lg font-black text-white font-mono">🛏️ {{ room.bedrooms_count || 2 }} PN</span>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-2xl border border-indigo-500/30">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block">Phòng Khách</span>
+                <span class="text-lg font-black text-white font-mono">🛋️ {{ room.living_rooms_count || 1 }} PK</span>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-2xl border border-indigo-500/30">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block">Số Nhà Vệ Sinh</span>
+                <span class="text-lg font-black text-white font-mono">🚿 {{ room.bathrooms_count || 1 }} WC</span>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-2xl border border-indigo-500/30">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block">Số Phòng Bếp</span>
+                <span class="text-lg font-black text-white font-mono">🍳 {{ room.kitchens_count || 1 }} Bếp</span>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-2xl border border-indigo-500/30">
+                <span class="text-[10px] uppercase font-bold text-indigo-300 block">Nội Thất / Tiện Ích</span>
+                <span class="text-xs font-black text-emerald-400 mt-1 block">
+                  {{ room.furnished_status_label || 'Full nội thất' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <!-- Full Amenities Section -->
           <div class="bg-slate-800/60 rounded-3xl p-6 border border-slate-700/80 shadow-lg space-y-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
@@ -233,13 +264,24 @@
             <p class="text-xs text-slate-300">Quý khách có thể đặt cọc giữ phòng trực tuyến 24/7 bằng mã VietQR tự động hoặc gọi điện trực tiếp:</p>
 
             <button
-              @click="showBookingModal = true"
+              @click="handleBookingClick"
               class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-600 hover:to-emerald-600 text-slate-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center space-x-2 transition"
             >
               <span>⚡</span> <span>Đặt Cọc Giữ Phòng VietQR 24/7</span>
             </button>
 
-            <a href="tel:0901234567" class="w-full py-3 bg-emerald-600/90 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-2xl shadow-md flex items-center justify-center space-x-2 transition">
+            <button
+              v-if="!authStore.isAuthenticated"
+              @click="showAuthModal = true"
+              class="w-full py-3 bg-emerald-600/90 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-2xl shadow-md flex items-center justify-center space-x-2 transition"
+            >
+              <span>📞</span> <span>Hotline: 0901 234 *** (Lấy hotline)</span>
+            </button>
+            <a
+              v-else
+              href="tel:0901234567"
+              class="w-full py-3 bg-emerald-600/90 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-2xl shadow-md flex items-center justify-center space-x-2 transition"
+            >
               <span>📞</span> <span>Hotline: 0901 234 567</span>
             </a>
 
@@ -298,6 +340,14 @@
     <!-- Detailed App Footer -->
     <AppFooter />
 
+    <!-- Auth Required Modal -->
+    <AuthRequiredModal
+      :show="showAuthModal"
+      :room="room"
+      @close="showAuthModal = false"
+      @authenticated="showBookingModal = true"
+    />
+
     <!-- Booking Modal VietQR -->
     <BookingModal
       v-if="showBookingModal"
@@ -314,11 +364,21 @@ import { useAuthStore } from '../stores/auth'
 import api from '../services/api'
 import AppFooter from '../components/AppFooter.vue'
 import BookingModal from '../components/BookingModal.vue'
+import AuthRequiredModal from '../components/AuthRequiredModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const showBookingModal = ref(false)
+const showAuthModal = ref(false)
+
+const handleBookingClick = () => {
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true
+  } else {
+    showBookingModal.value = true
+  }
+}
 
 const roomId = computed(() => route.params.id)
 
@@ -410,6 +470,10 @@ const submitAppointment = () => {
 }
 
 const openZalo = () => {
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true
+    return
+  }
   alert(`Vui lòng kết bạn Zalo Hotline: 0901.234.567 để nhận Video/Ảnh quay trực tiếp Phòng ${room.value.room_number}!`)
 }
 

@@ -225,15 +225,40 @@
 
               <!-- Details Body -->
               <div class="p-5 space-y-3.5">
-                <div class="flex justify-between items-center border-b border-slate-800/80 pb-3">
-                  <h3 class="text-2xl font-black text-white">Phòng {{ room.room_number }}</h3>
-                  <span class="text-xs font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    {{ room.property_type_label || 'Bất Động Sản Cho Thuê' }}
+                  </span>
+                  <span class="text-xs font-bold text-slate-300 bg-slate-800 px-2.5 py-0.5 rounded-lg border border-slate-700">
                     📐 {{ room.area || 25 }} m²
                   </span>
                 </div>
 
+                <div class="flex justify-between items-center border-b border-slate-800/80 pb-2.5">
+                  <h3 class="text-2xl font-black text-white">Phòng {{ room.room_number }}</h3>
+                  <span class="text-xs font-semibold text-emerald-400">
+                    {{ room.room_type_label || 'Phòng khép kín' }}
+                  </span>
+                </div>
+
+                <!-- Layout breakdown badges (PN, PK, WC, Ban công) -->
+                <div class="flex flex-wrap gap-1.5 text-[11px] font-semibold text-slate-300">
+                  <span class="px-2 py-0.5 bg-slate-800/90 rounded border border-slate-700/80">
+                    🛏️ {{ room.bedrooms_count || 1 }} PN
+                  </span>
+                  <span v-if="room.living_rooms_count > 0" class="px-2 py-0.5 bg-slate-800/90 rounded border border-slate-700/80">
+                    🛋️ {{ room.living_rooms_count }} PK
+                  </span>
+                  <span class="px-2 py-0.5 bg-slate-800/90 rounded border border-slate-700/80">
+                    🚿 {{ room.bathrooms_count || 1 }} WC
+                  </span>
+                  <span v-if="room.has_balcony" class="px-2 py-0.5 bg-slate-800/90 rounded border border-slate-700/80 text-cyan-300">
+                    🌅 Ban công
+                  </span>
+                </div>
+
                 <div>
-                  <p class="text-[11px] text-slate-400 mb-2 font-bold uppercase tracking-wider">Tiện nghi nổi bật:</p>
+                  <p class="text-[11px] text-slate-400 mb-1.5 font-bold uppercase tracking-wider">Tiện nghi nổi bật:</p>
                   <div class="flex flex-wrap gap-1.5">
                     <span v-for="(amenity, idx) in (room.amenities || []).slice(0, 3)" :key="idx" class="px-2.5 py-1 bg-slate-800 text-slate-300 text-[11px] rounded-lg font-bold border border-slate-700/60">
                       ✓ {{ amenity }}
@@ -251,7 +276,7 @@
                 @click="openRoomDetail(room)"
                 class="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2"
               >
-                <span>🔍</span> Xem Chi Tiết & Đặt Cọc ➔
+                <span>🔍</span> Xem Chi Tiết Phòng ➔
               </button>
             </div>
           </div>
@@ -550,7 +575,7 @@ const defaultRooms = [
 
 const rooms = ref(defaultRooms)
 const searchFilter = ref('')
-const statusFilter = ref('all')
+const statusFilter = ref('vacant')
 const selectedPropertyTab = ref('all')
 const showAllRooms = ref(false)
 

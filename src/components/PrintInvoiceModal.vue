@@ -54,6 +54,14 @@
               <td class="py-2.5 px-3 font-sans">Dịch vụ (Internet, rác, vệ sinh)</td>
               <td class="py-2.5 px-3 text-right font-bold">{{ formatCurrency(bill.service_fee || 0) }}</td>
             </tr>
+            <tr v-if="bill.penalty_amount > 0">
+              <td class="py-2.5 px-3 font-sans text-rose-700">Phạt chậm nộp / Phụ phí phát sinh</td>
+              <td class="py-2.5 px-3 text-right font-bold text-rose-700">+{{ formatCurrency(bill.penalty_amount) }}</td>
+            </tr>
+            <tr v-if="bill.discount_amount > 0">
+              <td class="py-2.5 px-3 font-sans text-emerald-700">Giảm giá / Chiết khấu thanh toán</td>
+              <td class="py-2.5 px-3 text-right font-bold text-emerald-700">-{{ formatCurrency(bill.discount_amount) }}</td>
+            </tr>
             <tr class="bg-slate-50 font-bold border-t-2 border-slate-900 text-base">
               <td class="py-3 px-3 font-sans">TỔNG CỘNG THANH TOÁN:</td>
               <td class="py-3 px-3 text-right text-indigo-700">{{ formatCurrency(bill.total_amount) }}</td>

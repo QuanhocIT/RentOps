@@ -23,12 +23,15 @@
         <div class="px-4 py-3 mx-3 my-3 bg-slate-900/80 rounded-xl border border-slate-800/90 shadow-inner group">
           <div class="text-[10px] uppercase tracking-widest text-slate-400 font-bold flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Tòa nhà / Tenant
+              <span class="w-1.5 h-1.5 rounded-full" :class="isSuperAdmin ? 'bg-amber-400' : (isRenter ? 'bg-emerald-400' : 'bg-indigo-400')"></span>
+              {{ isSuperAdmin ? 'Hệ thống SaaS' : (isRenter ? 'Khách Thuê / Cư Dân' : 'Tòa nhà / Tenant') }}
             </span>
-            <span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">Active</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold border" :class="isSuperAdmin ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : (isRenter ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')">
+              {{ isSuperAdmin ? 'SUPER ADMIN' : (isRenter ? 'CƯ DÂN' : 'CHỦ TRỌ') }}
+            </span>
           </div>
           <div class="text-xs font-bold text-white truncate mt-1">
-            {{ authStore.currentTenant?.name || 'Tòa Nhà Demo RentOps' }}
+            {{ isSuperAdmin ? 'Platform Control Center' : (isRenter ? (authStore.currentUser?.full_name || 'Khách thuê trọ') : (authStore.currentTenant?.name || 'Tòa Nhà Demo RentOps')) }}
           </div>
         </div>
 
@@ -56,7 +59,7 @@
 
             <span
               v-if="item.badge"
-              class="ml-auto px-1.5 py-0.5 text-[10px] font-extrabold rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+              class="ml-auto px-1.5 py-0.5 text-[10px] font-extrabold rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30"
             >
               {{ item.badge }}
             </span>
@@ -72,7 +75,7 @@
           </div>
           <div class="overflow-hidden">
             <div class="text-xs font-bold text-slate-100 truncate leading-snug">{{ authStore.currentUser?.full_name || 'Quản trị viên' }}</div>
-            <div class="text-[10px] text-slate-400 truncate">{{ authStore.currentUser?.email || 'admin@rentops.vn' }}</div>
+            <div class="text-[10px] text-slate-400 truncate">{{ authStore.currentUser?.email || 'superadmin@rentops.vn' }}</div>
           </div>
         </div>
         <button
@@ -99,23 +102,38 @@
             </h2>
             <p class="text-[11px] text-slate-500 font-medium mt-1 flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              RentOps Workspace • Synchronized Real-time
+              {{ isSuperAdmin ? 'RentOps SaaS Engine • Platform Administrator' : 'RentOps Workspace • Synchronized Real-time' }}
             </p>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
           <!-- Global Search Preview / Shortcut Button -->
-          <div class="hidden sm:flex items-center bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500 shadow-2xs cursor-pointer">
+          <button
+            @click="isPaletteOpen = true"
+            class="hidden sm:flex items-center bg-slate-100 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-500 shadow-2xs transition cursor-pointer"
+          >
             <span class="mr-2">🔍</span>
             <span class="font-medium">Tìm nhanh...</span>
             <kbd class="ml-3 px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-500 font-semibold">Ctrl K</kbd>
-          </div>
+          </button>
+
+          <!-- Theme Mode Switcher -->
+          <button
+            @click="toggleTheme"
+            class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl border border-slate-200 transition text-sm"
+            :title="isDark ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'"
+          >
+            {{ isDark ? '🌙' : '☀️' }}
+          </button>
 
           <!-- Multi-Tenant Status Badge -->
-          <span class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200/90 shadow-2xs">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-            Multi-Tenant Active
+          <span
+            class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-extrabold shadow-2xs"
+            :class="isSuperAdmin ? 'bg-amber-50 text-amber-800 border border-amber-200/90' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/90'"
+          >
+            <span class="w-2 h-2 rounded-full mr-2" :class="isSuperAdmin ? 'bg-amber-500' : 'bg-emerald-500'"></span>
+            {{ isSuperAdmin ? 'Super Admin Mode' : 'Multi-Tenant Active' }}
           </span>
         </div>
       </header>
@@ -125,20 +143,63 @@
         <slot />
       </main>
     </div>
+
+    <!-- Toast Notifications Container -->
+    <ToastContainer />
+
+    <!-- Command Palette (Ctrl + K) -->
+    <CommandPalette
+      :is-open="isPaletteOpen"
+      @close="isPaletteOpen = false"
+      @open="isPaletteOpen = true"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import ToastContainer from './ToastContainer.vue'
+import CommandPalette from './CommandPalette.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const navItems = [
+const isPaletteOpen = ref(false)
+const isDark = ref(localStorage.getItem('rentops_theme') === 'dark')
+
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+  localStorage.setItem('rentops_theme', theme)
+  if (isDark.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+}
+
+onMounted(() => {
+  if (isDark.value) {
+    document.documentElement.classList.add('dark')
+  }
+})
+
+const isSuperAdmin = computed(() => {
+  const u = authStore.currentUser
+  return u?.role === 'super_admin' || u?.email?.toLowerCase().includes('superadmin')
+})
+
+const isRenter = computed(() => {
+  const u = authStore.currentUser
+  return u?.role === 'renter'
+})
+
+const landlordNavItems = [
   { name: 'Sơ đồ phòng', path: '/', icon: '🏢' },
+  { name: 'Trợ lý AI & Phân tích', path: '/ai-advisor', icon: '🤖', badge: 'AI' },
   { name: 'Phòng trọ', path: '/rooms', icon: '🔑' },
   { name: 'Khu trọ / Tòa nhà', path: '/properties', icon: '🏛️' },
   { name: 'Khách thuê (Cư dân)', path: '/renters', icon: '👥' },
@@ -151,21 +212,37 @@ const navItems = [
   { name: 'Tiện ích phòng', path: '/amenities', icon: '🛋️' },
   { name: 'Quản lý Tài sản', path: '/assets', icon: '📦' },
   { name: 'Cổng Khách Thuê', path: '/tenant-portal', icon: '📱' },
-  { name: 'Khôi phục Dữ liệu', path: '/trash', icon: '♻️' },
-  { name: 'Super Admin Console', path: '/super-admin', icon: '⚙️' },
   { name: 'Chi phí vận hành', path: '/expenses', icon: '📊' },
   { name: 'Báo cáo tài chính', path: '/reports', icon: '📈' },
   { name: 'Cấu hình VietQR', path: '/settings', icon: '⚙️' },
+  { name: 'Khôi phục Dữ liệu', path: '/trash', icon: '♻️' },
   { name: 'Nhật ký thao tác', path: '/audit-logs', icon: '📜' }
 ]
 
+const renterNavItems = [
+  { name: 'Cổng Khách Thuê & Hóa Đơn', path: '/tenant-portal', icon: '📱', badge: 'Me' },
+  { name: 'Khám Phá & Tìm Phòng Trọ', path: '/landing', icon: '🔍' }
+]
+
+const superAdminNavItems = [
+  { name: 'Quản trị SaaS (MRR)', path: '/super-admin', icon: '👑', badge: 'System' },
+  { name: 'Nhật ký hệ thống', path: '/audit-logs', icon: '📜' },
+  { name: 'Thùng rác hệ thống', path: '/trash', icon: '♻️' }
+]
+
+const navItems = computed(() => {
+  if (isSuperAdmin.value) return superAdminNavItems
+  if (isRenter.value) return renterNavItems
+  return landlordNavItems
+})
+
 const currentRouteName = computed(() => {
-  const item = navItems.find((i) => i.path === route.path)
-  return item ? item.name : 'RentOps Dashboard'
+  const item = navItems.value.find((i) => i.path === route.path)
+  return item ? item.name : 'RentOps Console'
 })
 
 const currentNavIcon = computed(() => {
-  const item = navItems.find((i) => i.path === route.path)
+  const item = navItems.value.find((i) => i.path === route.path)
   return item ? item.icon : '⚡'
 })
 

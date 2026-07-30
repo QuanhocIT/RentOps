@@ -1,20 +1,55 @@
 <template>
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>👥</span> Quản Lý Khách Thuê (Cư Dân)
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Lưu trữ thông tin định danh CCCD/CMND, số điện thoại và quê quán khách thuê</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Quản Lý Khách Thuê</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Danh Sách Cư Dân & Khách Thuê</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Lưu trữ thông tin định danh CCCD/CMND, số điện thoại và quê quán khách thuê</p>
         </div>
 
-        <button
-          @click="openModal()"
-          class="inline-flex items-center gap-2 px-4.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs shadow-md shadow-indigo-600/30 transition hover:scale-105 active:scale-95"
-        >
-          <span>👤</span> Thêm khách thuê mới
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="openModal()"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>👤</span>
+            <span>Thêm Khách Thuê Mới</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Tổng Cư Dân</span>
+            <span>👥</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ renters.length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Toàn bộ khách thuê</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-indigo-600 flex items-center justify-between">
+            <span>Khách Thuê Đã Xác Thực</span>
+            <span>✅</span>
+          </div>
+          <p class="text-2xl font-black text-indigo-600 mt-2 font-mono">{{ renters.filter(r => r.id_card_number).length }}</p>
+          <p class="text-[11px] text-indigo-600 font-semibold mt-1">Đã có CCCD / Định danh</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-amber-600 flex items-center justify-between">
+            <span>Số Điện Thoại</span>
+            <span>📱</span>
+          </div>
+          <p class="text-2xl font-black text-amber-700 mt-2 font-mono">{{ renters.filter(r => r.phone).length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Có thể gửi ZNS / SMS</p>
+        </div>
       </div>
 
       <!-- Renters Table -->

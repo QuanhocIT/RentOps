@@ -2,79 +2,79 @@
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
       <!-- Title & Actions -->
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>💳</span> Quản Lý Hóa Đơn & VietQR
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Tạo hóa đơn tháng, tự động tính tiền phòng + điện nước và xuất mã VietQR thanh toán</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Hóa Đơn & Thanh Toán</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Quản Lý Hóa Đơn & VietQR</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Tạo hóa đơn tháng, tự động tính tiền phòng + điện nước và xuất mã VietQR thanh toán</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
           <button
             @click="sendBatchDebtReminders"
             :disabled="submittingBatchReminder"
-            class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-semibold text-sm shadow-md shadow-amber-600/30 transition"
+            class="px-3.5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>📩</span> {{ submittingBatchReminder ? 'Đang gửi...' : 'Nhắc nợ 1-Click' }}
+            <span>📩</span>
+            <span>{{ submittingBatchReminder ? 'Đang gửi...' : 'Nhắc nợ 1-Click' }}</span>
           </button>
 
           <button
             @click="exportCSV"
-            class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-sm shadow-md transition"
+            class="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>📥</span> Xuất File CSV
+            <span>📥</span>
+            <span>Xuất CSV</span>
           </button>
 
           <button
             @click="showBatchModal = true"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold text-sm shadow-md shadow-purple-600/30 transition"
+            class="px-4 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>⚡</span> Sinh hàng loạt
+            <span>⚡</span>
+            <span>Sinh hàng loạt</span>
           </button>
 
           <button
             @click="showCreateModal = true"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-600/30 transition"
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
           >
-            <span>✨</span> Sinh 1 phòng
+            <span>✨</span>
+            <span>Sinh 1 phòng</span>
           </button>
         </div>
       </div>
 
       <!-- Financial Statistics Cards -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng Hóa Đơn</div>
-            <div class="text-2xl font-black text-slate-900 mt-1">{{ bills.length }}</div>
-            <div class="text-xs text-slate-500 mt-0.5">Tổng giá trị: {{ formatCurrency(totalBilledAmount) }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Tổng Hóa Đơn</span>
+            <span>📄</span>
           </div>
-          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-            📄
-          </div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ bills.length }}</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Tổng: {{ formatCurrency(totalBilledAmount) }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Đã Thanh Toán</div>
-            <div class="text-2xl font-black text-emerald-700 mt-1">{{ paidCount }} phòng</div>
-            <div class="text-xs text-emerald-600 font-semibold mt-0.5">Đã thu: {{ formatCurrency(totalPaidAmount) }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-emerald-600 flex items-center justify-between">
+            <span>Đã Thanh Toán</span>
+            <span>✅</span>
           </div>
-          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-            ✅
-          </div>
+          <p class="text-2xl font-black text-emerald-700 mt-2 font-mono">{{ formatCurrency(paidAmount) }}</p>
+          <p class="text-[11px] text-emerald-600 font-semibold mt-1">Đã thu tiền</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Chưa Thanh Toán</div>
-            <div class="text-2xl font-black text-rose-700 mt-1">{{ pendingCount }} phòng</div>
-            <div class="text-xs text-rose-600 font-semibold mt-0.5">Còn nợ: {{ formatCurrency(totalPendingAmount) }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-rose-600 flex items-center justify-between">
+            <span>Chưa Thanh Toán / Nợ</span>
+            <span>⏳</span>
           </div>
-          <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-            ⚠️
-          </div>
+          <p class="text-2xl font-black text-rose-700 mt-2 font-mono">{{ formatCurrency(unpaidAmount) }}</p>
+          <p class="text-[11px] text-rose-600 font-semibold mt-1">Cần thu tiền</p>
         </div>
       </div>
 
@@ -475,7 +475,9 @@ import { ref, computed, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import PrintInvoiceModal from '../components/PrintInvoiceModal.vue'
 import api from '../services/api'
+import { useToastStore } from '../stores/toast'
 
+const toast = useToastStore()
 const bills = ref([])
 const rooms = ref([])
 const loading = ref(false)
@@ -570,10 +572,11 @@ const generateBill = async () => {
   submitting.value = true
   try {
     await api.post('/monthly_bills/generate', { monthly_bill: form.value })
+    toast.success('Sinh hóa đơn phòng thành công!')
     showCreateModal.value = false
     loadBills()
   } catch (err) {
-    alert(err?.message || 'Có lỗi xảy ra khi tạo hóa đơn')
+    toast.error(err?.message || 'Có lỗi xảy ra khi tạo hóa đơn')
   } finally {
     submitting.value = false
   }
@@ -583,11 +586,11 @@ const runBatchGenerate = async () => {
   submittingBatch.value = true
   try {
     const res = await api.post('/monthly_bills/batch_generate', batchForm.value)
-    alert(res?.message || 'Đã sinh hóa đơn hàng loạt thành công!')
+    toast.success(res?.message || 'Đã sinh hóa đơn hàng loạt thành công!')
     showBatchModal.value = false
     loadBills()
   } catch (err) {
-    alert(err?.message || 'Sinh hóa đơn hàng loạt thất bại')
+    toast.error(err?.message || 'Sinh hóa đơn hàng loạt thất bại')
   } finally {
     submittingBatch.value = false
   }
@@ -603,11 +606,11 @@ const confirmMarkAsPaid = async () => {
   submittingPay.value = true
   try {
     const res = await api.post(`/monthly_bills/${payModalBill.value.id}/mark_as_paid`, payForm.value)
-    alert(res?.message || 'Đã xác nhận thanh toán thành công!')
+    toast.success(res?.message || 'Đã xác nhận thanh toán thành công!')
     payModalBill.value = null
     loadBills()
   } catch (err) {
-    alert(err?.message || 'Không thể xác nhận thanh toán')
+    toast.error(err?.message || 'Không thể xác nhận thanh toán')
   } finally {
     submittingPay.value = false
   }
@@ -622,9 +625,9 @@ const submittingBatchReminder = ref(false)
 const sendDebtReminder = async (billId) => {
   try {
     const res = await api.post('/notifications/send_reminder', { bill_id: billId, channel: 'zns' })
-    alert(res?.message || 'Đã gửi tin nhắn nhắc nợ thành công!')
+    toast.success(res?.message || 'Đã gửi tin nhắn nhắc nợ thành công!')
   } catch (err) {
-    alert(err?.message || 'Gửi nhắc nợ thất bại')
+    toast.error(err?.message || 'Gửi nhắc nợ thất bại')
   }
 }
 
@@ -633,9 +636,9 @@ const sendBatchDebtReminders = async () => {
   submittingBatchReminder.value = true
   try {
     const res = await api.post('/notifications/send_batch_reminders', { billing_month: new Date().toISOString().slice(0, 7) })
-    alert(res?.message || 'Đã gửi tin nhắn nhắc nợ hàng loạt thành công!')
+    toast.success(res?.message || 'Đã gửi tin nhắn nhắc nợ hàng loạt thành công!')
   } catch (err) {
-    alert(err?.message || 'Có lỗi xảy ra khi gửi tin nhắn hàng loạt')
+    toast.error(err?.message || 'Có lỗi xảy ra khi gửi tin nhắn hàng loạt')
   } finally {
     submittingBatchReminder.value = false
   }
@@ -643,7 +646,7 @@ const sendBatchDebtReminders = async () => {
 
 const exportCSV = () => {
   if (!bills.value.length) {
-    alert('Không có dữ liệu hóa đơn để xuất file.')
+    toast.warning('Không có dữ liệu hóa đơn để xuất file.')
     return
   }
 
@@ -666,6 +669,7 @@ const exportCSV = () => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  toast.success('Đã xuất file CSV thành công!')
 }
 
 const deleteBill = async (id) => {

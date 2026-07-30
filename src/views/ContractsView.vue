@@ -1,45 +1,44 @@
 <template>
   <AppLayout>
     <div class="space-y-6 animate-slide-up">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/90 backdrop-blur-md p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>📑</span> Quản Lý Hợp Đồng Thuê
-          </h1>
-          <p class="text-slate-500 text-xs mt-1 font-medium">Lập hợp đồng mới, lưu tiền cọc, gia hạn và thanh lý hợp đồng khi khách trả phòng</p>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Hợp Đồng Thuê</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Quản Lý Hợp Đồng Thuê Phòng</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Lập hợp đồng mới, lưu tiền cọc, gia hạn và thanh lý hợp đồng khi khách trả phòng</p>
         </div>
       </div>
 
       <!-- Summary Stats & Warning -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-slate-400 uppercase">Hợp Đồng Hoạt Động</div>
-            <div class="text-2xl font-black text-slate-900 mt-1">{{ activeContractsCount }} Hợp đồng</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-slate-400 flex items-center justify-between">
+            <span>Hợp Đồng Hoạt Động</span>
+            <span>📝</span>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
-            📝
-          </div>
+          <p class="text-2xl font-black text-slate-900 mt-2 font-mono">{{ activeContractsCount }} Hợp đồng</p>
+          <p class="text-[11px] text-slate-400 font-medium mt-1">Đang có hiệu lực</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-emerald-600 uppercase">Tổng Tiền Cọc Đang Giữ</div>
-            <div class="text-2xl font-black text-emerald-700 mt-1">{{ formatCurrency(totalDepositHolding) }}</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-emerald-600 flex items-center justify-between">
+            <span>Tổng Tiền Cọc Đang Giữ</span>
+            <span>🛡️</span>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">
-            🛡️
-          </div>
+          <p class="text-2xl font-black text-emerald-700 mt-2 font-mono">{{ formatCurrency(totalDepositHolding) }}</p>
+          <p class="text-[11px] text-emerald-600 font-semibold mt-1">Bảo đảm hợp đồng</p>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold text-amber-600 uppercase">Sắp Hết Hạn (&lt;30 Ngày)</div>
-            <div class="text-2xl font-black text-amber-700 mt-1">{{ expiringCount }} Hợp đồng</div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="text-xs font-bold uppercase text-amber-600 flex items-center justify-between">
+            <span>Sắp Hết Hạn (&lt;30 Ngày)</span>
+            <span>⏰</span>
           </div>
-          <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl">
-            ⏰
-          </div>
+          <p class="text-2xl font-black text-amber-700 mt-2 font-mono">{{ expiringCount }} Hợp đồng</p>
+          <p class="text-[11px] text-amber-600 font-semibold mt-1">Cần gia hạn sớm</p>
         </div>
       </div>
 
@@ -147,6 +146,13 @@
 
               <div class="flex flex-wrap items-center gap-2">
                 <button
+                  @click="selectedCoTenantContract = item"
+                  class="text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-lg border border-purple-200 transition"
+                  title="Quản lý thành viên ở ghép"
+                >
+                  👥 Ở cùng ({{ item.co_tenants_count || 0 }})
+                </button>
+                <button
                   @click="selectedPrintContract = item"
                   class="text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-300 transition"
                 >
@@ -191,6 +197,14 @@
         :contract="selectedPrintContract"
         @close="selectedPrintContract = null"
       />
+
+      <!-- CoTenants Modal -->
+      <CoTenantsModal
+        v-if="selectedCoTenantContract"
+        :contract="selectedCoTenantContract"
+        @close="selectedCoTenantContract = null"
+        @updated="loadContracts"
+      />
     </div>
   </AppLayout>
 </template>
@@ -200,8 +214,12 @@ import { computed, onMounted, ref } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import CheckoutContractModal from '../components/CheckoutContractModal.vue'
 import PrintContractModal from '../components/PrintContractModal.vue'
+import CoTenantsModal from '../components/CoTenantsModal.vue'
 import api from '../services/api'
 
+import { useToastStore } from '../stores/toast'
+
+const toast = useToastStore()
 const contracts = ref([])
 const rooms = ref([])
 const renters = ref([])
@@ -213,6 +231,7 @@ const filterStatus = ref('all')
 
 const selectedCheckoutContract = ref(null)
 const selectedPrintContract = ref(null)
+const selectedCoTenantContract = ref(null)
 
 const form = ref({
   contract_code: `CTR-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(100 + Math.random() * 900)}`,
@@ -250,6 +269,7 @@ const loadContracts = async () => {
   } catch (error) {
     messageType.value = 'error'
     message.value = error?.message || 'Không thể tải danh sách hợp đồng.'
+    toast.error(message.value)
   }
 }
 
@@ -269,6 +289,7 @@ const createContract = async () => {
   if (!form.value.contract_code.trim() || !form.value.room_id || !form.value.start_date) {
     messageType.value = 'error'
     message.value = 'Vui lòng nhập mã hợp đồng, phòng và ngày bắt đầu.'
+    toast.warning(message.value)
     return
   }
 
@@ -279,9 +300,11 @@ const createContract = async () => {
     await loadContracts()
     messageType.value = 'success'
     message.value = 'Tạo hợp đồng thành công.'
+    toast.success('Tạo hợp đồng mới thành công!')
   } catch (error) {
     messageType.value = 'error'
     message.value = error?.message || 'Không thể tạo hợp đồng.'
+    toast.error(message.value)
   } finally {
     loading.value = false
   }
@@ -296,22 +319,23 @@ const renewContract = async (item) => {
   if (!monthsStr) return
   const months = parseInt(monthsStr, 10)
   if (isNaN(months) || months <= 0) {
-    alert('Số tháng gia hạn không hợp lệ')
+    toast.warning('Số tháng gia hạn không hợp lệ')
     return
   }
 
   try {
     const res = await api.post(`/contracts/${item.id}/renew`, { months })
-    alert(res?.message || 'Gia hạn hợp đồng thành công!')
+    toast.success(res?.message || 'Gia hạn hợp đồng thành công!')
     loadContracts()
   } catch (err) {
-    alert(err?.message || 'Gia hạn hợp đồng thất bại')
+    toast.error(err?.message || 'Gia hạn hợp đồng thất bại')
   }
 }
 
 const deleteContract = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa hợp đồng này?')) return
   await api.delete(`/contracts/${id}`)
+  toast.success('Xóa hợp đồng thành công')
   await loadContracts()
 }
 

@@ -3,16 +3,28 @@
     <div class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Nhật Ký Vết Thao Tác (Audit Logs)</h1>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 font-extrabold text-xs rounded-lg uppercase tracking-wider">Nhật Ký Thao Tác</span>
+            <span class="text-xs text-slate-400 font-medium">• RentOps Workspace</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 mt-1">Nhật Ký Thao Tác (Audit Logs)</h1>
           <p class="text-slate-500 text-sm mt-0.5">Theo dõi lịch sử chỉnh sửa, gạch nợ hóa đơn, thanh lý hợp đồng và lưu vết nhân viên</p>
         </div>
 
         <div class="flex items-center gap-3">
-          <button @click="exportCSV" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-sm shadow-md transition">
-            📥 Xuất File CSV
+          <button
+            @click="exportCSV"
+            class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5"
+          >
+            <span>📥</span>
+            <span>Xuất CSV</span>
           </button>
-          <button @click="loadLogs" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-700 text-sm hover:bg-slate-50 shadow-sm">
-            🔄 Tải lại
+          <button
+            @click="loadLogs"
+            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5"
+          >
+            <span>🔄</span>
+            <span>Tải lại</span>
           </button>
         </div>
       </div>
