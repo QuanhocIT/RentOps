@@ -96,7 +96,7 @@
         <div class="reviews-grid"><button class="review-arrow" type="button" aria-label="Đánh giá trước">‹</button><article v-for="review in reviews" :key="review.name"><div class="review-user"><img :src="review.avatar" :alt="review.name" /><span><strong>{{ review.name }}</strong><small>{{ review.role }}</small><b>★★★★★</b></span></div><p>“{{ review.comment }}”</p></article><button class="review-arrow" type="button" aria-label="Đánh giá tiếp">›</button></div>
       </section>
 
-      <section class="home-container listing-cta"><div><h2>Đăng tin cho thuê phòng ngay hôm nay!</h2><p>Tiếp cận hàng ngàn người tìm phòng mỗi ngày.</p><button type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin miễn phí <span>→</span></button></div><div class="cta-room-art"><img src="/images/rooms/living.png" alt="Không gian cho thuê" /><span>⌂</span></div></section>
+      <section class="home-container listing-cta"><div><h2>Đăng tin cho thuê phòng ngay hôm nay!</h2><p>Tiếp cận hàng ngàn người tìm thuê mỗi ngày.</p><button type="button" @click="notify('Tính năng đăng tin phòng đang được chuẩn bị')">Đăng tin miễn phí <span>→</span></button></div><div class="cta-room-art"><img src="/images/rooms/living.png" alt="Không gian cho thuê" /><span>⌂</span></div></section>
 
       <footer class="home-footer">
         <div class="home-container footer-grid">
@@ -163,7 +163,7 @@ const amenityCards = [
 const whyItems = [
   { icon: '♧', title: 'Tin đăng xác thực', desc: '100% tin đăng được kiểm duyệt, thông tin rõ ràng.' },
   { icon: '⌂', title: 'Giá cả minh bạch', desc: 'Giá thuê rõ ràng, không phát sinh chi phí.' },
-  { icon: '⌕', title: 'Tìm kiếm dễ dàng', desc: 'Bộ lọc thông minh giúp bạn tìm phòng nhanh.' },
+  { icon: '⌕', title: 'Tìm kiếm dễ dàng', desc: 'Bộ lọc thông minh giúp bạn tìm phòng nhanh chóng.' },
   { icon: '♙', title: 'Hỗ trợ tận tâm', desc: 'Đội ngũ hỗ trợ 24/7 giải đáp mọi thắc mắc.' },
   { icon: '▤', title: 'Thanh toán an toàn', desc: 'Hỗ trợ thanh toán online an toàn, bảo mật.' }
 ]
