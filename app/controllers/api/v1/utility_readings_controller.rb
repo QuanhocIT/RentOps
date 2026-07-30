@@ -12,11 +12,37 @@ module Api
 
         records, meta = paginate(readings.includes(:room).order(created_at: :desc))
 
+        # Fetch previous month readings map for quick anomaly detection
+        room_ids = records.map(&:room_id).uniq
+        prev_readings = UtilityReading.kept
+                                      .where(tenant_id: current_tenant_record&.id, room_id: room_ids)
+                                      .order(billing_month: :desc)
+                                      .group_by(&:room_id)
+
         readings_list = records.map do |r|
           elec_use = r.electric_usage
           water_use = r.water_usage
           is_high_elec = elec_use > 250
           is_high_water = water_use > 25
+
+          # Anomaly detection relative to previous month
+          room_prevs = prev_readings[r.room_id] || []
+          prev_r = room_prevs.find { |pr| pr.id != r.id && pr.billing_month < r.billing_month }
+          elec_anomaly = false
+          water_anomaly = false
+          elec_inc_pct = 0.0
+
+          if prev_r && prev_r.electric_usage > 0
+            elec_inc_pct = (((elec_use - prev_r.electric_usage).to_f / prev_r.electric_usage) * 100).round(1)
+            elec_anomaly = elec_inc_pct >= 50.0
+          end
+
+          if prev_r && prev_r.water_usage > 0
+            w_inc_pct = (((water_use - prev_r.water_usage).to_f / prev_r.water_usage) * 100).round(1)
+            water_anomaly = w_inc_pct >= 50.0
+          end
+
+          is_anomaly = elec_anomaly || water_anomaly
 
           r.as_json.merge(
             room_number: r.room&.room_number,
@@ -27,7 +53,9 @@ module Api
             is_high_electric: is_high_elec,
             is_high_water: is_high_water,
             is_high_usage: is_high_elec || is_high_water,
-            meter_reset: r.meter_reset?
+            meter_reset: r.meter_reset?,
+            anomaly_detected: is_anomaly,
+            elec_increase_pct: elec_inc_pct
           )
         end
 

@@ -265,7 +265,7 @@ module Api
         params.require(:monthly_bill).permit(
           :bill_code, :room_id, :contract_id, :billing_month, :status,
           :room_fee, :utility_fee, :service_fee, :total_amount, :due_date,
-          :bank_code, :bank_account, :bank_account_name
+          :bank_code, :bank_account, :bank_account_name, :discount_amount, :penalty_amount
         )
       end
     end

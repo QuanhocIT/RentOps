@@ -168,6 +168,14 @@ module Api
         if request.post?
           co_tenant = contract.co_tenants.create!(co_tenant_params)
           render_json_success(data: co_tenant, message: "Thêm người ở cùng thành công", status: :created)
+        elsif request.delete?
+          ct = contract.co_tenants.find_by(id: params[:co_tenant_id])
+          if ct
+            ct.destroy
+            render_json_success(message: "Xóa thành viên ở cùng thành công")
+          else
+            render_json_error(message: "Không tìm thấy thông tin thành viên")
+          end
         else
           render_json_success(data: contract.co_tenants, message: "Lấy danh sách người ở cùng thành công")
         end

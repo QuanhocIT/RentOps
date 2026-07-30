@@ -52,17 +52,34 @@ module Api
         if request_item.update(maintenance_params)
           request_item.update(resolved_at: Time.current) if request_item.resolved? && request_item.resolved_at.nil?
 
-          # Automatically record cost as operating expense if cost > 0
+          # Automatically record cost as operating expense if cost > 0 and owner-paid
           if request_item.cost.to_f > 0 && request_item.resolved?
-            OperatingExpense.find_or_create_by!(
-              tenant: current_tenant_record,
-              title: "Chi phí sửa chữa: #{request_item.title} (Phòng #{request_item.room&.room_number})"
-            ) do |exp|
-              exp.property = request_item.room&.property
-              exp.category = "sửa chữa"
-              exp.amount = request_item.cost
-              exp.expense_date = Date.current
-              exp.note = request_item.description
+            if request_item.cost_bearer == "owner"
+              OperatingExpense.find_or_create_by!(
+                tenant: current_tenant_record,
+                title: "Chi phí sửa chữa: #{request_item.title} (Phòng #{request_item.room&.room_number})"
+              ) do |exp|
+                exp.property = request_item.room&.property
+                exp.category = "sửa chữa"
+                exp.amount = request_item.cost
+                exp.expense_date = Date.current
+                exp.note = request_item.description
+              end
+            elsif request_item.cost_bearer == "renter"
+              # Auto link to current or upcoming monthly bill for room
+              current_month = Date.current.strftime("%Y-%m")
+              active_bill = MonthlyBill.find_by(tenant: current_tenant_record, room_id: request_item.room_id, billing_month: current_month)
+              if active_bill
+                active_bill.bill_items.find_or_create_by!(
+                  item_type: "maintenance",
+                  description: "Phí sửa chữa: #{request_item.title}"
+                ) do |bi|
+                  bi.amount = request_item.cost
+                  bi.quantity = 1
+                  bi.unit_price = request_item.cost
+                end
+                active_bill.update!(service_fee: active_bill.service_fee + request_item.cost)
+              end
             end
           end
 
@@ -71,7 +88,7 @@ module Api
             user: current_user,
             action: "UPDATE_MAINTENANCE_REQUEST",
             record: request_item,
-            payload: { status: request_item.status, cost: request_item.cost }
+            payload: { status: request_item.status, cost: request_item.cost, cost_bearer: request_item.cost_bearer }
           )
 
           render_json_success(data: request_item.as_json, message: "Cập nhật yêu cầu sửa chữa thành công")
@@ -90,7 +107,10 @@ module Api
       private
 
       def maintenance_params
-        params.require(:maintenance_request).permit(:room_id, :renter_id, :title, :description, :priority, :status, :cost)
+        params.require(:maintenance_request).permit(
+          :room_id, :renter_id, :title, :description, :priority, :status, :cost,
+          :cost_bearer, :handyman_name, :handyman_phone, :photo_before_url, :photo_after_url
+        )
       end
     end
   end

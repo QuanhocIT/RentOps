@@ -6,7 +6,7 @@ module Api
         renters = renters.order(:full_name)
 
         render_json_success(
-          data: renters.as_json(only: [:id, :email, :full_name, :phone, :id_card_number, :hometown, :created_at]),
+          data: renters.as_json(only: [:id, :email, :full_name, :phone, :id_card_number, :hometown, :vehicle_plate, :emergency_contact, :id_card_issue_date, :created_at]),
           message: "Lấy danh sách khách thuê thành công",
           meta: { total_items: renters.count }
         )
@@ -42,7 +42,7 @@ module Api
       private
 
       def renter_params
-        params.require(:renter).permit(:full_name, :email, :phone, :id_card_number, :hometown)
+        params.require(:renter).permit(:full_name, :email, :phone, :id_card_number, :hometown, :vehicle_plate, :emergency_contact, :id_card_issue_date)
       end
     end
   end

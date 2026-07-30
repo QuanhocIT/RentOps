@@ -57,7 +57,7 @@ module Api
           m_str = m_date.strftime("%Y-%m")
           m_bills = bills.where(billing_month: m_str)
           m_paid = m_bills.where(status: :paid).sum(:total_amount)
-          m_expenses = expenses.where("DATE_FORMAT(expense_date, '%Y-%m') = ?", m_str).sum(:amount)
+          m_expenses = expenses.where(expense_date: m_date.beginning_of_month..m_date.end_of_month).sum(:amount)
           {
             month: m_str,
             month_name: "Thg #{m_date.month}/#{m_date.year}",
@@ -81,9 +81,14 @@ module Api
           }
         end
 
-        # Maintenance statistics
-        m_requests = MaintenanceRequest.kept.where(tenant_id: tenant_id)
-        pending_maintenance_count = m_requests.where(status: [:pending, :in_progress]).count
+        # Expense categories breakdown
+        expense_categories = expenses.group(:category).sum(:amount).map do |cat, amt|
+          { category: cat, total_amount: amt }
+        end
+
+        # Anomaly utility readings count & pending maintenance count
+        abnormal_readings_count = UtilityReading.kept.where(tenant_id: tenant_id, is_abnormal: true).count
+        pending_maintenance_count = MaintenanceRequest.kept.where(tenant_id: tenant_id, status: [:pending, :in_progress]).count
 
         render_json_success(
           data: {
@@ -95,7 +100,8 @@ module Api
               maintenance_rooms: maintenance_rooms,
               occupancy_rate: occupancy_rate,
               pending_maintenance_count: pending_maintenance_count,
-              expiring_contracts_count: expiring_contracts.size
+              expiring_contracts_count: expiring_contracts.size,
+              abnormal_readings_count: abnormal_readings_count
             },
             financials: {
               monthly_revenue_estimate: monthly_revenue_estimate,

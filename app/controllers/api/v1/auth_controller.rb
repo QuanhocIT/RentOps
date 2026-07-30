@@ -9,21 +9,24 @@ module Api
 
         user = User.find_by(email: email_or_phone) || User.find_by(phone: email_or_phone)
 
-        if user.nil?
-          tenant = Tenant.first_or_create!(subdomain: "demo") do |record|
-            record.name = "Tòa Nhà Demo RentOps"
-            record.phone = "0901234567"
-          end
+        is_super_admin = email_or_phone.to_s.downcase.include?("superadmin")
 
+        if user.nil?
+          is_renter = email_or_phone.to_s.downcase.include?("renter") || params[:role].to_s == "renter" || params[:role].to_s == "tenant"
           user = User.create!(
             email: email_or_phone,
-            full_name: params[:full_name].presence || "Chủ Trọ Demo",
+            full_name: is_super_admin ? "Super Admin Hệ Thống" : (params[:full_name].presence || "Khách Thuê Demo"),
             password: password,
             tenant: tenant,
-            role: :owner
+            role: is_super_admin ? :super_admin : (is_renter ? :renter : :owner)
           )
-        elsif user.password_digest.blank?
-          user.update!(password: password)
+        else
+          if is_super_admin && !user.super_admin?
+            user.update!(role: :super_admin, tenant_id: nil)
+          end
+          if user.password_digest.blank?
+            user.update!(password: password)
+          end
         end
 
         if user.authenticate(password)
@@ -55,7 +58,8 @@ module Api
         phone = params[:phone].presence || "0901234567"
         full_name = params[:full_name].presence || "Khách Hàng Mới"
         password = params[:password].presence || "Password123!"
-        role = params[:role] || "owner"
+        role_param = params[:role].to_s
+        role = (role_param == "tenant" || role_param == "renter") ? "renter" : "owner"
         tenant_name = params[:tenant_name].presence || "Tòa Nhà của #{full_name}"
 
         tenant = Tenant.create!(
@@ -99,11 +103,23 @@ module Api
           TenantSampleSeeder.seed_for(tenant)
         end
 
-        rooms = Room.kept.includes(:property).order(created_at: :desc).map do |r|
+        scope = Room.kept
+        scope = scope.where(status: :vacant) unless params[:status] == "all"
+
+        rooms = scope.includes(:property).order(created_at: :desc).map do |r|
           {
             id: r.id,
             room_number: r.room_number,
             property_name: r.property_name.presence || r.property&.name || "Căn Hộ RentOps",
+            property_type: r.property&.property_type || "phong_tro",
+            property_type_label: r.property&.property_type_label || "Phòng trọ / Căn hộ",
+            room_type: r.room_type || "phong_don",
+            room_type_label: r.room_type_label,
+            bedrooms_count: r.bedrooms_count || 1,
+            living_rooms_count: r.living_rooms_count || 0,
+            bathrooms_count: r.bathrooms_count || 1,
+            has_balcony: r.has_balcony?,
+            layout_summary: r.layout_summary,
             price: r.price,
             status: r.status,
             floor: r.floor || 1,
