@@ -49,8 +49,28 @@
             <div class="text-lg font-bold text-slate-800 mt-1 capitalize">{{ topCategory }}</div>
           </div>
           <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">
-            🏷️
           </div>
+        </div>
+      </div>
+
+      <!-- Budget vs Actual Tracking Card -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-extrabold uppercase text-slate-800">📊 Ngân Sách Chi Phí Hàng Tháng (Budget vs Actual)</span>
+            <span v-if="budgetUsagePercent >= 80" class="px-2 py-0.5 bg-rose-100 text-rose-800 font-extrabold text-[10px] rounded-md animate-pulse">
+              ⚠️ Chi phí đã vượt {{ budgetUsagePercent }}% ngân sách!
+            </span>
+          </div>
+          <span class="text-xs font-mono font-bold text-slate-600">
+            {{ formatCurrency(totalDisplayAmount) }} / {{ formatCurrency(monthlyBudgetLimit) }}
+          </span>
+        </div>
+        <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200">
+          <div
+            :class="['h-full rounded-full transition-all duration-700', budgetUsagePercent >= 80 ? 'bg-gradient-to-r from-rose-500 to-red-600' : 'bg-gradient-to-r from-indigo-500 to-emerald-500']"
+            :style="{ width: `${Math.min(budgetUsagePercent, 100)}%` }"
+          ></div>
         </div>
       </div>
 
@@ -265,6 +285,8 @@ const filteredExpenses = computed(() => {
 })
 
 const totalDisplayAmount = computed(() => dataStore.totalExpensesAmount)
+const monthlyBudgetLimit = ref(25000000)
+const budgetUsagePercent = computed(() => Math.round((totalDisplayAmount.value / monthlyBudgetLimit.value) * 100))
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 

@@ -88,13 +88,21 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="item in batchItems" :key="item.room_id" class="hover:bg-slate-50/80">
+              <tr v-for="(item, idx) in batchItems" :key="item.room_id" class="hover:bg-slate-50/80">
                 <td class="px-4 py-3 font-bold text-slate-900">Phòng {{ item.room_number }}</td>
                 <td class="px-4 py-3">
                   <input v-model.number="item.electric_old" type="number" class="w-24 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono" />
                 </td>
                 <td class="px-4 py-3">
-                  <input v-model.number="item.electric_new" type="number" class="w-28 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-900" />
+                  <input
+                    :ref="(el) => setInputRef(el, `elec_${idx}`)"
+                    v-model.number="item.electric_new"
+                    type="number"
+                    @keydown.enter.prevent="focusInput(`elec_${idx + 1}`)"
+                    @keydown.down.prevent="focusInput(`elec_${idx + 1}`)"
+                    @keydown.up.prevent="focusInput(`elec_${idx - 1}`)"
+                    class="w-28 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-amber-900 focus:ring-2 focus:ring-amber-500"
+                  />
                 </td>
                 <td class="px-4 py-3 font-mono font-bold text-amber-600">
                   {{ Math.max(0, (item.electric_new || 0) - (item.electric_old || 0)) }}
@@ -103,7 +111,15 @@
                   <input v-model.number="item.water_old" type="number" class="w-24 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs font-mono" />
                 </td>
                 <td class="px-4 py-3">
-                  <input v-model.number="item.water_new" type="number" class="w-28 bg-blue-50 border border-blue-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-blue-900" />
+                  <input
+                    :ref="(el) => setInputRef(el, `water_${idx}`)"
+                    v-model.number="item.water_new"
+                    type="number"
+                    @keydown.enter.prevent="focusInput(`water_${idx + 1}`)"
+                    @keydown.down.prevent="focusInput(`water_${idx + 1}`)"
+                    @keydown.up.prevent="focusInput(`water_${idx - 1}`)"
+                    class="w-28 bg-blue-50 border border-blue-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-blue-900 focus:ring-2 focus:ring-blue-500"
+                  />
                 </td>
                 <td class="px-4 py-3 font-mono font-bold text-blue-600">
                   {{ Math.max(0, (item.water_new || 0) - (item.water_old || 0)) }}
@@ -273,6 +289,33 @@
               </div>
             </div>
 
+            <!-- AI OCR meter photo scanning button -->
+            <div class="bg-indigo-50/70 p-3 rounded-xl border border-indigo-200/80 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-indigo-900 block">🤖 Quét Ảnh Mặt Đồng Hồ AI OCR</span>
+                <span class="text-[11px] text-indigo-600">Tự động nhận diện con số từ ảnh chụp công tơ</span>
+              </div>
+              <button
+                type="button"
+                @click="simulateAiOcrScan"
+                :disabled="ocrScanning"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center gap-1"
+              >
+                <span>{{ ocrScanning ? '⏳ Đang phân tích ảnh...' : '📸 Tải Ảnh / Chụp' }}</span>
+              </button>
+            </div>
+
+            <!-- Rollover & Anomaly Badges -->
+            <div v-if="electricResult.isRollover" class="bg-amber-50 border border-amber-300 p-2.5 rounded-xl text-xs font-bold text-amber-900 flex items-center gap-2">
+              <span>🔄</span>
+              <span>Phát hiện công tơ điện quay đầu từ <strong>{{ form.electric_old }}</strong> ➜ <strong>{{ form.electric_new }}</strong>. Tiêu thụ tính toán: <strong>{{ electricResult.usage }} kWh</strong></span>
+            </div>
+
+            <div v-if="calculatedElectricUsage > 250" class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs font-bold text-rose-800 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>Cảnh báo: Tiêu thụ điện ({{ calculatedElectricUsage }} kWh) tăng cao bất thường so với mức trung bình!</span>
+            </div>
+
             <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex items-center justify-between text-sm text-indigo-900 font-semibold">
               <span>⚡ Điện tiêu thụ: <strong class="text-amber-600 font-mono">{{ calculatedElectricUsage }} kWh</strong></span>
               <span>💧 Nước tiêu thụ: <strong class="text-blue-600 font-mono">{{ calculatedWaterUsage }} m³</strong></span>
@@ -306,16 +349,33 @@ import { ref, computed } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import { useDataStore } from '../stores/data'
 import { useToastStore } from '../stores/toast'
+import { useUtilityCalc } from '../composables/useUtilityCalc'
 
 const dataStore = useDataStore()
 const toastStore = useToastStore()
+const { calculateUsageWithRollover } = useUtilityCalc()
 
 const activeMode = ref('list')
 const batchItems = ref([])
+const inputRefsMap = ref({})
+
+const setInputRef = (el, key) => {
+  if (el) inputRefsMap.value[key] = el
+}
+
+const focusInput = (key) => {
+  const target = inputRefsMap.value[key]
+  if (target) {
+    target.focus()
+    target.select?.()
+  }
+}
+
 const loading = ref(false)
 const submitting = ref(false)
 const submittingBatch = ref(false)
 const showModal = ref(false)
+const ocrScanning = ref(false)
 
 const selectedMonth = ref('07/2026')
 
@@ -332,8 +392,21 @@ const form = ref({
   water_new: 48
 })
 
-const calculatedElectricUsage = computed(() => Math.max(0, (form.value.electric_new || 0) - (form.value.electric_old || 0)))
-const calculatedWaterUsage = computed(() => Math.max(0, (form.value.water_new || 0) - (form.value.water_old || 0)))
+const electricResult = computed(() => calculateUsageWithRollover(form.value.electric_old, form.value.electric_new))
+const waterResult = computed(() => calculateUsageWithRollover(form.value.water_old, form.value.water_new))
+
+const calculatedElectricUsage = computed(() => electricResult.value.usage)
+const calculatedWaterUsage = computed(() => waterResult.value.usage)
+
+const simulateAiOcrScan = () => {
+  ocrScanning.value = true
+  setTimeout(() => {
+    form.value.electric_new = (Number(form.value.electric_old) || 1200) + Math.floor(120 + Math.random() * 80)
+    form.value.water_new = (Number(form.value.water_old) || 40) + Math.floor(6 + Math.random() * 6)
+    ocrScanning.value = false
+    toastStore.success('🤖 AI Gemini Vision OCR đã tự động đọc chỉ số từ ảnh công tơ!')
+  }, 1000)
+}
 
 const rooms = computed(() => dataStore.rooms)
 

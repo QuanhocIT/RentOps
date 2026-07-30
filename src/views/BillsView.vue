@@ -175,6 +175,24 @@
                   >
                     <span>📩</span> Nhắc nợ ZNS
                   </button>
+                  <a
+                    v-if="b.status !== 'paid' && getRenterPhone(b.renterId)"
+                    :href="`https://zalo.me/${getRenterPhone(b.renterId).replace(/[^0-9]/g, '')}`"
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-800 font-semibold rounded-lg text-xs hover:bg-blue-100 border border-blue-200 transition"
+                    title="Nhắn Zalo trực tiếp cho khách"
+                  >
+                    💬 Zalo
+                  </a>
+                  <a
+                    v-if="b.status !== 'paid' && getRenterPhone(b.renterId)"
+                    :href="`tel:${getRenterPhone(b.renterId)}`"
+                    class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-800 font-semibold rounded-lg text-xs hover:bg-emerald-100 border border-emerald-200 transition"
+                    title="Gọi ngay cho khách thuê"
+                  >
+                    📞 Gọi
+                  </a>
                   <button
                     @click="selectedPrintBill = b"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 font-semibold rounded-lg text-xs hover:bg-slate-200 border border-slate-300 transition"
@@ -516,6 +534,11 @@ const payForm = ref({
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 
+const getRenterPhone = (renterId) => {
+  const renter = dataStore.renters.find(r => r.id === Number(renterId) || r.id === renterId)
+  return renter ? (renter.phone || renter.phoneNumber || '') : ''
+}
+
 const rooms = computed(() => dataStore.rooms)
 
 const bills = computed(() => {
@@ -563,6 +586,49 @@ const filteredBills = computed(() => {
   })
 })
 
+const calculateDueDate = (billingMonthStr) => {
+  if (!billingMonthStr) {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    return d.toISOString().slice(0, 10)
+  }
+  let year = new Date().getFullYear()
+  let month = new Date().getMonth() + 1
+  if (billingMonthStr.includes('-')) {
+    const parts = billingMonthStr.split('-')
+    if (parts[0].length === 4) {
+      year = parseInt(parts[0], 10)
+      month = parseInt(parts[1], 10)
+    } else {
+      month = parseInt(parts[0], 10)
+      year = parseInt(parts[1], 10)
+    }
+  } else if (billingMonthStr.includes('/')) {
+    const parts = billingMonthStr.split('/')
+    if (parts[0].length === 4) {
+      year = parseInt(parts[0], 10)
+      month = parseInt(parts[1], 10)
+    } else {
+      month = parseInt(parts[0], 10)
+      year = parseInt(parts[1], 10)
+    }
+  }
+  let nextMonth = month + 1
+  let nextYear = year
+  if (nextMonth > 12) {
+    nextMonth = 1
+    nextYear += 1
+  }
+  return `${nextYear}-${String(nextMonth).padStart(2, '0')}-05`
+}
+
+const getRoomUtilityReading = (roomId, monthStr) => {
+  return dataStore.utilityReadings.find(u =>
+    (u.roomId === roomId || u.room_id === roomId) &&
+    (u.month === monthStr || u.billing_month === monthStr)
+  )
+}
+
 const generateBill = () => {
   const room = dataStore.rooms.find(r => r.id === Number(form.value.room_id))
   if (!room) {
@@ -570,16 +636,24 @@ const generateBill = () => {
     return
   }
 
+  const electricRate = dataStore.settings?.electricRate || 3500
+  const waterRate = dataStore.settings?.waterRate || 18000
+  const reading = getRoomUtilityReading(room.id, form.value.billing_month)
+  const electricUsage = reading ? (reading.electricUsage || Math.max(0, (reading.currElectric || 0) - (reading.prevElectric || 0))) : 0
+  const electricCost = reading ? (reading.electricCost || electricUsage * electricRate) : 0
+  const waterUsage = reading ? (reading.waterUsage || Math.max(0, (reading.currWater || 0) - (reading.prevWater || 0))) : 0
+  const waterCost = reading ? (reading.waterCost || waterUsage * waterRate) : 0
+
   const roomPrice = Number(form.value.room_fee) || room.price
-  const electricCost = 380000
-  const waterCost = 144000
-  const totalAmount = roomPrice + electricCost + waterCost + Number(form.value.service_fee)
+  const serviceFee = Number(form.value.service_fee) || 100000
+  const totalAmount = roomPrice + electricCost + waterCost + serviceFee
+  const dueDate = form.value.due_date || calculateDueDate(form.value.billing_month)
 
   const newBill = {
     id: Date.now(),
-    code: `INV-202607-${room.roomNumber}`,
+    code: `INV-${(form.value.billing_month || '2026-07').replace(/[^0-9]/g, '')}-${room.roomNumber}`,
     month: form.value.billing_month,
-    year: 2026,
+    year: new Date().getFullYear(),
     roomId: room.id,
     roomNumber: room.roomNumber,
     renterId: room.renterId,
@@ -587,19 +661,19 @@ const generateBill = () => {
     propertyId: room.propertyId,
     propertyName: room.propertyName,
     roomPrice,
-    electricUsage: 100,
+    electricUsage,
     electricCost,
-    waterUsage: 8,
+    waterUsage,
     waterCost,
-    serviceFee: Number(form.value.service_fee),
+    serviceFee,
     discount: 0,
     totalAmount,
     paidAmount: 0,
     status: 'unpaid',
-    dueDate: form.value.due_date || '2026-08-05',
+    dueDate,
     paidDate: null,
     paymentMethod: '',
-    notes: 'Tiền phòng & điện nước dịch vụ'
+    notes: reading ? 'Tiền phòng & điện nước dịch vụ' : 'Tiền phòng & dịch vụ (Chưa có chỉ số điện nước)'
   }
 
   dataStore.bills.unshift(newBill)
@@ -613,16 +687,32 @@ const generateBill = () => {
 const runBatchGenerate = () => {
   submittingBatch.value = true
   try {
-    const rentedRooms = dataStore.rooms.filter(r => r.status === 'rented')
+    const rentedRooms = dataStore.rooms.filter(r => r.status === 'rented' || r.status === 'occupied' || r.status === 1)
+    const monthStr = batchForm.value.billing_month || '2026-07'
+    const electricRate = dataStore.settings?.electricRate || 3500
+    const waterRate = dataStore.settings?.waterRate || 18000
+    let count = 0
+    let missingReadingCount = 0
+
     rentedRooms.forEach(room => {
-      const exists = dataStore.bills.some(b => b.roomId === room.id && b.month === batchForm.value.billing_month)
+      const exists = dataStore.bills.some(b => b.roomId === room.id && b.month === monthStr)
       if (!exists) {
-        const total = room.price + 380000 + 144000 + batchForm.value.service_fee
+        const reading = getRoomUtilityReading(room.id, monthStr)
+        if (!reading) missingReadingCount++
+
+        const electricUsage = reading ? (reading.electricUsage || Math.max(0, (reading.currElectric || 0) - (reading.prevElectric || 0))) : 0
+        const electricCost = reading ? (reading.electricCost || electricUsage * electricRate) : 0
+        const waterUsage = reading ? (reading.waterUsage || Math.max(0, (reading.currWater || 0) - (reading.prevWater || 0))) : 0
+        const waterCost = reading ? (reading.waterCost || waterUsage * waterRate) : 0
+        const serviceFee = batchForm.value.service_fee || 100000
+        const total = room.price + electricCost + waterCost + serviceFee
+        const dueDate = calculateDueDate(monthStr)
+
         dataStore.bills.unshift({
           id: Date.now() + Math.random(),
-          code: `INV-${batchForm.value.billing_month.replace('/', '')}-${room.roomNumber}`,
-          month: batchForm.value.billing_month,
-          year: 2026,
+          code: `INV-${monthStr.replace(/[^0-9]/g, '')}-${room.roomNumber}`,
+          month: monthStr,
+          year: new Date().getFullYear(),
           roomId: room.id,
           roomNumber: room.roomNumber,
           renterId: room.renterId,
@@ -630,24 +720,33 @@ const runBatchGenerate = () => {
           propertyId: room.propertyId,
           propertyName: room.propertyName,
           roomPrice: room.price,
-          electricUsage: 100,
-          electricCost: 380000,
-          waterUsage: 8,
-          waterCost: 144000,
-          serviceFee: batchForm.value.service_fee,
+          electricUsage,
+          electricCost,
+          waterUsage,
+          waterCost,
+          serviceFee,
           discount: 0,
           totalAmount: total,
           paidAmount: 0,
           status: 'unpaid',
-          dueDate: '2026-08-05',
+          dueDate,
           paidDate: null,
           paymentMethod: '',
-          notes: `Hóa đơn hàng loạt tháng ${batchForm.value.billing_month}`
+          notes: reading ? `Hóa đơn hàng loạt tháng ${monthStr}` : `Hóa đơn tháng ${monthStr} (Cần bổ sung điện nước)`
         })
+        count++
       }
     })
     dataStore.saveToStorage()
-    toast.success('Đã sinh hóa đơn hàng loạt thành công cho tất cả các phòng!')
+    if (count > 0) {
+      if (missingReadingCount > 0) {
+        toast.info(`Đã sinh ${count} hóa đơn! (Trong đó ${missingReadingCount} phòng chưa có chỉ số điện nước)`)
+      } else {
+        toast.success(`Đã sinh hóa đơn hàng loạt thành công cho ${count} phòng!`)
+      }
+    } else {
+      toast.info('Tất cả các phòng đang thuê đều đã có hóa đơn kỳ này.')
+    }
     showBatchModal.value = false
   } finally {
     submittingBatch.value = false
