@@ -9,6 +9,8 @@ const initialProperties = [
     address: '124 Nguyễn Trãi, Phường Bến Thành, Quận 1, TP.HCM',
     city: 'Hồ Chí Minh',
     totalRooms: 12,
+    electricRate: 3500,
+    waterRate: 18000,
     managerName: 'Nguyễn Văn Minh',
     managerPhone: '0908123456',
     image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
@@ -20,6 +22,8 @@ const initialProperties = [
     address: '450 Lê Văn Sỹ, Phường 14, Quận 3, TP.HCM',
     city: 'Hồ Chí Minh',
     totalRooms: 10,
+    electricRate: 3500,
+    waterRate: 18000,
     managerName: 'Trần Thị Mai',
     managerPhone: '0912987654',
     image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80',
@@ -31,6 +35,8 @@ const initialProperties = [
     address: '88 Điện Biên Phủ, Phường 15, Quận Bình Thạnh, TP.HCM',
     city: 'Hồ Chí Minh',
     totalRooms: 15,
+    electricRate: 3200,
+    waterRate: 20000,
     managerName: 'Lê Hoàng Nam',
     managerPhone: '0988776655',
     image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
@@ -641,16 +647,49 @@ export const useDataStore = defineStore('data', {
     // Property helper
     getPropertyById: (state) => (id) => state.properties.find(p => p.id === Number(id)),
     getRoomById: (state) => (id) => state.rooms.find(r => r.id === Number(id)),
-    getContractByRoomId: (state) => (roomId) => state.contracts.find(c => c.roomId === Number(roomId) && c.status === 'active')
+    getContractByRoomId: (state) => (roomId) => state.contracts.find(c => c.roomId === Number(roomId) && c.status === 'active'),
+    getRoomMaintenanceCost: (state) => (roomId) => {
+      return state.maintenance
+        .filter(m => Number(m.roomId || m.room_id) === Number(roomId))
+        .reduce((sum, m) => sum + (Number(m.cost) || 0), 0)
+    },
+    getRoomMaintenanceHistory: (state) => (roomId) => {
+      return state.maintenance.filter(m => Number(m.roomId || m.room_id) === Number(roomId))
+    }
   },
 
   actions: {
+    checkExpiringContracts() {
+      const now = new Date().getTime()
+      this.contracts.forEach(c => {
+        if (c.status === 'active' && c.endDate) {
+          const endMs = new Date(c.endDate).getTime()
+          const diffDays = Math.ceil((endMs - now) / (1000 * 60 * 60 * 24))
+          if (diffDays > 0 && diffDays <= 30) {
+            const notiTitle = `Hợp đồng phòng ${c.roomNumber} sắp hết hạn!`
+            const exists = this.notifications.some(n => n.title === notiTitle)
+            if (!exists) {
+              this.addNotification(
+                notiTitle,
+                `Hợp đồng ${c.contractNumber} (${c.renterName}) sẽ hết hạn sau ${diffDays} ngày (${c.endDate}). Vui lòng liên hệ gia hạn hoặc chuẩn bị bàn giao.`,
+                'warning',
+                '/contracts'
+              )
+            }
+          }
+        }
+      })
+    },
+
     saveToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.$state))
-      } catch (e) {
-        console.error('Failed to save to localStorage', e)
-      }
+      if (this._saveTimer) clearTimeout(this._saveTimer)
+      this._saveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(this.$state))
+        } catch (e) {
+          console.error('Failed to save to localStorage', e)
+        }
+      }, 300)
     },
 
     addAuditLog(action, target, details) {
@@ -849,10 +888,27 @@ export const useDataStore = defineStore('data', {
         this.saveToStorage()
       }
     },
-    terminateContract(id, reason = 'Kết thúc thời hạn') {
+    terminateContract(id, reason = 'Kết thúc thời hạn', depositSettlement = null) {
       const contract = this.contracts.find(c => c.id === id)
       if (contract) {
         contract.status = 'terminated'
+        if (depositSettlement) {
+          contract.depositSettlement = depositSettlement
+          if (depositSettlement.refundAmount > 0) {
+            this.expenses.unshift({
+              id: Date.now(),
+              title: `Hoàn trả tiền cọc phòng ${contract.roomNumber} (${contract.renterName})`,
+              category: 'Hoàn cọc',
+              amount: Number(depositSettlement.refundAmount),
+              propertyId: contract.propertyId,
+              propertyName: contract.propertyName,
+              date: new Date().toLocaleDateString('sv-SE'),
+              receiptImage: '',
+              paidTo: contract.renterName,
+              notes: depositSettlement.deductionReason ? `Khấu trừ ${depositSettlement.deductionAmount}đ vì: ${depositSettlement.deductionReason}` : 'Hoàn cọc đủ'
+            })
+          }
+        }
         const room = this.rooms.find(r => r.id === contract.roomId)
         if (room) {
           room.status = 'vacant'
@@ -863,7 +919,10 @@ export const useDataStore = defineStore('data', {
         if (renter) {
           renter.status = 'inactive'
         }
-        this.addAuditLog('Thanh lý hợp đồng', contract.contractNumber, `Thanh lý hợp đồng phòng ${contract.roomNumber}. Lý do: ${reason}`)
+        const logDetail = depositSettlement 
+          ? `Thanh lý HD ${contract.roomNumber}. Hoàn cọc: ${depositSettlement.refundAmount?.toLocaleString()}đ, Khấu trừ: ${depositSettlement.deductionAmount?.toLocaleString()}đ (${depositSettlement.deductionReason || 'Không'})`
+          : `Thanh lý hợp đồng phòng ${contract.roomNumber}. Lý do: ${reason}`
+        this.addAuditLog('Thanh lý hợp đồng', contract.contractNumber, logDetail)
         this.saveToStorage()
       }
     },
