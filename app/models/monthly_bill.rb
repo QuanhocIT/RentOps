@@ -16,17 +16,19 @@ class MonthlyBill < ApplicationRecord
   before_save :calculate_amounts
 
   def calculate_amounts
-    self.paid_amount ||= 0.0
-    self.discount_amount ||= 0.0
-    self.penalty_amount ||= 0.0
-    computed_total = (room_fee.to_f + utility_fee.to_f + service_fee.to_f + penalty_amount.to_f - discount_amount.to_f)
-    self.total_amount = [computed_total, 0.0].max
-    self.remaining_amount = [total_amount - paid_amount, 0.0].max
+    self.paid_amount = paid_amount.to_f if respond_to?(:paid_amount=)
+    disc = respond_to?(:discount_amount) && discount_amount.present? ? discount_amount.to_f : 0.0
+    pen = respond_to?(:penalty_amount) && penalty_amount.present? ? penalty_amount.to_f : 0.0
+    paid = respond_to?(:paid_amount) && paid_amount.present? ? paid_amount.to_f : 0.0
 
-    if paid_amount >= total_amount && total_amount > 0
+    computed_total = (room_fee.to_f + utility_fee.to_f + service_fee.to_f + pen - disc)
+    self.total_amount = [computed_total, 0.0].max
+    self.remaining_amount = [total_amount - paid, 0.0].max
+
+    if paid >= total_amount && total_amount > 0
       self.status = :paid
       self.paid_at ||= Time.current
-    elsif paid_amount > 0 && paid_amount < total_amount
+    elsif paid > 0 && paid < total_amount
       self.status = :partially_paid
     end
   end
