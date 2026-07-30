@@ -22,7 +22,7 @@
       <div class="flex bg-slate-900/80 p-1 rounded-2xl border border-white/10 mb-6">
         <button
           type="button"
-          @click="isRegister = false"
+          @click="switchToLogin"
           :class="!isRegister ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white font-semibold'"
           class="w-1/2 py-2 text-xs rounded-xl transition"
         >
@@ -30,7 +30,7 @@
         </button>
         <button
           type="button"
-          @click="isRegister = true"
+          @click="switchToRegister"
           :class="isRegister ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-slate-400 hover:text-white font-semibold'"
           class="w-1/2 py-2 text-xs rounded-xl transition"
         >
@@ -80,7 +80,7 @@
       </form>
 
       <!-- REGISTER FORM -->
-      <form v-else class="space-y-3.5" @submit.prevent="registerAccount">
+      <form v-else class="space-y-3.5" @submit.prevent="registerAccount" autocomplete="off">
         <div>
           <label class="mb-1 block text-xs font-semibold uppercase text-slate-300">Bạn là:</label>
           <select v-model="registerForm.role" class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm">
@@ -95,6 +95,7 @@
             v-model="registerForm.full_name"
             type="text"
             required
+            autocomplete="off"
             class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm"
             placeholder="vd: Nguyễn Văn Minh"
           />
@@ -106,6 +107,7 @@
             v-model="registerForm.email"
             type="email"
             required
+            autocomplete="new-email"
             class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm"
             placeholder="minh@gmail.com"
           />
@@ -116,6 +118,7 @@
           <input
             v-model="registerForm.phone"
             type="text"
+            autocomplete="off"
             class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm font-mono"
             placeholder="0987 654 321"
           />
@@ -126,6 +129,7 @@
           <input
             v-model="registerForm.tenant_name"
             type="text"
+            autocomplete="off"
             class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm"
             placeholder="vd: Căn Hộ Landmark Residence"
           />
@@ -137,6 +141,7 @@
             v-model="registerForm.password"
             type="password"
             required
+            autocomplete="new-password"
             class="w-full rounded-xl border border-white/10 bg-slate-900/80 px-4 py-2.5 text-white outline-none text-sm"
             placeholder="Nhập mật khẩu của bạn"
           />
@@ -182,6 +187,22 @@ const registerForm = ref({
   tenant_name: '',
   password: ''
 })
+
+const switchToRegister = () => {
+  isRegister.value = true
+  registerForm.value = {
+    role: 'landlord',
+    full_name: '',
+    email: '',
+    phone: '',
+    tenant_name: '',
+    password: ''
+  }
+}
+
+const switchToLogin = () => {
+  isRegister.value = false
+}
 
 const loginDemo = async () => {
   loading.value = true
