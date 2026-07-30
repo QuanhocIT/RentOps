@@ -19,10 +19,18 @@ class Tenant < ApplicationRecord
   validates :subdomain, presence: true, uniqueness: true
 
   def max_rooms_allowed
-    plan&.max_rooms || 20
+    plan&.max_rooms || 50
+  end
+
+  def max_properties_allowed
+    plan&.max_properties || 10
   end
 
   def can_add_more_rooms?
     rooms.kept.count < max_rooms_allowed
+  end
+
+  def can_add_more_properties?
+    properties.kept.count < max_properties_allowed
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_30_000005) do
   create_table "amenities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "tenant_id", null: false
     t.string "name", null: false
@@ -57,6 +57,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.string "temporary_residence_status", default: "pending"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "vehicle_plate"
+    t.string "emergency_contact"
+    t.date "id_card_issue_date"
     t.index ["contract_id"], name: "index_co_tenants_on_contract_id"
     t.index ["user_id"], name: "index_co_tenants_on_user_id"
   end
@@ -108,6 +111,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "cost_bearer", default: "owner"
+    t.string "handyman_name"
+    t.string "handyman_phone"
+    t.string "photo_before_url"
+    t.string "photo_after_url"
     t.index ["discarded_at"], name: "index_maintenance_requests_on_discarded_at"
     t.index ["room_id"], name: "fk_rails_ef1e4af497"
     t.index ["tenant_id", "status"], name: "index_maintenance_requests_on_tenant_id_and_status"
@@ -136,6 +144,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.string "payment_reference"
     t.decimal "paid_amount", precision: 12, scale: 2, default: "0.0"
     t.decimal "remaining_amount", precision: 12, scale: 2, default: "0.0"
+    t.decimal "discount_amount", precision: 12, scale: 2, default: "0.0"
+    t.decimal "penalty_amount", precision: 12, scale: 2, default: "0.0"
     t.index ["bill_code"], name: "index_monthly_bills_on_bill_code", unique: true
     t.index ["billing_month"], name: "index_monthly_bills_on_billing_month"
     t.index ["contract_id"], name: "index_monthly_bills_on_contract_id"
@@ -211,6 +221,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "max_properties", default: 5, null: false
+    t.boolean "allow_multi_bedroom", default: true, null: false
     t.index ["discarded_at"], name: "index_plans_on_discarded_at"
   end
 
@@ -221,7 +233,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.datetime "discarded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "property_type", default: "phong_tro", null: false
+    t.text "description"
     t.index ["discarded_at"], name: "index_properties_on_discarded_at"
+    t.index ["property_type"], name: "index_properties_on_property_type"
     t.index ["tenant_id"], name: "index_properties_on_tenant_id"
   end
 
@@ -254,8 +269,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.bigint "property_id"
     t.integer "floor", default: 1
     t.decimal "area", precision: 8, scale: 2, default: "20.0"
+    t.string "room_type", default: "phong_don", null: false
+    t.integer "bedrooms_count", default: 1, null: false
+    t.integer "living_rooms_count", default: 0, null: false
+    t.integer "bathrooms_count", default: 1, null: false
+    t.boolean "has_balcony", default: false, null: false
+    t.boolean "is_shared_bathroom", default: false, null: false
+    t.integer "kitchens_count", default: 1, null: false
+    t.boolean "is_mezzanine", default: false, null: false
+    t.string "furnished_status", default: "co_ban", null: false
     t.index ["discarded_at"], name: "index_rooms_on_discarded_at"
     t.index ["property_id"], name: "index_rooms_on_property_id"
+    t.index ["room_type"], name: "index_rooms_on_room_type"
     t.index ["tenant_id", "status"], name: "index_rooms_on_tenant_id_and_status"
     t.index ["tenant_id"], name: "index_rooms_on_tenant_id"
   end
@@ -301,6 +326,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.string "hometown"
     t.integer "role", default: 1, null: false
     t.string "password_digest"
+    t.string "vehicle_plate"
+    t.string "emergency_contact"
+    t.date "id_card_issue_date"
     t.index ["discarded_at"], name: "index_users_on_discarded_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["tenant_id"], name: "index_users_on_tenant_id"
@@ -320,6 +348,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_30_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "meter_reset", default: false
+    t.boolean "is_abnormal", default: false
     t.index ["discarded_at"], name: "index_utility_readings_on_discarded_at"
     t.index ["room_id"], name: "fk_rails_1aa99be56e"
     t.index ["tenant_id", "room_id", "billing_month"], name: "idx_utility_readings_tenant_room_month"

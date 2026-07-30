@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   include Discard::Model
-  acts_as_tenant(:tenant)
+  acts_as_tenant(:tenant, optional: true)
 
   has_secure_password validations: false
 
@@ -19,11 +19,11 @@ class User < ApplicationRecord
   validates :full_name, presence: true
 
   def super_admin?
-    role == "super_admin" || email == "admin@rentops.vn"
+    role == "super_admin" || email == "superadmin@rentops.vn"
   end
 
   def landlord?
-    owner? || super_admin?
+    owner?
   end
 
   def staff?

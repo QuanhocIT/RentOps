@@ -17,7 +17,10 @@ class MonthlyBill < ApplicationRecord
 
   def calculate_amounts
     self.paid_amount ||= 0.0
-    self.total_amount ||= (room_fee.to_f + utility_fee.to_f + service_fee.to_f)
+    self.discount_amount ||= 0.0
+    self.penalty_amount ||= 0.0
+    computed_total = (room_fee.to_f + utility_fee.to_f + service_fee.to_f + penalty_amount.to_f - discount_amount.to_f)
+    self.total_amount = [computed_total, 0.0].max
     self.remaining_amount = [total_amount - paid_amount, 0.0].max
 
     if paid_amount >= total_amount && total_amount > 0

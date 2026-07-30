@@ -11,6 +11,7 @@ class BillItem < ApplicationRecord
     water: "water",
     service: "service",
     penalty: "penalty",
-    discount: "discount"
+    discount: "discount",
+    maintenance: "maintenance"
   }
 end
