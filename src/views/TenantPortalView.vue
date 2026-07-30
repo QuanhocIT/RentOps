@@ -1072,10 +1072,10 @@ function handleSearchSubmit() {
 }
 
 function openRoomDetail(room) {
-  selectedRoomDetail.value = room
   if (!recentRooms.value.some(r => r.id === room.id)) {
     recentRooms.value.unshift(room)
   }
+  router.push(`/room-detail/${room.id || 101}`)
 }
 
 function isSaved(roomId) {

@@ -166,11 +166,16 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-4">
-          <article v-for="room in featuredRooms" :key="room.title" class="overflow-hidden rounded-[1.75rem] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100">
+          <article
+            v-for="room in featuredRooms"
+            :key="room.title"
+            class="overflow-hidden rounded-[1.75rem] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] ring-1 ring-slate-100 cursor-pointer transition hover:scale-[1.02]"
+            @click="goToRoomDetail(room)"
+          >
             <div class="relative h-56">
               <img :src="room.image" :alt="room.title" class="h-full w-full object-cover" />
               <span v-if="room.badge" class="absolute left-4 top-4 rounded-full bg-amber-400 px-3 py-1 text-xs font-black text-white shadow-lg">{{ room.badge }}</span>
-              <button class="absolute right-4 top-4 rounded-full bg-white/85 p-2 text-slate-500 shadow-sm">♡</button>
+              <button class="absolute right-4 top-4 rounded-full bg-white/85 p-2 text-slate-500 shadow-sm" @click.stop>♡</button>
             </div>
             <div class="space-y-3 p-5">
               <h3 class="text-base font-bold text-slate-900">{{ room.title }}</h3>
@@ -317,7 +322,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../services/api'
+
+const router = useRouter()
+
+const goToRoomDetail = (room) => {
+  router.push(`/room-detail/${room.id || 101}`)
+}
 
 const navItems = ['Trang chủ', 'Tìm phòng', 'Khu vực', 'Loại phòng', 'Tiện ích', 'Blog', 'Về chúng tôi']
 
@@ -362,10 +374,10 @@ const categories = [
 ]
 
 const featuredRooms = [
-  { title: 'Tòa A - Nam Từ Liêm', location: '6 phòng, 4 phòng đang ở', price: 'Từ 3.5 triệu/tháng', image: '/images/rooms/main.png', tags: ['Multi-tenant', 'Hợp đồng', 'VietQR'], rating: '4.8', reviews: 120, badge: 'Đang hoạt động' },
-  { title: 'Tòa B - Cầu Giấy', location: '8 phòng, 2 phòng trống', price: 'Từ 4.2 triệu/tháng', image: '/images/rooms/living.png', tags: ['Bảo trì', 'Nhắc nợ', 'Kiểm kê'], rating: '4.9', reviews: 98 },
-  { title: 'Căn hộ dịch vụ C', location: '4 hợp đồng đang hiệu lực', price: 'Từ 6.5 triệu/tháng', image: '/images/bedroom.png', tags: ['Tiện ích', 'Điện nước', 'Cư dân'], rating: '4.8', reviews: 76, badge: 'VIP' },
-  { title: 'Homestay Đà Lạt', location: 'Quản lý theo ngày/đêm', price: 'Từ 600k/đêm', image: '/images/rooms/kitchen.png', tags: ['Tour 360', 'Đặt lịch', 'Khách thuê'], rating: '4.9', reviews: 56 }
+  { id: 101, title: 'Tòa A - Nam Từ Liêm', location: '6 phòng, 4 phòng đang ở', price: 'Từ 3.5 triệu/tháng', image: '/images/rooms/main.png', tags: ['Multi-tenant', 'Hợp đồng', 'VietQR'], rating: '4.8', reviews: 120, badge: 'Đang hoạt động' },
+  { id: 102, title: 'Tòa B - Cầu Giấy', location: '8 phòng, 2 phòng trống', price: 'Từ 4.2 triệu/tháng', image: '/images/rooms/living.png', tags: ['Bảo trì', 'Nhắc nợ', 'Kiểm kê'], rating: '4.9', reviews: 98 },
+  { id: 401, title: 'Căn hộ dịch vụ C', location: '4 hợp đồng đang hiệu lực', price: 'Từ 6.5 triệu/tháng', image: '/images/bedroom.png', tags: ['Tiện ích', 'Điện nước', 'Cư dân'], rating: '4.8', reviews: 76, badge: 'VIP' },
+  { id: 301, title: 'Homestay Đà Lạt', location: 'Quản lý theo ngày/đêm', price: 'Từ 600k/đêm', image: '/images/rooms/kitchen.png', tags: ['Tour 360', 'Đặt lịch', 'Khách thuê'], rating: '4.9', reviews: 56 }
 ]
 
 const areas = [
