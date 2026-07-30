@@ -589,7 +589,7 @@ const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 const loadDashboardStats = async () => {
   try {
     const res = await api.get('/dashboard/summary')
-    const counters = res?.counters || {}
+    const counters = res?.data?.counters || res?.counters || {}
     dashboardStats.value = {
       total_rooms: counters.total_rooms ?? 0,
       occupied_rooms: counters.occupied_rooms ?? 0,
