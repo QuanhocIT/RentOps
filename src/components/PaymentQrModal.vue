@@ -79,6 +79,10 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0)
 }
 
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
+
 const simulateWebhook = async () => {
   loading.value = true
   try {
@@ -86,23 +90,21 @@ const simulateWebhook = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        transaction_code: 'FT' + Date.now(),
-        amount: props.bill.total_amount,
-        description: props.bill.bill_code,
-        payment_method: 'vietqr',
-        bank_name: props.bill.bank_code || 'MB Bank'
+        bill_code: props.bill.bill_code,
+        amount: props.bill.total_amount
       })
     })
 
     const data = await res.json()
     if (res.ok && data.success) {
       props.bill.status = 'paid'
+      toastStore.success('Xác nhận thanh toán VietQR thành công!')
       emit('payment-success', props.bill)
     } else {
-      alert(data.message || 'Chuyển khoản thất bại')
+      toastStore.error(data.message || 'Chuyển khoản thất bại')
     }
   } catch (err) {
-    alert('Lỗi kết nối ngân hàng webhook simulation')
+    toastStore.error('Lỗi kết nối ngân hàng webhook simulation')
   } finally {
     loading.value = false
   }

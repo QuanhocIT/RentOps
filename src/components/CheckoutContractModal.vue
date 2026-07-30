@@ -115,6 +115,10 @@ const refundAmount = computed(() => {
   return Math.max(0, deposit - totalDeduction.value)
 })
 
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
+
 const handleCheckout = async () => {
   submitting.value = true
   try {
@@ -123,10 +127,11 @@ const handleCheckout = async () => {
       deduction_reason: deductionReason.value,
       settle_unpaid_with_deposit: settleUnpaidWithDeposit.value
     })
+    toastStore.success('Thanh lý hợp đồng thành công!')
     emit('success')
     emit('close')
   } catch (err) {
-    alert(err?.message || 'Có lỗi xảy ra khi thanh lý hợp đồng')
+    toastStore.error(err?.message || 'Có lỗi xảy ra khi thanh lý hợp đồng')
   } finally {
     submitting.value = false
   }

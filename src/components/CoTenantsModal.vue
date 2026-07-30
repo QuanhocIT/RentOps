@@ -198,15 +198,20 @@ const loadCoTenants = async () => {
 
 onMounted(loadCoTenants)
 
+import { useToastStore } from '../stores/toast'
+
+const toastStore = useToastStore()
+
 const addCoTenant = async () => {
   submitting.value = true
   try {
     await api.post(`/contracts/${props.contract.id}/co_tenants`, { co_tenant: form.value })
+    toastStore.success('Thêm thành viên cùng ở thành công!')
     form.value = { full_name: '', phone: '', id_card_number: '', vehicle_plate: '', emergency_contact: '', temporary_residence_status: 'pending' }
     loadCoTenants()
     emit('updated')
   } catch (err) {
-    alert(err?.message || 'Không thể thêm thành viên')
+    toastStore.error(err?.message || 'Không thể thêm thành viên')
   } finally {
     submitting.value = false
   }
@@ -216,10 +221,11 @@ const removeCoTenant = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa thành viên ở cùng này khỏi hợp đồng?')) return
   try {
     await api.delete(`/contracts/${props.contract.id}/co_tenants?co_tenant_id=${id}`)
+    toastStore.success('Đã xóa thành viên khỏi hợp đồng!')
     loadCoTenants()
     emit('updated')
   } catch (err) {
-    alert(err?.message || 'Không thể xóa thành viên')
+    toastStore.error(err?.message || 'Không thể xóa thành viên')
   }
 }
 </script>
