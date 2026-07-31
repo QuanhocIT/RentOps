@@ -1687,15 +1687,18 @@ const filteredBills = computed(() => bills.value.filter(bill => {
 }))
 
 const filteredNotifications = computed(() => notificationFilter.value === 'unread' ? notifications.value.filter(notification => !notification.read) : notifications.value)
-function isMaintenanceResolved(request = {}) {
+const resolvedMaintenanceStatuses = new Set(['resolved', 'completed', 'done'])
+const isMaintenanceResolved = (request) => {
   const status = String(request?.status || '').trim().toLowerCase()
-  return ['resolved', 'completed', 'done', 'hoàn thành'].includes(status)
+  return resolvedMaintenanceStatuses.has(status)
 }
 
-const maintenanceRequestsWithStatus = computed(() => maintenanceRequests.value.map(request => ({
-  ...request,
-  is_resolved: isMaintenanceResolved(request)
-})))
+const maintenanceRequestsWithStatus = computed(() => maintenanceRequests.value.map(request => {
+  return {
+    ...request,
+    is_resolved: isMaintenanceResolved(request)
+  }
+}))
 const pendingMaintenanceCount = computed(() => maintenanceRequestsWithStatus.value.filter(request => !request.is_resolved).length)
 const resolvedMaintenanceCount = computed(() => maintenanceRequestsWithStatus.value.filter(request => request.is_resolved).length)
 const filteredMaintenanceRequests = computed(() => {
