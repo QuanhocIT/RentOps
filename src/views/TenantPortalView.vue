@@ -713,8 +713,8 @@
               <article v-for="req in filteredMaintenanceRequests" :key="req.id" class="ticket-card">
                 <div class="ticket-header">
                   <strong>{{ req.title }}</strong>
-                  <span class="status-badge" :class="isMaintenanceResolved(req) ? 'resolved' : 'pending'">
-                    {{ isMaintenanceResolved(req) ? '✓ Đã xong' : '⏳ Đang xử lý' }}
+                  <span class="status-badge" :class="req.is_resolved ? 'resolved' : 'pending'">
+                    {{ req.is_resolved ? '✓ Đã xong' : '⏳ Đang xử lý' }}
                   </span>
                 </div>
                 <p class="ticket-desc">{{ req.description }}</p>
@@ -1687,10 +1687,23 @@ const filteredBills = computed(() => bills.value.filter(bill => {
 }))
 
 const filteredNotifications = computed(() => notificationFilter.value === 'unread' ? notifications.value.filter(notification => !notification.read) : notifications.value)
-const isMaintenanceResolved = request => ['resolved', 'completed', 'done', 'hoàn thành'].includes(String(request.status || '').toLowerCase())
-const pendingMaintenanceCount = computed(() => maintenanceRequests.value.filter(request => !isMaintenanceResolved(request)).length)
-const resolvedMaintenanceCount = computed(() => maintenanceRequests.value.filter(request => isMaintenanceResolved(request)).length)
-const filteredMaintenanceRequests = computed(() => supportStatusFilter.value === 'all' ? maintenanceRequests.value : maintenanceRequests.value.filter(request => supportStatusFilter.value === 'resolved' ? isMaintenanceResolved(request) : !isMaintenanceResolved(request)))
+function isMaintenanceResolved(request = {}) {
+  const status = String(request?.status || '').trim().toLowerCase()
+  return ['resolved', 'completed', 'done', 'hoàn thành'].includes(status)
+}
+
+const maintenanceRequestsWithStatus = computed(() => maintenanceRequests.value.map(request => ({
+  ...request,
+  is_resolved: isMaintenanceResolved(request)
+})))
+const pendingMaintenanceCount = computed(() => maintenanceRequestsWithStatus.value.filter(request => !request.is_resolved).length)
+const resolvedMaintenanceCount = computed(() => maintenanceRequestsWithStatus.value.filter(request => request.is_resolved).length)
+const filteredMaintenanceRequests = computed(() => {
+  const list = maintenanceRequestsWithStatus.value
+  if (supportStatusFilter.value === 'resolved') return list.filter(request => request.is_resolved)
+  if (supportStatusFilter.value === 'pending') return list.filter(request => !request.is_resolved)
+  return list
+})
 
 const areas = ref([
   { name: 'Nam Từ Liêm', rooms: 18, image: '/images/suite.png' },
