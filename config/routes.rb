@@ -3,6 +3,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "auth/login", to: "auth#login"
       post "auth/register", to: "auth#register"
+      post "auth/google", to: "auth#google_login"
       get "auth/me", to: "auth#me"
       get "public/rooms", to: "auth#public_rooms"
 

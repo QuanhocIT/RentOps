@@ -16,17 +16,32 @@
       </div>
 
       <nav class="side-nav">
-        <button
-          v-for="item in navItems"
-          :key="item.id"
-          class="nav-item"
-          :class="{ active: currentTab === item.id }"
-          @click="setActiveTab(item.id)"
-        >
-          <span class="nav-icon">{{ item.icon }}</span>
-          <span>{{ item.name }}</span>
-          <span v-if="item.badge" class="side-badge">{{ item.badge }}</span>
-        </button>
+        <div v-for="sec in navSections" :key="sec.title" class="nav-group">
+          <div class="nav-group-title">{{ sec.title }}</div>
+          <button
+            v-for="item in sec.items"
+            :key="item.id"
+            class="nav-item"
+            :class="{ active: currentTab === item.id }"
+            @click="setActiveTab(item.id)"
+          >
+            <span class="nav-icon">
+              <svg v-if="item.icon === 'home'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <svg v-else-if="item.icon === 'contract'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <svg v-else-if="item.icon === 'bill'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="6.01" y2="15"/><line x1="10" y1="15" x2="14" y2="15"/></svg>
+              <svg v-else-if="item.icon === 'support'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              <svg v-else-if="item.icon === 'search'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg v-else-if="item.icon === 'favorite'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <svg v-else-if="item.icon === 'history'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <svg v-else-if="item.icon === 'bell'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <svg v-else-if="item.icon === 'message'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <svg v-else-if="item.icon === 'star'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </span>
+            <span>{{ item.name }}</span>
+            <span v-if="item.id === 'notifications' && unreadNotificationsCount" class="side-badge">{{ unreadNotificationsCount }}</span>
+            <span v-if="item.id === 'messages' && unreadMessagesCount" class="side-badge">{{ unreadMessagesCount }}</span>
+          </button>
+        </div>
       </nav>
 
       <div class="reward-card">
@@ -249,14 +264,14 @@
             <section class="list-pair">
               <div class="section-block">
                 <div class="section-head">
-                  <h2>Phòng bạn đã lưu ({{ savedRooms.length }})</h2>
+                  <h2>Phòng bạn đã lưu ({{ (savedRooms || []).length }})</h2>
                   <a href="#" @click.prevent="setActiveTab('favorites')">Xem tất cả ›</a>
                 </div>
-                <div v-if="savedRooms.length === 0" class="empty-state-mini">
+                <div v-if="!savedRooms || savedRooms.length === 0" class="empty-state-mini">
                   <p>Chưa có phòng nào trong danh sách yêu thích</p>
                 </div>
                 <div v-else class="compact-list">
-                  <article v-for="room in savedRooms.slice(0, 3)" :key="room.id" class="compact-room" @click="openRoomDetail(room)">
+                  <article v-for="room in (savedRooms || []).slice(0, 3)" :key="room.id" class="compact-room" @click="openRoomDetail(room)">
                     <img :src="room.image" :alt="room.title" />
                     <div>
                       <strong>{{ room.title }}</strong>
@@ -271,14 +286,14 @@
 
               <div class="section-block">
                 <div class="section-head">
-                  <h2>Bạn đã xem gần đây ({{ recentRooms.length }})</h2>
+                  <h2>Bạn đã xem gần đây ({{ (recentRooms || []).length }})</h2>
                   <a href="#" @click.prevent="setActiveTab('history')">Xem tất cả ›</a>
                 </div>
-                <div v-if="recentRooms.length === 0" class="empty-state-mini">
+                <div v-if="!recentRooms || recentRooms.length === 0" class="empty-state-mini">
                   <p>Bạn chưa xem phòng nào gần đây</p>
                 </div>
                 <div v-else class="compact-list">
-                  <article v-for="room in recentRooms.slice(0, 3)" :key="room.id" class="compact-room" @click="openRoomDetail(room)">
+                  <article v-for="room in (recentRooms || []).slice(0, 3)" :key="room.id" class="compact-room" @click="openRoomDetail(room)">
                     <img :src="room.image" :alt="room.title" />
                     <div>
                       <strong>{{ room.title }}</strong>
@@ -298,11 +313,13 @@
                 <a href="#" @click.prevent="showToast('Danh sách ưu đãi đã cập nhật!')">Xem tất cả ›</a>
               </div>
               <div class="wide-offers">
-                <article v-for="offer in wideOffers" :key="offer.title" :class="offer.tone">
-                  <div>
+                <article v-for="offer in (wideOffers || [])" :key="offer.title" :class="offer.tone">
+                  <div class="offer-copy">
+                    <span v-if="offer.badge" class="offer-badge">{{ offer.badge }}</span>
                     <strong>{{ offer.title }}</strong>
                     <p>{{ offer.desc }}</p>
-                    <span>HSD: {{ offer.expiry }}</span>
+                    <small v-if="offer.condition">{{ offer.condition }}</small>
+                    <span class="offer-expiry">HSD: {{ offer.expiry }}</span>
                     <button @click="claimOffer(offer)">Lưu mã {{ offer.code }}</button>
                   </div>
                   <img :src="offer.image" :alt="offer.title" />
@@ -318,14 +335,22 @@
                   <div>{{ reason.icon }}</div>
                   <strong>{{ reason.title }}</strong>
                   <p>{{ reason.desc }}</p>
+                  <small v-if="reason.stat">{{ reason.stat }}</small>
                 </article>
               </div>
             </section>
 
             <section class="app-banner">
-              <div>
+              <div class="app-banner-copy">
+                <span class="app-badge">RentOps Resident App</span>
                 <h2>Tải ứng dụng RentOps ngay hôm nay!</h2>
-                <p>Trải nghiệm tìm phòng nhanh hơn, quản lý hợp đồng &amp; hóa đơn dễ dàng</p>
+                <p>Đặt lịch xem phòng, nhận hóa đơn, thanh toán VietQR và gửi yêu cầu sửa chữa trong một nơi.</p>
+                <div class="app-metrics">
+                  <span v-for="metric in appMetrics" :key="metric.label">
+                    <strong>{{ metric.value }}</strong>
+                    <small>{{ metric.label }}</small>
+                  </span>
+                </div>
                 <div class="store-row">
                   <button @click="showToast('Tính năng tải ứng dụng iOS đang chuẩn bị phát hành!')">▣ App Store</button>
                   <button @click="showToast('Tính năng tải ứng dụng Android đang chuẩn bị phát hành!')">▷ Google Play</button>
@@ -335,7 +360,10 @@
                 <img :src="phoneImage" alt="RentOps app" />
               </div>
               <div class="qr-box">
-                <div class="qr-content">QR CODE</div>
+                <div class="qr-content">
+                  <strong>QR</strong>
+                  <span>Quét để tải app</span>
+                </div>
               </div>
             </section>
           </div>
@@ -644,78 +672,74 @@
             </div>
           </div>
 
-          <!-- FOOTER -->
-          <footer class="tenant-footer">
-            <div class="footer-brand">
-              <div class="brand compact">
-                <div class="brand-mark">⌂</div>
-                <div class="brand-name">RentOps</div>
-              </div>
-              <p>Nền tảng tìm kiếm, đặt phòng và quản lý thuê nhà thông minh, tin cậy.</p>
-              <div class="socials">
-                <span>f</span>
-                <span>◎</span>
-                <span>♪</span>
-                <span>▶</span>
-              </div>
-            </div>
-            <div v-for="group in footerGroups" :key="group.title">
-              <strong>{{ group.title }}</strong>
-              <a v-for="link in group.links" :key="link" href="#" @click.prevent>{{ link }}</a>
-            </div>
-          </footer>
-          <div class="copyright">© 2026 RentOps Platform. All rights reserved.</div>
         </main>
 
         <!-- RIGHT SIDEBAR PANEL -->
         <aside class="right-panel">
           <section class="user-card">
-            <div class="user-row">
-              <img :src="userAvatar" alt="avatar" />
-              <div>
-                <span>Chào buổi sáng! 👋</span>
+            <div class="profile-hero">
+              <div class="profile-avatar">
+                <img :src="userAvatar" alt="avatar" />
+                <span aria-hidden="true"></span>
+              </div>
+              <div class="profile-copy">
+                <span>Chào buổi sáng</span>
                 <strong>{{ tenantName }}</strong>
+                <small>Cư dân RentOps</small>
               </div>
             </div>
+
             <div class="member-progress">
-              <div>
-                <span>◇ Thành viên Bạc</span>
+              <div class="member-tier">
+                <span>Thành viên Bạc</span>
                 <strong>2.350 điểm</strong>
               </div>
               <div class="progress-track"><i style="width: 68%;"></i></div>
-              <small>Còn 650 điểm để lên hạng Vàng</small>
+              <div class="progress-meta">
+                <span>Còn 650 điểm để lên hạng Vàng</span>
+                <b>68%</b>
+              </div>
             </div>
           </section>
 
           <section class="wallet-card">
-            <h2>Ví của tôi</h2>
+            <div class="wallet-head">
+              <div>
+                <span>Ví của tôi</span>
+                <h2>Số dư hiện tại</h2>
+              </div>
+              <small>Đang hoạt động</small>
+            </div>
+
             <div class="wallet-balance">
               <div>
-                <span>Số dư hiện tại</span>
                 <strong>{{ formatCurrency(walletBalance) }}</strong>
+                <span>Sẵn sàng thanh toán hóa đơn</span>
               </div>
               <button @click="openTopUpModal">Nạp tiền</button>
             </div>
+
+            <div class="wallet-summary">
+              <div>
+                <span>Tháng này</span>
+                <strong>03 giao dịch</strong>
+              </div>
+              <div>
+                <span>Phương thức</span>
+                <strong>VietQR</strong>
+              </div>
+            </div>
+
             <button class="wallet-link" @click="showToast('Lịch sử giao dịch: 03 giao dịch gần đây')">
-              ▤ Lịch sử giao dịch <span>›</span>
+              <span><i aria-hidden="true">▤</i> Lịch sử giao dịch</span>
+              <b>›</b>
             </button>
             <button class="wallet-link" @click="showToast('Phương thức thanh toán: MoMo, VietQR, Chuyển khoản')">
-              ▭ Phương thức thanh toán <span>›</span>
+              <span><i aria-hidden="true">▭</i> Phương thức thanh toán</span>
+              <b>›</b>
             </button>
           </section>
 
-          <section class="offer-card">
-            <h2>Ưu đãi dành riêng cho bạn</h2>
-            <article v-for="offer in offers" :key="offer.title">
-              <div>
-                <strong>{{ offer.title }}</strong>
-                <p>{{ offer.desc }}</p>
-                <span>HSD: {{ offer.expiry }}</span>
-              </div>
-              <button @click="claimOffer(offer)">Lưu mã</button>
-            </article>
-            <a href="#" @click.prevent="showToast('Các ưu đãi mới nhất sẽ tự động gửi vào ví quà tặng')">Xem tất cả ưu đãi ›</a>
-          </section>
         </aside>
       </div>
     </div>
@@ -848,19 +872,69 @@
 
           <div class="modal-actions">
             <button type="button" class="secondary-btn" @click="showNewMaintenanceModal = false">Hủy</button>
-            <button type="submit" class="primary-btn">Gửi yêu cầu kỹ thuật</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- MODAL: CONTRACT DETAIL -->
+    <div v-if="selectedContractDetail" class="modal-backdrop" @click.self="selectedContractDetail = null">
+      <div class="modal-card room-detail-modal" style="max-width: 580px;">
+        <button class="modal-close" @click="selectedContractDetail = null">✕</button>
+
+        <div class="modal-body" style="padding: 24px;">
+          <div class="modal-title-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin: 0;">📄 Chi tiết Hợp đồng {{ selectedContractDetail.contract_code }}</h2>
+            <span class="status-badge active" style="background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;">● Đang hiệu lực</span>
+          </div>
+
+          <div class="contract-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Phòng thuê:</span>
+              <strong style="color: #1e293b; font-size: 15px;">Phòng {{ selectedContractDetail.room_number }}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Tòa nhà:</span>
+              <strong style="color: #1e293b; font-size: 15px;">{{ selectedContractDetail.property_name || 'Tòa nhà RentOps' }}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Người thuê chính:</span>
+              <strong style="color: #1e293b; font-size: 15px;">{{ selectedContractDetail.renter_name || tenantName }}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Giá thuê hàng tháng:</span>
+              <strong style="color: #4f46e5; font-size: 15px;">{{ formatCurrency(selectedContractDetail.monthly_rent) }}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Tiền đặt cọc:</span>
+              <strong style="color: #1e293b; font-size: 15px;">{{ formatCurrency(selectedContractDetail.deposit_amount) }}</strong>
+            </div>
+            <div>
+              <span style="color: #64748b; font-size: 13px; display: block;">Thời hạn hợp đồng:</span>
+              <strong style="color: #1e293b; font-size: 14px;">{{ formatDate(selectedContractDetail.start_date) }} - {{ formatDate(selectedContractDetail.end_date) }}</strong>
+            </div>
+          </div>
+
+          <div style="background: #eff6ff; padding: 14px; border-radius: 10px; font-size: 13px; color: #1e40af; margin-bottom: 20px; line-height: 1.5;">
+            ℹ️ Hợp đồng này đã được xác nhận ký số điện tử hợp lệ giữa Ban quản lý tòa nhà và Cư dân. Bạn có thể tra cứu hóa đơn hàng tháng hoặc báo sửa chữa trực tiếp trên ứng dụng.
+          </div>
+
+          <div class="modal-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="secondary-btn" @click="selectedContractDetail = null">Đóng</button>
+            <button class="primary-btn" @click="selectedContractDetail = null; setActiveTab('bills')">💳 Thanh toán hóa đơn</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useDataStore } from '../stores/data'
+import api from '../services/api'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -878,10 +952,21 @@ const filterPriceRange = ref('')
 const selectedAmenitiesCount = ref(0)
 const sortBy = ref('default')
 
+const loadingRooms = ref(false)
+const loadingContracts = ref(false)
+const loadingBills = ref(false)
+
+const apiRooms = ref([])
+const apiContracts = ref([])
+const apiBills = ref([])
+const apiMaintenance = ref([])
+
 // ASSETS & DEMO IMAGES
 const currentUser = computed(() => authStore.currentUser || {})
 const tenantName = computed(() => currentUser.value.full_name || 'Khách Thuê (Cư Dân)')
 const userAvatar = '/images/rooms/main.png'
+const heroImage = '/images/hero_banner.png'
+const phoneImage = '/images/rooms/main.png'
 const walletBalance = ref(2350000)
 
 // TOAST NOTIFICATION STATE
@@ -893,8 +978,9 @@ function showToast(message, type = 'success') {
 
 // REAL DATA STORES
 const rooms = computed(() => {
+  if (apiRooms.value.length > 0) return apiRooms.value
   const imgList = ['/images/suite.png', '/images/studio.png', '/images/bedroom.png', '/images/rooms/living.png', '/images/rooms/main.png']
-  return dataStore.rooms.map((r, i) => ({
+  return (dataStore.rooms || []).map((r, i) => ({
     ...r,
     title: `Phòng ${r.roomNumber} - ${r.propertyName}`,
     location: r.propertyName,
@@ -908,10 +994,11 @@ const rooms = computed(() => {
 const currentRenterId = computed(() => currentUser.value.renterId || currentUser.value.id)
 
 const contracts = computed(() => {
+  if (apiContracts.value.length > 0) return apiContracts.value
   const isRenterRole = currentUser.value.role === 'renter'
   const list = isRenterRole
-    ? dataStore.contracts.filter(c => Number(c.renterId) === Number(currentRenterId.value) || (c.renterName && currentUser.value.full_name && c.renterName.includes(currentUser.value.full_name)))
-    : dataStore.contracts
+    ? (dataStore.contracts || []).filter(c => Number(c.renterId) === Number(currentRenterId.value) || (c.renterName && currentUser.value.full_name && c.renterName.includes(currentUser.value.full_name)))
+    : (dataStore.contracts || [])
   return list.map(c => ({
     ...c,
     contract_code: c.contractNumber,
@@ -925,10 +1012,11 @@ const contracts = computed(() => {
 })
 
 const bills = computed(() => {
+  if (apiBills.value.length > 0) return apiBills.value
   const isRenterRole = currentUser.value.role === 'renter'
   const list = isRenterRole
-    ? dataStore.bills.filter(b => Number(b.renterId) === Number(currentRenterId.value) || (b.renterName && currentUser.value.full_name && b.renterName.includes(currentUser.value.full_name)))
-    : dataStore.bills
+    ? (dataStore.bills || []).filter(b => Number(b.renterId) === Number(currentRenterId.value) || (b.renterName && currentUser.value.full_name && b.renterName.includes(currentUser.value.full_name)))
+    : (dataStore.bills || [])
   return list.map(b => ({
     ...b,
     bill_code: b.code,
@@ -943,11 +1031,12 @@ const bills = computed(() => {
 })
 
 const maintenanceRequests = computed(() => {
+  if (apiMaintenance.value.length > 0) return apiMaintenance.value
   const isRenterRole = currentUser.value.role === 'renter'
   const renterRoomNumbers = contracts.value.map(c => c.room_number)
   const list = isRenterRole
-    ? dataStore.maintenance.filter(m => renterRoomNumbers.includes(m.roomNumber) || (m.reporterName && currentUser.value.full_name && m.reporterName.includes(currentUser.value.full_name)))
-    : dataStore.maintenance
+    ? (dataStore.maintenance || []).filter(m => renterRoomNumbers.includes(m.roomNumber) || (m.reporterName && currentUser.value.full_name && m.reporterName.includes(currentUser.value.full_name)))
+    : (dataStore.maintenance || [])
   return list.map(m => ({
     ...m,
     room_number: m.roomNumber
@@ -958,8 +1047,8 @@ const notifications = computed(() => {
   const isRenterRole = currentUser.value.role === 'renter'
   const renterRoomNumbers = contracts.value.map(c => c.room_number)
   const list = isRenterRole
-    ? dataStore.notifications.filter(n => renterRoomNumbers.some(rn => n.message && n.message.includes(rn)))
-    : dataStore.notifications
+    ? (dataStore.notifications || []).filter(n => renterRoomNumbers.some(rn => n.message && n.message.includes(rn)))
+    : (dataStore.notifications || [])
   return list.map(n => ({
     id: n.id,
     content: n.message,
@@ -968,8 +1057,62 @@ const notifications = computed(() => {
   }))
 })
 
-const savedRooms = ref([])
-const recentRooms = ref([])
+const areas = ref([
+  { name: 'Nam Từ Liêm', rooms: 18, image: '/images/suite.png' },
+  { name: 'Cầu Giấy', rooms: 24, image: '/images/studio.png' },
+  { name: 'Thanh Xuân', rooms: 15, image: '/images/bedroom.png' },
+  { name: 'Đống Đa', rooms: 20, image: '/images/rooms/living.png' }
+])
+
+const interestItems = ref([
+  { title: 'Căn hộ Studio Nam Từ Liêm', subtitle: 'Full nội thất cao cấp, ban công thoáng', price: '4.500.000 đ/tháng', image: '/images/suite.png' },
+  { title: 'Phòng trọ Duplex Cầu Giấy', subtitle: 'Gần trường ĐH, giờ giấc tự do', price: '3.800.000 đ/tháng', image: '/images/studio.png' },
+  { title: 'Căn hộ Dịch vụ Thanh Xuân', subtitle: 'An ninh 24/7, khóa vân tay', price: '5.200.000 đ/tháng', image: '/images/rooms/main.png' },
+  { title: 'Studio cửa sổ lớn Đống Đa', subtitle: 'Gần trung tâm, không gian sáng thoáng', price: '4.900.000 đ/tháng', image: '/images/rooms/living.png' }
+])
+
+const savedRooms = ref([
+  {
+    id: 101,
+    title: 'Studio Ban công thoáng mát Nam Từ Liêm',
+    location: 'Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội',
+    price: 4800000,
+    meta: '38m² · Studio',
+    image: '/images/suite.png',
+    rating: '4.9 (82)'
+  },
+  {
+    id: 102,
+    title: 'Phòng trọ Duplex hiện đại Cầu Giấy',
+    location: 'Số 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+    price: 3900000,
+    meta: '28m² · Gác lửng',
+    image: '/images/studio.png',
+    rating: '4.8 (64)'
+  }
+])
+
+const recentRooms = ref([
+  {
+    id: 103,
+    title: 'Căn hộ dịch vụ cao cấp full nội thất',
+    location: 'Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội',
+    price: 5500000,
+    meta: '40m² · 1 PN',
+    image: '/images/rooms/living.png',
+    rating: '4.9 (110)'
+  },
+  {
+    id: 104,
+    title: 'Homestay xinh xắn view sân vườn',
+    location: 'Số 102 Chùa Láng, Đống Đa, Hà Nội',
+    price: 3500000,
+    meta: '25m² · 1 PN',
+    image: '/images/bedroom.png',
+    rating: '4.7 (45)'
+  }
+])
+
 const selectedRoomDetail = ref(null)
 const activeVietQRBill = ref(null)
 const showNewMaintenanceModal = ref(false)
@@ -980,19 +1123,81 @@ const chatMessages = ref([
 ])
 const newChatMessage = ref('')
 
-// NAVIGATION ITEMS
-const navItems = [
-  { id: 'home', name: 'Trang chủ', icon: '⌂' },
-  { id: 'search', name: 'Tìm phòng', icon: '⌕' },
-  { id: 'favorites', name: 'Phòng yêu thích', icon: '♡' },
-  { id: 'history', name: 'Lịch sử tìm kiếm', icon: '◷' },
-  { id: 'bookings', name: 'Đặt phòng của tôi', icon: '▣' },
-  { id: 'contracts', name: 'Hợp đồng của tôi', icon: '▤' },
-  { id: 'bills', name: 'Thanh toán', icon: '▭' },
-  { id: 'notifications', name: 'Thông báo', icon: '🔔' },
-  { id: 'messages', name: 'Tin nhắn', icon: '💬' },
-  { id: 'reviews', name: 'Đánh giá của tôi', icon: '☆' },
-  { id: 'support', name: 'Hỗ trợ / Sửa chữa', icon: '🔧' }
+const wideOffers = ref([
+  {
+    title: 'Giảm 10% tháng đầu',
+    desc: 'Áp dụng khi ký hợp đồng từ 12 tháng và thanh toán cọc qua VietQR.',
+    condition: 'Tối đa 1.000.000đ cho phòng trống trong tháng',
+    expiry: '31/08/2026',
+    code: 'RENTOPS10',
+    badge: 'Tiết kiệm đến 1 triệu',
+    tone: 'tone-blue',
+    image: '/images/suite.png'
+  },
+  {
+    title: 'Tặng voucher 500k',
+    desc: 'Nhận thưởng khi giới thiệu bạn bè đặt phòng thành công trên RentOps.',
+    condition: 'Tự động cộng vào ví sau khi bạn bè ký hợp đồng',
+    expiry: '30/09/2026',
+    code: 'REF500K',
+    badge: 'Cho cư dân hiện tại',
+    tone: 'tone-orange',
+    image: '/images/studio.png'
+  },
+  {
+    title: 'Miễn phí vệ sinh',
+    desc: 'Miễn phí vệ sinh đầu kỳ cho khách đặt lịch xem và giữ phòng trong tuần.',
+    condition: 'Áp dụng cho căn hộ studio, căn hộ dịch vụ',
+    expiry: '15/09/2026',
+    code: 'CLEANFREE',
+    badge: 'Ưu đãi tuần này',
+    tone: 'tone-green',
+    image: '/images/bedroom.png'
+  }
+])
+
+const reasons = ref([
+  { icon: '⚡', title: 'Thanh toán siêu tốc', desc: 'Tích hợp VietQR, tự động ghi nhận công nợ.', stat: '3 giây' },
+  { icon: '🛡️', title: 'Thông tin minh bạch', desc: 'Hợp đồng, hóa đơn và phí dịch vụ rõ ràng.', stat: 'Không phí ẩn' },
+  { icon: '🔧', title: 'Hỗ trợ 24/7', desc: 'Gửi yêu cầu sửa chữa và theo dõi tiến độ.', stat: 'Luôn cập nhật' },
+  { icon: '📅', title: 'Nhắc lịch thông minh', desc: 'Tự nhắc hạn thanh toán, lịch xem phòng, ngày hết hợp đồng.', stat: 'Tự động' },
+  { icon: '🎁', title: 'Ưu đãi cá nhân hóa', desc: 'Mã giảm giá theo hành vi tìm phòng và lịch sử thuê.', stat: 'Hàng tuần' }
+])
+
+const appMetrics = ref([
+  { value: '2 phút', label: 'đặt lịch xem phòng' },
+  { value: '24/7', label: 'nhận thông báo cư dân' },
+  { value: '0đ', label: 'phí tải ứng dụng' }
+])
+
+
+// NAVIGATION SECTIONS & ITEMS
+const navSections = [
+  {
+    title: 'Tổng quan & Vận hành',
+    items: [
+      { id: 'home', name: 'Trang chủ', icon: 'home' },
+      { id: 'contracts', name: 'Hợp đồng của tôi', icon: 'contract' },
+      { id: 'bills', name: 'Hóa đơn & Thanh toán', icon: 'bill' },
+      { id: 'support', name: 'Hỗ trợ / Sửa chữa', icon: 'support' }
+    ]
+  },
+  {
+    title: 'Khám phá & Tìm phòng',
+    items: [
+      { id: 'search', name: 'Tìm phòng trọ', icon: 'search' },
+      { id: 'favorites', name: 'Phòng yêu thích', icon: 'favorite' },
+      { id: 'history', name: 'Lịch sử tìm kiếm', icon: 'history' }
+    ]
+  },
+  {
+    title: 'Tương tác & Cài đặt',
+    items: [
+      { id: 'notifications', name: 'Thông báo', icon: 'bell' },
+      { id: 'messages', name: 'Tin nhắn', icon: 'message' },
+      { id: 'reviews', name: 'Đánh giá của tôi', icon: 'star' }
+    ]
+  }
 ]
 
 const categories = [
@@ -1001,13 +1206,6 @@ const categories = [
   { title: 'Căn hộ dịch vụ', price: 'Giá từ 5 triệu', icon: '▤', color: 'pink' },
   { title: 'Homestay', price: 'Giá từ 500k/đêm', icon: '⌂', color: 'blue' },
   { title: 'Ở ghép', price: 'Giá từ 800k/người', icon: '●●', color: 'red' }
-]
-
-const footerGroups = [
-  { title: 'Về chúng tôi', links: ['Giới thiệu RentOps', 'Tuyển dụng', 'Tin tức', 'Điều khoản dịch vụ', 'Chính sách bảo mật'] },
-  { title: 'Hỗ trợ khách thuê', links: ['Trung tâm trợ giúp', 'Hướng dẫn thanh toán VietQR', 'Câu hỏi thường gặp', 'Liên hệ hotline'] },
-  { title: 'Dành cho chủ nhà', links: ['Đăng cho thuê căn hộ', 'Quản lý hợp đồng & hóa đơn', 'Chính sách hợp tác'] },
-  { title: 'Liên hệ', links: ['1900 6868', 'support@rentops.vn', 'Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội'] }
 ]
 
 // COMPUTED BADGES & COUNTS
@@ -1040,6 +1238,10 @@ const featuredRoomsDisplay = computed(() => {
 })
 
 // METHODS
+function toggleProfileMenu() {
+  showProfileDropdown.value = !showProfileDropdown.value
+}
+
 function setActiveTab(tabId) {
   currentTab.value = tabId
   showProfileDropdown.value = false
@@ -1052,9 +1254,26 @@ function handleLogout() {
   router.push('/landing')
 }
 
+const selectedContractDetail = ref(null)
+
 function formatCurrency(val) {
   if (!val) return '0 đ'
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '15/01/2026'
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('vi-VN')
+  } catch (e) {
+    return dateStr
+  }
+}
+
+function openContractDetail(contract) {
+  selectedContractDetail.value = contract
 }
 
 function toggleSaveRoom(room) {
@@ -1140,7 +1359,7 @@ onMounted(async () => {
     loadingRooms.value = true
     const res = await api.get('/public/rooms')
     if (res && res.data && res.data.length > 0) {
-      rooms.value = res.data.map((r, i) => {
+      apiRooms.value = res.data.map((r, i) => {
         const imgList = ['/images/suite.png', '/images/studio.png', '/images/bedroom.png', '/images/rooms/living.png', '/images/rooms/main.png']
         return {
           ...r,
@@ -1160,8 +1379,8 @@ onMounted(async () => {
   }
 
   // If fallback rooms empty, populate default seed
-  if (rooms.value.length === 0) {
-    rooms.value = [
+  if (apiRooms.value.length === 0) {
+    apiRooms.value = [
       { id: 1, title: 'Căn hộ dịch vụ cao cấp full nội thất', location: 'Số 15 Lê Đức Thọ, Nam Từ Liêm, Hà Nội', price: 8500000, image: '/images/suite.png', tags: ['40m²', '1 PN', '1 WC', 'Ban công'], badge: true, rating: '4.9', area: 40, floor: 3, bedrooms_count: 1, bathrooms_count: 1 },
       { id: 2, title: 'Studio ban công thoáng mát gần trung tâm', location: 'Số 88 Trần Thái Tông, Cầu Giấy, Hà Nội', price: 6200000, image: '/images/studio.png', tags: ['30m²', 'Studio', '1 WC'], badge: true, rating: '4.7', area: 30, floor: 2, bedrooms_count: 1, bathrooms_count: 1 },
       { id: 3, title: 'Homestay xinh xắn view vườn thoáng', location: 'Đà Lạt, Lâm Đồng', price: 3500000, image: '/images/bedroom.png', tags: ['20m²', '1 PN', '1 WC'], badge: false, rating: '4.8', area: 20, floor: 1, bedrooms_count: 1, bathrooms_count: 1 },
@@ -1174,11 +1393,11 @@ onMounted(async () => {
     loadingContracts.value = true
     const res = await api.get('/contracts')
     if (res && res.data) {
-      contracts.value = res.data
+      apiContracts.value = res.data
     }
   } catch (err) {
     // fallback sample contract
-    contracts.value = [
+    apiContracts.value = [
       { id: 101, contract_code: 'CTR-2026-102', room_number: '102', property_name: 'Tòa Nhà RentOps A - Nam Từ Liêm', monthly_rent: 3800000, deposit_amount: 3800000, start_date: '2026-01-01', end_date: '2026-12-31', status: 'active', renter_name: tenantName.value }
     ]
   } finally {
@@ -1190,10 +1409,10 @@ onMounted(async () => {
     loadingBills.value = true
     const res = await api.get('/monthly_bills')
     if (res && res.data) {
-      bills.value = res.data
+      apiBills.value = res.data
     }
   } catch (err) {
-    bills.value = [
+    apiBills.value = [
       { id: 201, bill_code: 'BILL-202607-102', billing_month: '2026-07', room_number: '102', room_fee: 3800000, utility_fee: 650000, service_fee: 150000, total_amount: 4600000, status: 'issued', bank_code: 'MB', bank_account: '0901234567', bank_account_name: 'RENTOPS DEMO' }
     ]
   } finally {
@@ -1204,10 +1423,10 @@ onMounted(async () => {
   try {
     const res = await api.get('/maintenance_requests')
     if (res && res.data) {
-      maintenanceRequests.value = res.data
+      apiMaintenance.value = res.data
     }
   } catch (e) {
-    maintenanceRequests.value = [
+    apiMaintenance.value = [
       { id: 1, title: 'Sửa vòi nước rò rỉ nhà vệ sinh', priority: 'medium', status: 'resolved', description: 'Vòi sen tắm chảy yếu và rò rỉ', room_number: '102' }
     ]
   }
@@ -1216,6 +1435,9 @@ onMounted(async () => {
 
 <style scoped>
 .tenant-shell {
+  --tenant-topbar-height: 76px;
+  --tenant-right-panel-width: 294px;
+  --tenant-content-x-padding: 22px;
   min-height: 100vh;
   display: block;
   background: #f7f8fc;
@@ -1281,41 +1503,64 @@ onMounted(async () => {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: 4px;
+}
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.nav-group-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  padding: 6px 12px 4px 12px;
 }
 .nav-item {
-  height: 42px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
-  color: #263255;
+  color: #334155;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 0 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 0 12px;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
 }
 .nav-item:hover {
-  background: #f1f3f9;
+  background: #f1f5f9;
+  color: #4f46e5;
 }
 .nav-item.active {
-  color: #fff;
-  background: #5a42e8;
-  box-shadow: 0 10px 20px rgba(90, 66, 232, 0.22);
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
 }
 .nav-icon {
-  width: 22px;
-  text-align: center;
-  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
+}
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }
 .side-badge {
   margin-left: auto;
@@ -1366,6 +1611,7 @@ onMounted(async () => {
 .tenant-main {
   min-width: 0;
   margin-left: 260px;
+  padding-top: var(--tenant-topbar-height);
 }
 .topbar {
   height: 76px;
@@ -1376,9 +1622,13 @@ onMounted(async () => {
   border-bottom: 1px solid #e6eaf2;
   background: rgba(255, 255, 255, 0.96);
   padding: 0 28px;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 20;
+  left: 260px;
+  right: 0;
+  z-index: 80;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 22px rgba(18, 25, 54, 0.05);
 }
 .search-box {
   width: min(460px, 100%);
@@ -1495,9 +1745,9 @@ onMounted(async () => {
 /* CONTENT GRID */
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 294px;
+  grid-template-columns: minmax(0, 1fr) var(--tenant-right-panel-width);
   gap: 18px;
-  padding: 18px 22px 24px;
+  padding: 18px var(--tenant-content-x-padding) 24px;
 }
 .center-column { min-width: 0; }
 
@@ -1616,13 +1866,16 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   margin-bottom: 14px;
 }
 .section-head a {
+  flex: 0 0 auto;
   color: #5942e9;
   font-size: 13px;
   font-weight: 900;
   text-decoration: none;
+  white-space: nowrap;
 }
 .category-row {
   display: grid;
@@ -1776,65 +2029,143 @@ onMounted(async () => {
 
 /* BOTTOM GRIDS */
 .bottom-grid {
+  --tenant-area-card-height: 282px;
+  --tenant-interest-card-height: 135px;
+  --tenant-bottom-card-gap: 12px;
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: 24px;
 }
 .area-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tenant-bottom-card-gap);
 }
 .area-card {
   position: relative;
-  height: 108px;
+  height: var(--tenant-area-card-height);
+  min-height: 0;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+  background: #121936;
+  box-shadow: 0 10px 28px rgba(18, 25, 54, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.area-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(18, 25, 54, 0.14);
 }
 .area-card img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+.area-card:hover img {
+  transform: scale(1.07);
 }
 .area-card div {
   position: absolute;
-  left: 10px;
-  bottom: 8px;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
   color: #fff;
   z-index: 2;
+}
+.area-card strong,
+.area-card span {
+  display: block;
+}
+.area-card strong {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.22;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+.area-card span {
+  width: fit-content;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 .area-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+  background:
+    linear-gradient(180deg, rgba(18, 25, 54, 0.08), rgba(18, 25, 54, 0.28)),
+    linear-gradient(0deg, rgba(0,0,0,0.72), rgba(0,0,0,0.08) 62%);
 }
 .interest-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tenant-bottom-card-gap);
 }
 .interest-card {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: var(--tenant-interest-card-height);
   border: 1px solid #e6eaf2;
   border-radius: 8px;
   background: #fff;
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
+  box-shadow: 0 8px 24px rgba(18, 25, 54, 0.04);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.interest-card:hover {
+  border-color: #c7c2ff;
+  transform: translateY(-2px);
 }
 .interest-card img {
-  width: 68px;
-  height: 68px;
+  width: 92px;
+  height: 88px;
   border-radius: 6px;
   object-fit: cover;
+}
+.interest-card div {
+  min-width: 0;
+}
+.interest-card strong,
+.interest-card span {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.38;
+  -webkit-box-orient: vertical;
+  word-break: normal;
+}
+.interest-card strong {
+  color: #121936;
+  font-size: 15px;
+  font-weight: 900;
+  -webkit-line-clamp: 2;
+}
+.interest-card span {
+  margin-top: 4px;
+  color: #303a5f;
+  font-size: 13px;
+  -webkit-line-clamp: 2;
 }
 .interest-card b {
   display: block;
   margin-top: 6px;
   color: #5942e9;
   font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 /* LIST PAIR & OFFERS */
@@ -1861,6 +2192,42 @@ onMounted(async () => {
   border-radius: 6px;
   object-fit: cover;
 }
+.compact-room div {
+  min-width: 0;
+}
+.compact-room strong,
+.compact-room p,
+.compact-room small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compact-room strong {
+  color: #121936;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.compact-room p {
+  margin: 4px 0;
+  color: #303a5f;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.compact-room b {
+  display: block;
+  color: #5942e9;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.compact-room small {
+  margin-top: 2px;
+  color: #7b849d;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
 .remove-fav {
   border: 0;
   background: transparent;
@@ -1877,14 +2244,50 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  min-height: 238px;
   border: 1px solid #e4e7f0;
   border-radius: 8px;
   padding: 16px;
 }
-.wide-offers article.violet { background: #f2eeff; }
-.wide-offers article.blue { background: #edf7ff; }
-.wide-offers article.pink { background: #ffeef4; }
-.wide-offers strong { color: #5942e9; font-size: 16px; font-weight: 900; }
+.wide-offers article.tone-blue { background: linear-gradient(135deg, #eef6ff, #ffffff); }
+.wide-offers article.tone-orange { background: linear-gradient(135deg, #fff7ed, #ffffff); }
+.wide-offers article.tone-green { background: linear-gradient(135deg, #ecfdf5, #ffffff); }
+.offer-copy {
+  min-width: 0;
+}
+.offer-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(89, 66, 233, 0.1);
+  color: #5942e9;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 900;
+}
+.wide-offers strong { display: block; color: #5942e9; font-size: 16px; font-weight: 900; }
+.wide-offers p {
+  margin: 8px 0 0;
+  color: #121936;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.offer-copy small {
+  display: block;
+  margin-top: 8px;
+  color: #6d7694;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.offer-expiry {
+  display: block;
+  margin-top: 8px;
+  color: #121936;
+  font-size: 12px;
+  font-weight: 900;
+}
 .wide-offers button {
   margin-top: 10px;
   border: 1px solid #c7c2ff;
@@ -1897,8 +2300,9 @@ onMounted(async () => {
   font-weight: 800;
 }
 .wide-offers img {
-  width: 100px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
+  flex: 0 0 auto;
   border-radius: 8px;
   object-fit: cover;
 }
@@ -1926,9 +2330,31 @@ onMounted(async () => {
   color: #5942e9;
   font-size: 20px;
 }
+.reason-row strong {
+  display: block;
+  color: #121936;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.reason-row p {
+  margin: 8px 0 0;
+  color: #303a5f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.reason-row small {
+  display: inline-flex;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #5942e9;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 900;
+}
 .app-banner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px 140px;
+  grid-template-columns: minmax(0, 1fr) 210px 140px;
   align-items: center;
   gap: 20px;
   margin-top: 30px;
@@ -1936,6 +2362,55 @@ onMounted(async () => {
   background: linear-gradient(135deg, #4d3be3, #7460ff);
   color: #fff;
   padding: 24px;
+}
+.app-banner-copy h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.3;
+}
+.app-banner-copy p {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.app-badge {
+  display: inline-flex;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 5px 10px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+.app-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.app-metrics span {
+  min-width: 112px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 10px 12px;
+}
+.app-metrics strong,
+.app-metrics small {
+  display: block;
+}
+.app-metrics strong {
+  font-size: 18px;
+  line-height: 1.2;
+}
+.app-metrics small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 11px;
+  line-height: 1.35;
 }
 .store-row { display: flex; gap: 10px; margin-top: 16px; }
 .store-row button {
@@ -1968,77 +2443,277 @@ onMounted(async () => {
   font-size: 14px;
   justify-self: center;
 }
+.qr-content {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.qr-content strong {
+  font-size: 24px;
+  line-height: 1;
+}
+.qr-content span {
+  max-width: 78px;
+  color: #303a5f;
+  font-size: 10px;
+  line-height: 1.25;
+}
 
 /* RIGHT PANEL */
-.right-panel { display: flex; flex-direction: column; gap: 16px; }
+.right-panel {
+  position: fixed;
+  top: calc(var(--tenant-topbar-height) + 18px);
+  right: var(--tenant-content-x-padding);
+  width: var(--tenant-right-panel-width);
+  max-height: calc(100vh - var(--tenant-topbar-height) - 36px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  z-index: 30;
+}
 .right-panel section {
+  position: relative;
+  overflow: hidden;
   border: 1px solid #e6eaf2;
   border-radius: 8px;
   background: #fff;
   padding: 18px;
+  box-shadow: 0 14px 34px rgba(18, 25, 54, 0.06);
 }
-.user-row { display: flex; align-items: center; gap: 12px; }
-.user-row img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-.user-row strong { display: block; font-size: 16px; color: #121936; }
-.member-progress { margin-top: 18px; }
-.member-progress > div { display: flex; justify-content: space-between; font-size: 12px; color: #7b849d; }
+.right-panel section::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #5942e9, #7c6cff);
+}
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.profile-avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5942e9, #9b8cff);
+  padding: 3px;
+  box-shadow: 0 12px 24px rgba(89, 66, 233, 0.18);
+}
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.profile-avatar span {
+  position: absolute;
+  right: 5px;
+  bottom: 6px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #22c55e;
+}
+.profile-copy {
+  min-width: 0;
+}
+.profile-copy span,
+.profile-copy small {
+  display: block;
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 800;
+}
+.profile-copy strong {
+  display: block;
+  margin-top: 3px;
+  color: #121936;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+.profile-copy small {
+  margin-top: 4px;
+  font-weight: 700;
+}
+.member-progress {
+  margin-top: 18px;
+  border: 1px solid #eef1f7;
+  border-radius: 8px;
+  background: #f8f9ff;
+  padding: 14px;
+}
+.member-tier,
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.member-tier span {
+  color: #5942e9;
+  font-size: 12px;
+  font-weight: 900;
+}
+.member-tier strong {
+  color: #121936;
+  font-size: 13px;
+  font-weight: 900;
+}
 .progress-track {
-  height: 8px;
-  margin: 10px 0 8px;
+  height: 9px;
+  margin: 12px 0 10px;
   border-radius: 999px;
-  background: #e7eaf4;
+  background: #e4e7f2;
   overflow: hidden;
 }
-.progress-track i { display: block; height: 100%; background: #5942e9; border-radius: 999px; }
-.wallet-card h2, .offer-card h2 { margin: 0; font-size: 16px; color: #121936; }
-.wallet-balance { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 14px; }
-.wallet-balance strong { display: block; margin-top: 4px; font-size: 22px; color: #121936; }
+.progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #5942e9, #745eff);
+  box-shadow: 0 0 0 1px rgba(89, 66, 233, 0.08);
+}
+.progress-meta span {
+  color: #303a5f;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.progress-meta b {
+  color: #5942e9;
+  font-size: 12px;
+}
+.wallet-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+}
+.wallet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+.wallet-head span,
+.wallet-head small,
+.wallet-balance span,
+.wallet-summary span {
+  display: block;
+  color: #7b849d;
+  font-size: 12px;
+  font-weight: 800;
+}
+.wallet-card h2 {
+  margin: 4px 0 0;
+  color: #121936;
+  font-size: 18px;
+  font-weight: 900;
+}
+.wallet-head small {
+  width: fit-content;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+.wallet-balance {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  border-bottom: 1px solid #eef1f7;
+  padding-bottom: 16px;
+}
+.wallet-balance strong {
+  display: block;
+  color: #121936;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+.wallet-balance span {
+  margin-top: 5px;
+  font-weight: 700;
+}
 .wallet-balance button {
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #5942e9;
   color: #fff;
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: 13px;
   font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 12px 24px rgba(89, 66, 233, 0.22);
+}
+.wallet-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.wallet-summary div {
+  border: 1px solid #eef1f7;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+.wallet-summary strong {
+  display: block;
+  margin-top: 4px;
+  color: #121936;
+  font-size: 12px;
+  font-weight: 900;
 }
 .wallet-link {
   width: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   border: 0;
-  border-top: 1px solid #eef1f7;
   background: transparent;
   color: #303a5f;
   font-size: 13px;
-  font-weight: 700;
-  padding: 14px 0;
+  font-weight: 900;
+  padding: 13px 0 0;
+  margin-top: 14px;
   cursor: pointer;
+  text-align: left;
 }
-.offer-card article {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: 12px;
-  border: 1px solid #c7c2ff;
+.wallet-link + .wallet-link {
+  border-top: 1px solid #eef1f7;
+  padding-top: 13px;
+}
+.wallet-link span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.wallet-link i {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
   border-radius: 8px;
-  background: #fbfaff;
-  padding: 12px;
-}
-.offer-card article strong { color: #5942e9; font-size: 13px; }
-.offer-card article p { margin: 4px 0 8px; font-size: 11px; color: #303a5f; }
-.offer-card article button {
-  border: 1px solid #c7c2ff;
-  border-radius: 6px;
-  background: #fff;
+  background: #eef2ff;
   color: #5942e9;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
+  font-style: normal;
+  font-size: 13px;
 }
-
+.wallet-link b {
+  color: #5942e9;
+  font-size: 20px;
+  line-height: 1;
+}
 /* TAB CONTENT CONTAINER */
 .tab-view-container, .search-view-container {
   background: #fff;
@@ -2336,38 +3011,160 @@ onMounted(async () => {
   font-family: inherit;
 }
 
-/* FOOTER */
-.tenant-footer {
-  display: grid;
-  grid-template-columns: 1.35fr repeat(4, minmax(0, 1fr));
-  gap: 28px;
-  margin-top: 34px;
-  border-top: 1px solid #e6eaf2;
-  padding: 30px 0 24px;
-}
-.footer-brand p { color: #6d7694; font-size: 12px; line-height: 1.6; margin-top: 12px; }
-.socials { display: flex; gap: 10px; margin-top: 14px; }
-.socials span {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #eef1f7;
-  font-size: 12px;
-  font-weight: 900;
-}
-.tenant-footer strong { display: block; margin-bottom: 12px; color: #121936; font-size: 13px; }
-.tenant-footer a { display: block; margin-top: 8px; color: #6d7694; font-size: 12px; text-decoration: none; }
-.copyright { border-top: 1px solid #e6eaf2; color: #8b93a8; font-size: 12px; padding: 16px 0; text-align: center; }
-
 @media (max-width: 1279px) {
   .content-grid { grid-template-columns: minmax(0, 1fr); }
-  .right-panel { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .right-panel {
+    position: static;
+    width: auto;
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
 }
 @media (max-width: 1100px) {
   .tenant-sidebar { display: none; }
   .tenant-main { margin-left: 0; }
+  .topbar { left: 0; }
   .room-grid { grid-template-columns: repeat(2, 1fr); }
+  .category-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .bottom-grid {
+    --tenant-area-card-height: 190px;
+    --tenant-interest-card-height: 120px;
+  }
+  .bottom-grid,
+  .list-pair,
+  .wide-offers,
+  .reason-row,
+  .right-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .search-fields { grid-template-columns: minmax(0, 1fr); }
+  .search-field { border-right: 0; border-bottom: 1px solid #eef1f7; }
+  .search-submit {
+    width: calc(100% - 28px);
+    margin: 10px 14px 14px;
+    justify-self: stretch;
+  }
+}
+@media (max-width: 640px) {
+  .tenant-shell { --tenant-topbar-height: 132px; }
+  .content-grid { padding: 14px; }
+  .topbar {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+  .top-actions { justify-content: space-between; gap: 10px; }
+  .profile-info { display: none; }
+  .hero-panel { height: 360px; }
+  .hero-panel h1 {
+    left: 22px;
+    right: 22px;
+    top: 24px;
+    font-size: 24px;
+  }
+  .category-row,
+  .room-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .area-grid { grid-template-columns: minmax(0, 1fr); }
+  .area-card { height: 150px; }
+  .interest-card {
+    grid-template-columns: 84px minmax(0, 1fr);
+    min-height: 104px;
+  }
+  .interest-card img {
+    width: 84px;
+    height: 80px;
+  }
+  .app-banner { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* SIDEBAR LOGOUT BUTTON */
+.side-logout-wrap {
+  margin-top: auto;
+  padding: 16px 12px 20px;
+}
+.side-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fff5f5;
+  color: #e53e3e;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid #feb2b2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(229, 62, 62, 0.08);
+}
+.side-logout-btn:hover {
+  background: #e53e3e;
+  color: #ffffff;
+  border-color: #e53e3e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.25);
+}
+
+.profile-widget {
+  position: relative;
+  cursor: pointer;
+}
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  width: 230px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 8px 0;
+}
+.dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.dropdown-header strong {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+}
+.dropdown-header p {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.profile-dropdown button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.profile-dropdown button:hover {
+  background: #f8fafc;
+  color: #2563eb;
+}
+.profile-dropdown .logout-btn {
+  color: #dc2626;
+}
+.profile-dropdown .logout-btn:hover {
+  background: #fef2f2;
+  color: #b91c1c;
 }
 </style>

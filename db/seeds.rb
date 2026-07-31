@@ -422,3 +422,4 @@ ActsAsTenant.with_tenant(tenant) do
 end
 
 puts "RentOps 6+ months sample seed data populated successfully!"
+load Rails.root.join("db/seed_renter_account.rb") if File.exist?(Rails.root.join("db/seed_renter_account.rb"))

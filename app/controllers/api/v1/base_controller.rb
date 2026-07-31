@@ -13,6 +13,8 @@ module Api
       protected
 
       def render_json_success(data: nil, message: "Thành công", meta: {}, status: :ok)
+        return if performed?
+
         render json: {
           success: true,
           message: message,
@@ -22,6 +24,8 @@ module Api
       end
 
       def render_json_error(message: "Đã có lỗi xảy ra", errors: [], meta: {}, status: :unprocessable_entity)
+        return if performed?
+
         render json: {
           success: false,
           message: message,

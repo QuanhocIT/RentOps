@@ -53,11 +53,11 @@ class Room < ApplicationRecord
     elsif bathrooms_count.to_i > 0
       parts << "#{bathrooms_count} WC khép kín"
     end
-    parts << "#{kitchens_count} Bếp" if responds_to?(:kitchens_count) && kitchens_count.to_i > 0
+    parts << "#{kitchens_count} Bếp" if respond_to?(:kitchens_count) && kitchens_count.to_i > 0
     parts << "#{area.to_f.round(0)}m²" if area.to_f > 0
-    parts << "Gác lửng" if responds_to?(:is_mezzanine?) && is_mezzanine?
+    parts << "Gác lửng" if respond_to?(:is_mezzanine?) && is_mezzanine?
     parts << "Ban công" if has_balcony?
-    parts << furnished_status_label if responds_to?(:furnished_status) && furnished_status.present?
+    parts << furnished_status_label if respond_to?(:furnished_status) && furnished_status.present?
     parts.join(" • ")
   end
 

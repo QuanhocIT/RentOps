@@ -2,9 +2,7 @@
   <div class="home-page">
     <PublicHeader
       active="landing"
-      listing-action
       @notify="notify('Bạn chưa có thông báo mới')"
-      @post-room="showPostRoomModal = true"
     />
 
     <main id="home">

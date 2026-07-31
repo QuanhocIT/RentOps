@@ -19,8 +19,6 @@
 
       <div class="home-actions">
         <RouterLink class="home-login" to="/login">Đăng nhập</RouterLink>
-        <button v-if="listingAction" class="home-listing" type="button" @click="$emit('post-room')">Đăng tin phòng +</button>
-        <RouterLink v-else class="home-listing" to="/landing">Đăng tin phòng +</RouterLink>
       </div>
     </div>
   </header>
@@ -30,11 +28,10 @@
 import { RouterLink } from 'vue-router'
 
 defineProps({
-  active: { type: String, default: '' },
-  listingAction: { type: Boolean, default: false }
+  active: { type: String, default: '' }
 })
 
-defineEmits(['notify', 'post-room'])
+defineEmits(['notify'])
 
 const navItems = [
   { key: 'landing', label: 'Trang chủ', href: '/landing#home' },

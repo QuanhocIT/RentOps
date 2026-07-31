@@ -1,4 +1,7 @@
 class Rack::Attack
+  # Use MemoryStore in development/windows to prevent file locking issues in tmp/cache
+  Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
+
   # Rate limit login attempts by IP address
   throttle('req/ip', limit: 300, period: 5.minutes) do |req|
     req.ip

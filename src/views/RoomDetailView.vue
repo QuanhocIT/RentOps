@@ -1,9 +1,7 @@
 <template>
   <div class="detail-page">
     <PublicHeader
-      listing-action
       @notify="notify('Bạn chưa có thông báo mới')"
-      @post-room="openPostListingModal"
     />
 
     <main class="home-container content-shell">
