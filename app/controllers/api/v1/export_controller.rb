@@ -27,7 +27,7 @@ module Api
           end
         end
 
-        send_data csv_data, filename: "Bao_Cao_Hoa_Don_#{params[:billing_month] || 'Tất_Cả'}.csv", type: "text/csv; charset=utf-8; header=present"
+        send_data "\uFEFF" + csv_data, filename: "Bao_Cao_Hoa_Don_#{params[:billing_month] || 'Tat_Ca'}.csv", type: "text/csv; charset=utf-8; header=present"
       end
 
       def operating_expenses
@@ -47,7 +47,7 @@ module Api
           end
         end
 
-        send_data csv_data, filename: "Bao_Cao_Chi_Phi_Vat_Hanh.csv", type: "text/csv; charset=utf-8; header=present"
+        send_data "\uFEFF" + csv_data, filename: "Bao_Cao_Chi_Phi_Vat_Hanh.csv", type: "text/csv; charset=utf-8; header=present"
       end
 
       def printable_bill

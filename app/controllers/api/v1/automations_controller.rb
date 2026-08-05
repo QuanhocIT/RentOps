@@ -25,14 +25,6 @@ module Api
         render_json_success(message: msg)
       end
 
-      private
-
-      def trigger_job(job_class)
-        job_class.perform_async
-      rescue StandardError
-        job_class.new.perform rescue nil
-      end
-
       def reconcile_payment
         content = params[:content]
         amount = params[:amount].to_f
@@ -51,6 +43,14 @@ module Api
         else
           render_json_error(message: res[:message])
         end
+      end
+
+      private
+
+      def trigger_job(job_class)
+        job_class.perform_async
+      rescue StandardError
+        job_class.new.perform rescue nil
       end
     end
   end

@@ -9,7 +9,8 @@ module Api
         transaction_code = payload["referenceCode"] || payload["id"] || "SEPAY-#{Time.current.to_i}"
 
         bill_code = extract_bill_code(content)
-        process_auto_reconciliation(bill_code, amount, transaction_code, "SePay", payload)
+        res = perform_reconciliation(bill_code, amount, transaction_code, "SePay", payload)
+        render json: res, status: res[:http_status] || :ok
       end
 
       def cassso
@@ -23,7 +24,7 @@ module Api
           transaction_code = item["tid"] || "CASSSO-#{Time.current.to_i}"
 
           bill_code = extract_bill_code(content)
-          res = process_auto_reconciliation(bill_code, amount, transaction_code, "Cassso", item)
+          res = perform_reconciliation(bill_code, amount, transaction_code, "Cassso", item)
           processed_results << res
         end
 
@@ -38,14 +39,14 @@ module Api
         match ? match[0] : nil
       end
 
-      def process_auto_reconciliation(bill_code, amount, transaction_code, provider, raw_payload)
-        return render json: { success: false, message: "No bill code match found in transaction content" }, status: :unprocessable_entity if bill_code.blank?
+      def perform_reconciliation(bill_code, amount, transaction_code, provider, raw_payload)
+        return { success: false, message: "No bill code match found in transaction content", http_status: :unprocessable_entity } if bill_code.blank?
 
         bill = MonthlyBill.kept.find_by(bill_code: bill_code)
-        return render json: { success: false, message: "Bill #{bill_code} not found" }, status: :not_found unless bill
+        return { success: false, message: "Bill #{bill_code} not found", http_status: :not_found } unless bill
 
         if bill.paid?
-          return render json: { success: true, message: "Bill #{bill_code} is already fully paid" }
+          return { success: true, message: "Bill #{bill_code} is already fully paid", http_status: :ok }
         end
 
         MonthlyBill.transaction do
@@ -85,14 +86,15 @@ module Api
           )
         end
 
-        render json: {
+        {
           success: true,
           message: "Tự động gạch nợ thành công cho hóa đơn #{bill_code}",
           data: {
             bill_code: bill.bill_code,
             amount_paid: amount,
             new_status: bill.status
-          }
+          },
+          http_status: :ok
         }
       end
     end

@@ -176,6 +176,7 @@ class TenantSampleSeeder
         b.utility_fee = 700000
         b.service_fee = 150000
         b.total_amount = b.room_fee + b.utility_fee + b.service_fee
+        b.paid_amount = b.total_amount
         b.due_date = Date.current.end_of_month
         b.status = :paid
         b.paid_at = Time.current - 1.day

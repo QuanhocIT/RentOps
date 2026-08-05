@@ -25,7 +25,7 @@ class MonthlyBill < ApplicationRecord
     self.total_amount = [computed_total, 0.0].max
     self.remaining_amount = [total_amount - paid, 0.0].max
 
-    if paid >= total_amount && total_amount > 0
+    if paid >= total_amount
       self.status = :paid
       self.paid_at ||= Time.current
     elsif paid > 0 && paid < total_amount

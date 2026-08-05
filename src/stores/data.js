@@ -692,14 +692,35 @@ export const useDataStore = defineStore('data', {
       }, 300)
     },
 
-    addAuditLog(action, target, details) {
+    addAuditLog(action, p2, p3, p4, p5 = {}) {
+      if (!this.auditLogs) this.auditLogs = []
+      let recordType = 'General'
+      let recordId = Date.now()
+      let details = ''
+      let payload = {}
+
+      if (p4 !== undefined) {
+        recordType = p2 || 'General'
+        recordId = p3 || Date.now()
+        details = p4 || 'Đã thực hiện thao tác trên hệ thống.'
+        payload = p5 || {}
+      } else {
+        recordType = p2 || 'General'
+        details = p3 || 'Đã thực hiện thao tác trên hệ thống.'
+      }
+
       const newLog = {
         id: Date.now(),
+        created_at: new Date().toISOString(),
+        user_name: 'Nguyễn Văn Minh (Chủ nhà)',
         user: 'Chủ Trọ Quản Lý',
-        action,
-        target,
+        action: action || 'MANUAL_ACTION',
+        record_type: recordType,
+        target: recordType,
+        record_id: recordId,
+        details: details,
+        payload: payload,
         timestamp: new Date().toLocaleString('sv-SE').replace('T', ' ').substring(0, 16),
-        details,
         ip: '14.232.11.88'
       }
       this.auditLogs.unshift(newLog)
@@ -1140,21 +1161,7 @@ export const useDataStore = defineStore('data', {
       this.saveToStorage()
     },
 
-    // AUDIT LOGS
-    addAuditLog(action, recordType, recordId, details, payload = {}) {
-      if (!this.auditLogs) this.auditLogs = []
-      const newLog = {
-        id: Date.now(),
-        created_at: new Date().toISOString(),
-        user_name: 'Nguyễn Văn Minh (Chủ nhà)',
-        action: action || 'MARK_BILL_PAID',
-        record_type: recordType || 'General',
-        record_id: recordId || Date.now(),
-        details: details || 'Đã thực hiện thao tác trên hệ thống.',
-        payload: payload || {}
-      }
-      this.auditLogs.unshift(newLog)
-    },
+
 
     // SETTINGS UPDATE
     updateSettings(newSettings) {

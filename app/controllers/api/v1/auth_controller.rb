@@ -117,53 +117,7 @@ module Api
         end
       end
 
-      def google_login
-        token = params[:credential].presence || params[:id_token].presence
-        google_user = verify_google_token(token)
 
-        email = google_user&.[](:email) || params[:email].presence || "google_user@rentops.vn"
-        name = google_user&.[](:name) || params[:name].presence || "Cư Dân Google Demo"
-
-        user = User.find_by(email: email)
-        tenant = user&.tenant || Tenant.first_or_create!(subdomain: "demo") do |t|
-          t.name = "Tòa Nhà Demo RentOps"
-          t.phone = "0901234567"
-        end
-
-        unless user
-          user = User.create!(
-            email: email,
-            full_name: name,
-            password: SecureRandom.hex(12),
-            role: :renter,
-            tenant: tenant
-          )
-        end
-
-        TenantSampleSeeder.seed_for(tenant) if tenant && Service.where(tenant_id: tenant.id).count.zero?
-
-        token = encode_jwt_token(user)
-
-        render json: {
-          success: true,
-          message: "Đăng nhập Google thành công!",
-          data: {
-            token: token,
-            user: user_payload(user),
-            tenant: tenant_payload(tenant)
-          }
-        }
-      rescue => e
-        render json: {
-          success: true,
-          message: "Đăng nhập Google thành công (Demo)",
-          data: {
-            token: "google_demo_token",
-            user: { id: 102, email: params[:email] || "google_user@rentops.vn", full_name: params[:name] || "Cư Dân Google Demo", role: "renter" },
-            tenant: { id: 1, name: "Tòa Nhà Demo RentOps", subdomain: "demo" }
-          }
-        }
-      end
 
       def register
         email = params[:email].presence
